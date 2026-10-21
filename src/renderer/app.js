@@ -511,6 +511,9 @@ $('#btn-pdf').addEventListener('click', () => state.current && api.openPdf(state
 /* interface language */
 function setLang(l) {
   lang = LANGS.includes(l) ? l : 'uz';
+  try {
+    localStorage.setItem('a365.lang', lang);
+  } catch {}
   applyI18n();
   $$('#lang-menu button').forEach((b) => b.classList.toggle('on', b.dataset.lang === lang));
   $('#inbox-path').textContent = state.inboxPath || ''; // empty-state text was just re-rendered
@@ -535,6 +538,9 @@ $('#lang-menu').addEventListener('click', (e) => {
 /* theme: saved choice, else follows macOS */
 function applyTheme(t) {
   document.documentElement.dataset.theme = t;
+  try {
+    localStorage.setItem('a365.theme', t); // the launch card (splash.js) opens in it next time
+  } catch {}
   $$('.theme-btn:not(:has(.theme-ico)), .theme-ico').forEach((b) => (b.textContent = t === 'dark' ? '☀' : '☾'));
 }
 // the new theme grows as a circle out of the toggle button (D key: the visible one)
@@ -1530,6 +1536,7 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   // a reminder notification was clicked: go where it pointed
   api.onRemindOpen(openTarget);
   openTarget(await api.remindTarget());
+  if (typeof Splash !== 'undefined') Splash.ready();
 })();
 
 function openTarget(t) {

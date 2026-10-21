@@ -2,6 +2,7 @@ const { app, session, BrowserWindow, ipcMain, dialog, clipboard, shell, nativeTh
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 const path = require('node:path');
+const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
 const remind = require('./notify');
@@ -139,6 +140,15 @@ function allowYouTubeEmbeds() {
   });
 }
 
+// the window opens in the theme the app was left in (the launch card is drawn in it too)
+function savedDark() {
+  try {
+    const th = JSON.parse(fs.readFileSync(NOTES(), 'utf8')).settings.theme;
+    if (th === 'dark' || th === 'light') return th === 'dark';
+  } catch {}
+  return nativeTheme.shouldUseDarkColors;
+}
+
 function createWindow() {
   allowYouTubeEmbeds();
   win = new BrowserWindow({
@@ -146,7 +156,7 @@ function createWindow() {
     height: 860,
     minWidth: 760,
     minHeight: 520,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0d0d0d' : '#ffffff',
+    backgroundColor: savedDark() ? '#0d0d0d' : '#ffffff',
     title: '365 Articles',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 18, y: 18 },

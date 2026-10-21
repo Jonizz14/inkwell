@@ -1,0 +1,64 @@
+/* ── Launch card (splash.js) ──
+   One continuous piece: the digits roll up into "365" with a little blur while they move, the
+   letters of "Articles" rise out of a blur one after another, a hairline draws out from the
+   middle, the greeting comes in last. Leaving, it all melts through a blur in place. Only
+   transform, opacity and filter move, so it stays on the compositor. */
+#splash {
+  --sp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-app-region: drag;
+  transition: opacity 700ms var(--sp-ease) 120ms;
+}
+.sp-mark { display: flex; flex-direction: column; align-items: center; transition: opacity 560ms var(--sp-ease), filter 640ms var(--sp-ease), transform 760ms var(--sp-ease); }
+
+/* "365": three windows onto a column of numbers */
+.sp-num { display: flex; font: 600 92px/1 var(--serif); letter-spacing: -0.02em; font-variant-numeric: tabular-nums lining-nums; }
+.sp-d {
+  display: block;
+  height: 1.4em;
+  padding-top: 0.2em;
+  box-sizing: border-box;
+  margin: -0.2em 0;
+  overflow: hidden;
+  /* the numbers fade out past the window's edges, like a picker wheel; the digit at rest is whole */
+  -webkit-mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
+  mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
+}
+/* the numbers it rolled past go once it has stopped */
+.sp-d i:not(:last-child) { animation: sp-past 500ms var(--sp-ease) forwards 1500ms; }
+@keyframes sp-past { to { opacity: 0; } }
+.sp-d > span { display: flex; flex-direction: column; transform: translateY(calc(var(--n) * -1em)); animation: sp-roll 1500ms var(--sp-ease) both; }
+.sp-d i { display: block; height: 1em; font-style: normal; text-align: center; }
+.sp-d:nth-child(2) > span { animation-delay: 110ms; animation-duration: 1650ms; }
+.sp-d:nth-child(3) > span { animation-delay: 220ms; animation-duration: 1800ms; }
+@keyframes sp-roll {
+  0% { transform: translateY(0); filter: blur(5px); opacity: 0; }
+  12% { opacity: 1; }
+  70% { filter: blur(0.6px); }
+  100% { transform: translateY(calc(var(--n) * -1em)); filter: blur(0); opacity: 1; }
+}
+
+/* "Articles" */
+.sp-word { margin-top: 10px; display: flex; font: 500 30px/1.1 var(--serif); letter-spacing: 0.01em; }
+.sp-word span { display: block; animation: sp-letter 900ms var(--sp-ease) both; animation-delay: calc(900ms + var(--i) * 45ms); }
+@keyframes sp-letter { from { opacity: 0; transform: translateY(10px); filter: blur(8px); } }
+
+/* the hairline, drawn out from the middle */
+.sp-line { display: block; width: 168px; height: 1px; margin: 22px 0 18px; background: var(--ink); opacity: 0.28; transform: scaleX(0); animation: sp-line 1100ms var(--sp-ease) 1500ms forwards; }
+@keyframes sp-line { to { transform: scaleX(1); } }
+
+.sp-sub { font: 13px/1.4 var(--ui); color: var(--muted); letter-spacing: 0.01em; animation: sp-letter 900ms var(--sp-ease) both 1900ms; }
+
+/* leaving: everything blurs away where it is, then the card itself goes */
+#splash.out { opacity: 0; pointer-events: none; }
+#splash.out .sp-mark { opacity: 0; filter: blur(14px); transform: scale(0.985); }
+
+/* reduced motion: just the mark, then a plain fade */
+#splash.still *, #splash.still .sp-d > span { animation: none !important; }
+#splash.still .sp-line { transform: none; }
