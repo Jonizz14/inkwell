@@ -547,16 +547,16 @@ async function schedule(notesArg) {
   return times;
 }
 
-// Windows: one daily task per time in the Task Scheduler (folder "365 Articles"). The times
+// Windows: one daily task per time in the Task Scheduler (folder "Inkwell"). The times
 // last written are kept beside the notes, so nothing is touched while they stay the same.
 const schtasks = (...args) => new Promise((res) => execFile('schtasks', args, { windowsHide: true }, (err) => res(!err)));
 async function scheduleWin(times) {
   const file = path.join(app.getPath('userData'), 'remind-tasks.json');
   const old = await readJson(file, []);
   if (old.join() === times.join()) return times;
-  for (let i = 0; i < old.length; i++) await schtasks('/Delete', '/F', '/TN', `365 Articles\\Reminder ${i + 1}`);
+  for (let i = 0; i < old.length; i++) await schtasks('/Delete', '/F', '/TN', `Inkwell\\Reminder ${i + 1}`);
   const run = [process.execPath, ...(app.isPackaged ? [] : [app.getAppPath()])].map((a) => `"${a}"`).join(' ') + ' --remind';
-  for (let i = 0; i < times.length; i++) await schtasks('/Create', '/F', '/SC', 'DAILY', '/ST', times[i], '/TN', `365 Articles\\Reminder ${i + 1}`, '/TR', run);
+  for (let i = 0; i < times.length; i++) await schtasks('/Create', '/F', '/SC', 'DAILY', '/ST', times[i], '/TN', `Inkwell\\Reminder ${i + 1}`, '/TR', run);
   await fsp.writeFile(file, JSON.stringify(times));
   return times;
 }

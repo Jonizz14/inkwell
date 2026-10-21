@@ -42,7 +42,7 @@ const Splash = (() => {
     el.setAttribute('aria-hidden', 'true');
     if (still) el.className = 'still';
     el.innerHTML = `<div class="sp-mark">
-        <div class="sp-word">${[...'365 Articles'].map((c, i) => `<span style="--i:${i}">${c === ' ' ? '&nbsp;' : c}</span>`).join('')}</div>
+        <div class="sp-word">${[...'Inkwell'].map((c, i) => `<span style="--i:${i}">${c === ' ' ? '&nbsp;' : c}</span>`).join('')}</div>
         <i class="sp-line"></i>
         ${name ? `<div class="sp-hi"></div>` : ''}
       </div>`;

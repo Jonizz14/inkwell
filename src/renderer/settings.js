@@ -350,7 +350,7 @@ const Settings = (() => {
   // a macOS banner, drawn the way the real one will arrive
   const remindPv = () => `<div class="set-preview pv-notif"><div class="pv-banner">
       <img class="pv-ic" src="icon.png" onerror="this.style.visibility='hidden'" alt="" />
-      <div class="pv-txt"><div class="pv-top"><b>365 Articles</b><span>${esc(t('set.r.now'))}</span></div>
+      <div class="pv-txt"><div class="pv-top"><b>Inkwell</b><span>${esc(t('set.r.now'))}</span></div>
         <div class="pv-t">${esc(t('set.r.pvT', streakNow()))}</div><div class="pv-b">${esc(t('set.r.pvB'))}</div></div>
       <span class="pv-flame"><svg viewBox="0 0 64 64"><path d="M32 6c3 9 16 15 15 31-1 12-7 19-15 19s-15-7-15-18c0-8 5-13 8-16 0 6 3 10 6 11-2-11 0-20 1-27z" fill="#fff"/></svg><i>${streakNow()}</i></span>
     </div></div>`;

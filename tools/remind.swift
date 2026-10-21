@@ -2,7 +2,7 @@
 // current macOS drops without a word, so notify.js hands the banner to this helper instead.
 // It must sit in the app's own Contents/MacOS (scripts/build-remind.sh puts it there and signs
 // the app again): UNUserNotificationCenter takes the bundle a process lives in as its sender,
-// so the banner comes from "365 Articles" with its icon, and a click brings the reader up.
+// so the banner comes from "Inkwell" with its icon, and a click brings the reader up.
 // The reader starts it itself, so macOS asks "allow notifications?" on the reader's behalf.
 //
 //   Reminder --title T --body B [--image png]
@@ -35,7 +35,7 @@ let center = UNUserNotificationCenter.current()
 center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, err in
   guard granted else { finish(["ok": false, "err": err?.localizedDescription ?? "denied", "code": (err as NSError?)?.code ?? 1]) }
   let c = UNMutableNotificationContent()
-  c.title = arg("--title") ?? "365 Articles"
+  c.title = arg("--title") ?? "Inkwell"
   c.body = arg("--body") ?? ""
   c.sound = .default
   c.threadIdentifier = "remind"

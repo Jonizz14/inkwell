@@ -733,7 +733,7 @@ extension View {
 struct StreakWidget: Widget {
   var body: some WidgetConfiguration {
     StaticConfiguration(kind: "streak", provider: Provider()) { e in StreakView(entry: e).card(link(e.info.id.map { "article/\($0)" } ?? "open")) }
-      .configurationDisplayName("365 Articles")
+      .configurationDisplayName("Inkwell")
       .description("Streak, words to review and the article you're reading.")
       .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
   }

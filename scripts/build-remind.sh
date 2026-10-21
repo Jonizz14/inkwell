@@ -4,7 +4,7 @@
 # a new file inside the bundle breaks its signature. Run again after every install.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-APP="${1:-/Applications/365 Articles.app}"
+APP="${1:-/Applications/Inkwell.app}"
 
 mkdir -p src/bin
 swiftc -O tools/remind.swift -o src/bin/remind

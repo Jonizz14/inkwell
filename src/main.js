@@ -11,6 +11,9 @@ const remind = require('./notify');
 const REMIND_RUN = process.argv.includes('--remind');
 // Windows shows notifications under the installed shortcut's id (electron-builder sets it to appId)
 if (process.platform === 'win32') app.setAppUserModelId('uz.javohir.articles365');
+// the data folder keeps the name the app first shipped under, so nothing moves on an update
+app.setPath('userData', path.join(app.getPath('appData'), '365 Articles Reader'));
+app.setName('Inkwell');
 const primary = app.requestSingleInstanceLock();
 if (!primary) app.quit();
 
@@ -19,7 +22,7 @@ const LIB = () => path.join(DATA(), 'library');
 const INDEX = () => path.join(DATA(), 'index.json');
 const NOTES = () => path.join(DATA(), 'notes.json');
 // Folder scanned on every start: PDFs dropped here are imported.
-const INBOX = () => path.join(app.getPath('documents'), '365 Articles');
+const INBOX = () => path.join(app.getPath('documents'), 'Inkwell');
 
 let win;
 let extractor;
@@ -157,7 +160,7 @@ function createWindow() {
     minWidth: 760,
     minHeight: 520,
     backgroundColor: savedDark() ? '#0d0d0d' : '#ffffff',
-    title: '365 Articles',
+    title: 'Inkwell',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 18, y: 18 },
     show: false,

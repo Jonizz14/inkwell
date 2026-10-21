@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Pre-indexes all PDFs from ~/Documents/365 Articles into the app's userData
+ * Pre-indexes all PDFs from ~/Documents/Inkwell into the app's userData
  * so the app opens instantly without re-processing.
  * Run: node scripts/preindex.mjs
  */
@@ -10,8 +10,8 @@ import crypto from 'node:crypto';
 import os from 'node:os';
 import { extractPdf, stopOcr } from '../src/extract.mjs';
 
-const INBOX   = path.join(os.homedir(), 'Documents', '365 Articles');
-const DATA    = path.join(os.homedir(), 'Library', 'Application Support', '365 Articles');
+const INBOX   = path.join(os.homedir(), 'Documents', 'Inkwell');
+const DATA    = path.join(os.homedir(), 'Library', 'Application Support', '365 Articles Reader');
 const LIB     = path.join(DATA, 'library');
 const INDEX_F = path.join(DATA, 'index.json');
 

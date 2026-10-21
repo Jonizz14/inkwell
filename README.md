@@ -1,4 +1,6 @@
-# 365 Articles Reader
+<p align="center"><img src="build/icon.png" width="128" alt="Inkwell"></p>
+
+# Inkwell
 
 An offline desktop reader for PDF articles, made for daily English reading practice.
 It pulls clean text out of the PDFs and gives you a quiet reading view. You can highlight, save words with
@@ -33,23 +35,23 @@ All shortcuts are listed, with a live demo, in **Settings → Shortcuts**. On Wi
 ## Install
 
 ### Windows
-Download `365 Articles Setup x.y.z.exe` from [Releases](../../releases) and run it.
+Download `Inkwell Setup x.y.z.exe` from [Releases](../../releases) and run it.
 The installer isn't code-signed, so SmartScreen may warn you: choose *More info → Run anyway*.
 
 ### macOS
 Download the `.dmg` from [Releases](../../releases). Or build it on your Mac (needs Node.js 20+ and the Xcode command line tools):
 
 ```bash
-git clone https://github.com/Jonizz14/365-articles-reader.git
-cd 365-articles-reader
+git clone https://github.com/Jonizz14/inkwell.git
+cd inkwell
 npm run install:mac
 ```
 
-This builds the app with its native helpers (Vision OCR, read-along, reminders and widgets), puts it in `/Applications` and adds a Desktop shortcut.
+This builds the app with its native helpers (Vision OCR, read-along, reminders and widgets), puts it in `/Applications/Inkwell.app` and adds a Desktop shortcut.
 The app isn't notarized. If macOS blocks a downloaded build, right-click it, choose *Open* and confirm.
 
 ## Adding articles
-- Drop PDFs into the inbox folder: `~/Documents/365 Articles` (macOS) or `Documents\365 Articles` (Windows). They're imported every time the app starts.
+- Drop PDFs into the inbox folder: `~/Documents/Inkwell` (macOS) or `Documents\Inkwell` (Windows). They're imported every time the app starts.
 - Drag PDFs onto the window, or use **+ Add PDF**.
 
 ## Your data

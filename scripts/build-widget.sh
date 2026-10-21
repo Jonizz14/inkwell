@@ -4,7 +4,7 @@
 # Then: right-click the desktop → Edit Widgets → search "365".
 set -euo pipefail
 cd "$(dirname "$0")/.."
-APP="${1:-/Applications/365 Articles.app}"
+APP="${1:-/Applications/Inkwell.app}"
 ID=uz.javohir.articles365.widget
 OUT=src/bin/ReaderWidget.appex
 
@@ -22,7 +22,7 @@ cat > "$OUT/Contents/Info.plist" <<EOF
 <dict>
   <key>CFBundleIdentifier</key><string>$ID</string>
   <key>CFBundleName</key><string>ReaderWidget</string>
-  <key>CFBundleDisplayName</key><string>365 Articles</string>
+  <key>CFBundleDisplayName</key><string>Inkwell</string>
   <key>CFBundleExecutable</key><string>ReaderWidget</string>
   <key>CFBundlePackageType</key><string>XPC!</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
