@@ -93,9 +93,9 @@ struct Entry: TimelineEntry {
 }
 
 let sample = Info(
-  streak: 12, best: 12, doneToday: true, todayMin: 11, due: 4, word: "hypnosis", tr: "гипноз",
-  words: [Word(w: "hypnosis", tr: "гипноз"), Word(w: "resilient", tr: "chidamli"), Word(w: "to wane", tr: "susaymoq"), Word(w: "scarce", tr: "kam, tanqis")],
-  vocab: 214, id: nil, title: "What You Need to Know About Hypnosis", pct: 63, left: 4, goal: 15,
+  streak: 12, best: 12, doneToday: true, todayMin: 11, due: 4, word: "resilient", tr: "chidamli",
+  words: [Word(w: "resilient", tr: "chidamli"), Word(w: "to wane", tr: "susaymoq"), Word(w: "scarce", tr: "kam, tanqis")],
+  vocab: 214, id: nil, title: "A Sample Article", pct: 63, left: 4, goal: 15,
   week: [true, true, false, true, true, true, true], mins: [14, 22, 0, 9, 31, 18, 11],
   heat: [5, 0, 12, 20, 8, 0, 0, 15, 22, 30, 4, 0, 18, 9, 14, 22, 0, 9, 31, 18, 11, 25, 0, 7, 16, 28, 19, 11],
   focus: FocusInfo(min: 25, sessions: 1, away: 2, week: [0, 25, 0, 45, 10, 25, 25])
