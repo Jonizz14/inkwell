@@ -1,12 +1,18 @@
 name: build
+# Every push to main builds macOS and Windows and publishes them as a new release
+# (v1.1.<run number>); pull requests only build, to check.
 on:
   push:
     branches: [main]
-    tags: ['v*']
   pull_request:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  VERSION: 1.1.${{ github.run_number }}
 jobs:
   build:
     strategy:
@@ -22,20 +28,37 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # the installers carry this build's version in their names and "About"
+      - run: npm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
       # macOS: the native helpers (Vision OCR, read-along); Windows uses tesseract.js instead
       - if: matrix.os == 'macos-latest'
         run: npm run build:mac-tools
       - run: npx electron-builder ${{ matrix.os == 'macos-latest' && '--mac' || '--win' }} --publish never
       - uses: actions/upload-artifact@v4
         with:
-          name: 365-articles-${{ matrix.os }}
+          name: inkwell-${{ matrix.os }}
           path: |
             dist/*.dmg
             dist/*.exe
-      # a version tag (v1.2.0) puts the installers on the GitHub release
-      - if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+
+  release:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          files: |
-            dist/*.dmg
-            dist/*.exe
+          path: out
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ env.VERSION }}
+          name: Inkwell ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
+          make_latest: true
+          body: |
+            ${{ github.event.head_commit.message }}
+
+            **macOS:** `Inkwell-${{ env.VERSION }}-arm64.dmg` · **Windows:** `Inkwell Setup ${{ env.VERSION }}.exe`
+            Not code-signed: on Windows choose *More info → Run anyway*; on macOS right-click → *Open*.
+          files: out/*

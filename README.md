@@ -79,7 +79,7 @@ Layout:
 - `src/renderer/`: the interface
 - `tools/`: Swift helpers for macOS
 
-Each push builds macOS and Windows installers in GitHub Actions. A `v*` tag attaches them to a release.
+Every push to `main` builds the macOS and Windows installers in GitHub Actions and publishes them as a new release.
 
 ## License
 
