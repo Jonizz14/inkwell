@@ -1,0 +1,78 @@
+{
+  "name": "article-reader",
+  "productName": "365 Articles Reader",
+  "version": "1.0.0",
+  "description": "Offline desktop reader for PDF articles: highlights, vocabulary, focus mode, paragraph notes and reading stats",
+  "main": "src/main.js",
+  "author": "Javohir",
+  "license": "AGPL-3.0-only",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/extract.test.mjs",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "icon": "python3 scripts/make_icon.py",
+    "install:mac": "bash scripts/install-mac.sh",
+    "build:ocr": "mkdir -p src/bin && swiftc -O tools/vision-ocr.swift -o src/bin/vision-ocr",
+    "build:read": "mkdir -p src/bin && swiftc -O tools/read-along.swift -o src/bin/read-along",
+    "build:mac-tools": "npm run build:ocr && npm run build:read",
+    "reextract": "node scripts/reextract.mjs --apply"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.100",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "pdfjs-dist": "5.4.296",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "electron": "38.2.0",
+    "electron-builder": "26.0.12"
+  },
+  "build": {
+    "appId": "uz.javohir.articles365",
+    "productName": "365 Articles",
+    "asar": false,
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!**/*.map",
+      "!**/*.d.ts",
+      "!**/*.d.mts"
+    ],
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.education",
+      "icon": "build/icon.png",
+      "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "365 Articles listens while you read aloud, to follow the text.",
+        "NSSpeechRecognitionUsageDescription": "Speech is recognised on this Mac to follow your reading aloud."
+      }
+    },
+    "dmg": {
+      "title": "365 Articles"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": true,
+      "createDesktopShortcut": "always",
+      "shortcutName": "365 Articles"
+    },
+    "linux": {
+      "target": [
+        "dir"
+      ]
+    }
+  }
+}

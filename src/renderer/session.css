@@ -1,0 +1,343 @@
+/* ── Deep focus session (session.js) ──
+   One card over a blur of the page holds every step. It appears and goes away where it
+   stands (a fade through a blur); between steps only its clip moves to the new height while
+   the old step blurs out and the new one blurs in. The shadow is a drop-shadow on the card's
+   wrapper, so it follows the clipped rounded shape, glow included. Compositor-only: opacity,
+   filter, transform, clip-path. */
+:root {
+  /* black and white, like the rest of the app: ink on paper, nothing tinted */
+  --fs-calm: var(--ink);
+  --fs-calm-2: var(--ink);
+  --fs-leaf: var(--ink);
+  --fs-warm: var(--ink);
+  --fs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fs-spring: cubic-bezier(0.32, 1.25, 0.5, 1);
+  --fs-veil: color-mix(in srgb, var(--bg) 42%, transparent);
+}
+[data-theme="dark"] { --fs-veil: color-mix(in srgb, var(--bg) 50%, transparent); }
+
+.fs-open svg, #focus-session svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+/* the blur over the page: a fixed blur whose opacity moves, so the blur itself seems to grow */
+.fs-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: grid;
+  place-items: center;
+  background: var(--fs-veil);
+  backdrop-filter: blur(22px) saturate(1.15);
+  -webkit-app-region: no-drag;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 520ms var(--fs-ease), visibility 0s 520ms;
+}
+.fs-veil.show { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 520ms var(--fs-ease), visibility 0s; }
+/* a pane sets its own visibility, which would let it show through a hidden veil and take the
+   clicks meant for the text under it (an invisible card in the middle of the page): while the
+   veil is closed or fading out nothing inside it can be hit */
+.fs-veil:not(.show), .fs-veil:not(.show) * { pointer-events: none !important; }
+.fs-veil:not(.show) .fs-pane.on { visibility: hidden; transition: opacity 220ms ease, filter 260ms ease, visibility 0s 520ms; }
+
+.fs-shadow {
+  /* the third shadow is the glow: transparent until a session completes */
+  filter: blur(14px) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.14)) drop-shadow(0 0 0 transparent);
+  opacity: 0;
+  transition: opacity 380ms ease, filter 520ms var(--fs-ease);
+}
+[data-theme="dark"] .fs-shadow { filter: blur(14px) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 0 transparent); }
+.fs-veil.show .fs-shadow { opacity: 1; filter: blur(0) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.14)) drop-shadow(0 0 0 transparent); transition: opacity 380ms ease 60ms, filter 560ms var(--fs-ease) 60ms; }
+[data-theme="dark"] .fs-veil.show .fs-shadow { filter: blur(0) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 0 transparent); }
+/* done: a soft glow around the card's own shape breathes in once, then stays faint */
+.fs-veil.show.glow .fs-shadow { animation: fs-glow 2.6s var(--fs-ease) 200ms both; }
+@keyframes fs-glow {
+  0% { filter: blur(0) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.14)) drop-shadow(0 0 0 transparent); }
+  35% { filter: blur(0) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.14)) drop-shadow(0 0 34px color-mix(in srgb, var(--ink) 22%, transparent)); }
+  100% { filter: blur(0) drop-shadow(0 0 0.5px var(--line-2)) drop-shadow(0 24px 48px rgba(0, 0, 0, 0.14)) drop-shadow(0 0 22px color-mix(in srgb, var(--ink) 9%, transparent)); }
+}
+
+.fs-card {
+  --h: 300px;
+  display: grid;
+  width: min(400px, calc(100vw - 32px));
+  background: var(--surface);
+  border-radius: 24px;
+  /* the clip shows only the visible step, centred in the tallest one */
+  clip-path: inset(calc((100% - var(--h)) / 2) 0 round 24px);
+  transition: clip-path 560ms var(--fs-spring);
+}
+.fs-card.snap, .fs-card.snap .fs-pane { transition: none !important; }
+
+.fs-pane {
+  grid-area: 1 / 1;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 28px 24px;
+  opacity: 0;
+  filter: blur(8px);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 220ms ease, filter 260ms ease, visibility 0s 260ms;
+}
+.fs-pane.on { opacity: 1; filter: blur(0); visibility: visible; pointer-events: auto; transition: opacity 360ms ease 140ms, filter 440ms var(--fs-ease) 120ms, visibility 0s; }
+.fs-pane.on > *, .fs-pane.on .fs-stats > div, .fs-pane.on .fs-row > * { animation: fs-in 560ms var(--fs-ease) both; animation-delay: calc(120ms + var(--k, 0) * 55ms); }
+.fs-pane > :nth-child(2) { --k: 1; }
+.fs-pane > :nth-child(3) { --k: 2; }
+.fs-pane > :nth-child(4) { --k: 3; }
+.fs-pane > :nth-child(5) { --k: 4; }
+.fs-pane > :nth-child(6) { --k: 5; }
+.fs-pane > :nth-child(7) { --k: 6; }
+.fs-pane > :nth-child(8) { --k: 7; }
+.fs-pane > :nth-child(9) { --k: 8; }
+.fs-stats > :nth-child(1) { --k: 3; }
+.fs-stats > :nth-child(2) { --k: 3.6; }
+.fs-stats > :nth-child(3) { --k: 4.2; }
+.fs-stats > :nth-child(4) { --k: 4.8; }
+.fs-row > :nth-child(1) { --k: 6; }
+.fs-row > :nth-child(2) { --k: 6.6; }
+.fs-pane.on .fs-stats, .fs-pane.on .fs-row { animation: none; }
+@keyframes fs-in { from { opacity: 0; transform: translateY(8px); filter: blur(6px); } }
+.fs-pane h2 { margin: 4px 0 6px; font: 600 22px/1.2 var(--serif); color: var(--ink); letter-spacing: -0.01em; }
+.fs-pane p { margin: 0; max-width: 300px; font: 13.5px/1.5 var(--ui); color: var(--ink-2); }
+
+.fs-icon { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 16px; color: var(--on-ink); background: var(--ink); }
+.fs-icon svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+
+/* the time: big rolling digits with − and + beside them */
+.fs-dial { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 18px 0 2px; }
+.fs-step {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 200ms var(--fs-spring);
+}
+.fs-step:hover { background: var(--soft); color: var(--ink); }
+.fs-step:active { transform: scale(0.9); }
+.fs-step svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.fs-clock {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  padding: 2px 10px;
+  border-radius: 16px;
+  font: 600 76px/1 ui-rounded, "SF Pro Rounded", var(--ui);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  cursor: text;
+  outline: none;
+  transition: background 200ms ease;
+}
+.fs-clock:hover, .fs-clock:focus-visible, .fs-clock:focus { background: var(--soft); }
+.fs-colon, .fs-sec { color: var(--muted); }
+.fs-colon { margin: 0 2px; transform: translateY(-0.06em); }
+/* typing: a caret after the minutes */
+.fs-caret { align-self: center; width: 3px; height: 0.62em; margin: 0 1px 0 3px; border-radius: 2px; background: var(--ink); opacity: 0; }
+.fs-clock:focus .fs-caret, .fs-clock.typing .fs-caret { animation: fs-caret 1.05s steps(1) infinite; }
+@keyframes fs-caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.fs-hint { font: 11.5px var(--ui); color: var(--muted); margin-bottom: 14px; }
+
+/* rolling digits (session.js roll): the leaving digit and the coming one share the slot */
+.roll { display: inline-flex; font-variant-numeric: tabular-nums; }
+.rd { position: relative; display: inline-block; }
+.rd i { display: block; font-style: normal; transition: transform 460ms var(--fs-spring), opacity 300ms ease, filter 380ms var(--fs-ease); }
+.rd i.up, .rd i.down { position: absolute; left: 0; top: 0; opacity: 0; filter: blur(6px); }
+.rd i.up { transform: translateY(-0.5em) scale(0.86); }
+.rd i.down { transform: translateY(0.5em) scale(0.86); }
+.rd i.from-down, .rd i.from-up { opacity: 0; filter: blur(6px); transition: none; }
+.rd i.from-down { transform: translateY(0.5em) scale(0.86); }
+.rd i.from-up { transform: translateY(-0.5em) scale(0.86); }
+
+/* the presets: one pill slides under the chosen one; a custom time lets it fade where it is */
+.fs-lens {
+  --i: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  width: 100%;
+  margin: 0 0 14px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--soft);
+}
+.fs-lens i {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 4);
+  border-radius: 9px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 0 0 0.5px var(--line-2);
+  transform: translateX(calc(100% * var(--i)));
+  transition: transform 460ms var(--fs-spring), opacity 260ms ease, filter 300ms ease;
+}
+.fs-lens.free i { opacity: 0; filter: blur(4px); }
+.fs-lens button {
+  position: relative;
+  height: 32px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 600 13.5px var(--ui);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: color 200ms ease, transform 160ms ease;
+}
+.fs-lens button small { font: 500 11px var(--ui); }
+.fs-lens button.on { color: var(--ink); }
+.fs-lens button:active { transform: scale(0.95); }
+
+.fs-opts { display: flex; flex-direction: column; width: 100%; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 12px; }
+.fs-opt {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 40px;
+  padding: 0 12px 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-2);
+  font: 500 13px var(--ui);
+  cursor: pointer;
+}
+.fs-opt + .fs-opt { border-top: 1px solid var(--line); }
+.fs-opt:focus-visible { outline: none; background: var(--soft); }
+/* a small switch: only the knob moves */
+.fs-opt i { position: relative; flex-shrink: 0; width: 28px; height: 17px; border-radius: 9px; background: var(--line-2); transition: background 240ms ease; }
+.fs-opt i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 320ms var(--fs-spring); }
+.fs-opt[aria-pressed="true"] i { background: var(--fs-calm); }
+.fs-opt[aria-pressed="true"] i::after { transform: translateX(11px); background: var(--on-ink); }
+.fs-opt[aria-pressed="true"] { color: var(--ink); }
+
+.fs-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 44px;
+  border: 0;
+  border-radius: 13px;
+  background: var(--ink);
+  color: var(--on-ink);
+  font: 600 14.5px var(--ui);
+  cursor: pointer;
+  transition: transform 160ms ease, filter 200ms ease;
+}
+.fs-go:hover { filter: opacity(0.88); }
+.fs-go:active { transform: scale(0.98); }
+.fs-go kbd { font: 11px var(--ui); color: color-mix(in srgb, var(--on-ink) 75%, transparent); border: 1px solid color-mix(in srgb, var(--on-ink) 35%, transparent); border-radius: 4px; padding: 0 4px; line-height: 16px; }
+.fs-go:focus-visible, .fs-ghost:focus-visible { outline: 2px solid color-mix(in srgb, var(--fs-calm) 50%, transparent); outline-offset: 2px; }
+.fs-go:focus:not(:focus-visible) { outline: none; }
+.fs-ghost {
+  flex: 1;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink-2);
+  font: 500 13px var(--ui);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.fs-ghost:hover { background: var(--soft); color: var(--ink); }
+.fs-ghost:active { transform: scale(0.98); }
+.fs-row { display: flex; gap: 8px; width: 100%; margin-top: 10px; }
+.fs-row .fs-go { flex: 1.4; width: auto; }
+.fs-foot { margin-top: 12px; font: 12px var(--ui); color: var(--muted); }
+
+/* the countdown: each number comes out of a blur and goes on into one, bigger */
+.fs-digits { position: relative; width: 120px; height: 110px; margin-top: 4px; }
+.fs-digits span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 700 92px/1 var(--ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  opacity: 0;
+  filter: blur(12px);
+  transform: scale(0.72);
+  transition: opacity 420ms ease, filter 520ms var(--fs-ease), transform 700ms var(--fs-ease);
+}
+.fs-digits span.on { opacity: 1; filter: blur(0); transform: none; }
+.fs-digits span.gone { opacity: 0; filter: blur(14px); transform: scale(1.35); }
+.fs-track { width: 100%; height: 4px; margin-top: 18px; border-radius: 2px; background: var(--soft); overflow: hidden; }
+.fs-track i { display: block; height: 100%; border-radius: 2px; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 3s linear; }
+.fs-track i.go { transform: scaleX(1); }
+
+.fs-big { margin: 14px 0 4px; font: 650 30px/1.1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ink); }
+.fs-pane[data-p="break"] .fs-big { font-size: 46px; margin-top: 4px; }
+.fs-tip { min-height: 2.9em; }
+.fs-pane[data-p="break"] .fs-ghost { flex: none; width: 100%; margin-top: 16px; }
+
+/* done: the circle draws itself, then the tick */
+.fs-check { width: 56px; height: 56px; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.fs-check circle { stroke: var(--fs-calm); stroke-width: 3; stroke-dasharray: 145; stroke-dashoffset: 145; transform: rotate(-90deg); transform-origin: center; }
+.fs-check path { stroke: var(--fs-calm); stroke-width: 3.4; stroke-dasharray: 34; stroke-dashoffset: 34; }
+.fs-pane.on .fs-check circle { animation: fs-draw 700ms var(--fs-ease) 260ms forwards; }
+.fs-pane.on .fs-check path { animation: fs-draw 420ms var(--fs-ease) 820ms forwards; }
+@keyframes fs-draw { to { stroke-dashoffset: 0; } }
+.fs-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; width: 100%; margin: 18px 0 16px; }
+.fs-stats div { display: flex; flex-direction: column; align-items: center; padding: 10px 2px 8px; border-radius: 12px; background: var(--soft); }
+.fs-stats b { font: 700 22px/1.1 var(--ui); font-variant-numeric: tabular-nums; color: var(--ink); }
+.fs-stats small { margin-top: 2px; font: 11px var(--ui); color: var(--muted); }
+
+/* ---------- the timer in the corner ----------
+   Only the time shows; on hover the clip opens to the left over pause and stop. */
+.fs-chip {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  z-index: 13;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+  padding: 0 12px 0 4px;
+  border-radius: 18px;
+  background: var(--glass);
+  backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px var(--line);
+  -webkit-app-region: no-drag;
+  clip-path: inset(0 0 0 calc(100% - var(--cw, 86px)) round 18px);
+  opacity: 0;
+  filter: blur(8px);
+  visibility: hidden;
+  transition: opacity 360ms ease, filter 420ms var(--fs-ease), clip-path 460ms var(--fs-spring), transform var(--t-slow) var(--ease), visibility 0s 420ms;
+}
+body.focus .fs-chip.show { opacity: 0.62; filter: blur(0); visibility: visible; transition: opacity 360ms ease, filter 420ms var(--fs-ease), clip-path 460ms var(--fs-spring), transform var(--t-slow) var(--ease), visibility 0s; }
+body.focus .fs-chip.show:hover, body.focus .fs-chip.show.paused { opacity: 1; }
+.fs-chip:hover { clip-path: inset(0 0 0 0 round 18px); }
+body.drawer-open .fs-chip { transform: translateX(calc(var(--drawer-w) * -1)); }
+.fs-main { display: inline-flex; align-items: center; gap: 7px; padding-left: 8px; }
+.fs-ring { width: 18px; height: 18px; fill: none; transform: rotate(-90deg); }
+.fs-ring circle { stroke: var(--line-2); stroke-width: 2.4; }
+.fs-ring .fs-arc { stroke: var(--fs-calm); stroke-linecap: round; stroke-dasharray: 43.98; transition: stroke-dashoffset 260ms linear; }
+.fs-chip.paused .fs-arc { stroke: var(--muted); }
+.fs-time { min-width: 38px; overflow: visible; font: 600 13px var(--ui); font-variant-numeric: tabular-nums; color: var(--ink); }
+.fs-cb { display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 15px; background: transparent; color: var(--ink-2); cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+.fs-cb:hover { background: var(--soft); color: var(--ink); }
+.fs-cb svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+/* reading in a session: the pointer steps away until it moves */
+body.fs-idle, body.fs-idle * { cursor: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-veil, .fs-shadow, .fs-pane, .fs-card, .fs-chip, .fs-digits span { transition-duration: 1ms !important; }
+}

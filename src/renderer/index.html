@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' https://i.ytimg.com; frame-src 'self' https://www.youtube-nocookie.com https://www.youtube.com" />
+  <title>365 Articles</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="stats.css" />
+  <link rel="stylesheet" href="stats-more.css" />
+  <link rel="stylesheet" href="cards.css" />
+  <link rel="stylesheet" href="player.css" />
+  <link rel="stylesheet" href="settings.css" />
+  <link rel="stylesheet" href="session.css" />
+</head>
+<body>
+  <div class="dragbar"></div>
+
+  <!-- Library -->
+  <section id="library" class="view is-active">
+    <div class="lib-top">
+    <header class="lib-head">
+      <div>
+        <h1>365 Articles</h1>
+        <p class="muted" id="lib-stats"></p>
+      </div>
+      <div class="lib-actions">
+        <button class="btn ghost" id="btn-cards" data-i18n-title="cd.title"><span data-i18n="cd.btn">Kartochkalar</span> <span class="count" id="cards-count" hidden></span></button>
+        <button class="btn ghost" id="btn-vocab-all" data-i18n-title="lib.vocabTitle"><span data-i18n="lib.vocab">Lug'at</span> <span class="count" id="vocab-total">0</span></button>
+        <button class="btn solid" id="btn-add" data-i18n="lib.add">+ PDF qo'shish</button>
+        <button class="btn ghost icon mp-btn" id="btn-music"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 12.2V3.6l7-1.6v8.6"/><circle cx="4.2" cy="12.2" r="1.8"/><circle cx="11.2" cy="10.6" r="1.8"/></svg></button>
+        <div class="menu-wrap">
+          <button class="btn ghost icon" id="btn-more" data-i18n-title="lib.more">⋯</button>
+          <div class="menu more-menu" id="more-menu">
+            <button id="btn-settings" style="--i:0"><b data-i18n="set.menu">Sozlamalar</b><span><kbd>⌘,</kbd></span></button>
+            <button id="btn-stats" style="--i:1"><b data-i18n="st.title">Statistika</b></button>
+            <button id="btn-inbox" style="--i:2" data-i18n-title="lib.folderTitle"><b data-i18n="lib.folder">Papka</b></button>
+            <button id="btn-theme-menu" style="--i:3"><b data-i18n="theme.name">Qorong'i rejim</b><span><span class="theme-ico">☾</span><kbd>D</kbd></span></button>
+            <div class="menu-sep"></div>
+            <div class="menu-langs" id="lang-menu" data-i18n-title="lang.title">
+              <button data-lang="uz">UZ</button>
+              <button data-lang="en">EN</button>
+              <button data-lang="ru">RU</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="lib-tools">
+      <input id="search" type="search" placeholder="Qidirish…  (⌘F)" data-i18n-ph="lib.search" autocomplete="off" spellcheck="false" />
+      <div class="seg" id="filter">
+        <button data-f="all" class="on" data-i18n="f.all">Hammasi</button>
+        <button data-f="new" data-i18n="f.new">O'qilmagan</button>
+        <button data-f="reading" data-i18n="f.reading">O'qilmoqda</button>
+        <button data-f="done" data-i18n="f.done">Tugatilgan</button>
+      </div>
+    </div>
+
+    <div id="import-bar" class="import-bar" hidden>
+      <div class="import-track"><div class="import-fill"></div></div>
+      <span class="import-text"></span>
+    </div>
+
+      <div class="pblur pblur-top" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <ol id="list" class="list"></ol>
+
+    <div id="empty" class="empty" hidden>
+      <div class="empty-mark">¶</div>
+      <h2 data-i18n="empty.title">Kutubxona bo'sh</h2>
+      <p data-i18n-html="empty.text">PDF maqolalarni shu oynaga sudrab tashlang yoki <b>+ PDF qo'shish</b> tugmasini bosing.<br />
+        Telegram'dan yuklovchi skript fayllarni <code id="inbox-path"></code> papkasiga saqlaydi. Ilova ularni har safar ochilganda o'zi qo'shadi.</p>
+    </div>
+    <div class="pblur pblur-bottom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </section>
+
+  <!-- Reader -->
+  <div id="dim"></div>
+  <section id="reader" class="view">
+    <header class="bar">
+      <button class="btn ghost back" id="btn-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
+      <div class="bar-title" id="bar-title"></div>
+      <div class="bar-actions">
+        <button class="btn ghost mp-btn" id="btn-music-r"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 12.2V3.6l7-1.6v8.6"/><circle cx="4.2" cy="12.2" r="1.8"/><circle cx="11.2" cy="10.6" r="1.8"/></svg><span data-i18n="bar.music">Musiqa</span></button>
+        <button class="btn ghost" id="btn-focus" data-i18n-title="focus.title"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5.5V3.5A1.5 1.5 0 0 1 3.5 2h2M10.5 2h2A1.5 1.5 0 0 1 14 3.5v2M14 10.5v2a1.5 1.5 0 0 1-1.5 1.5h-2M5.5 14h-2A1.5 1.5 0 0 1 2 12.5v-2"/><circle cx="8" cy="8" r="2.2"/></svg><span data-i18n="focus.btn">Fokus</span></button>
+        <button class="btn ghost fs-open" id="btn-session" data-i18n-title="fs.btn"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6v3l2 1.4M6.5 1.5h3"/></svg><span data-i18n="bar.session">Sessiya</span></button>
+        <div class="menu-wrap tools-wrap">
+        <button class="btn ghost tools-btn" id="btn-tools" data-i18n-title="bar.toolsTitle" aria-expanded="false"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="2.5" y="2.5" width="11" height="3.2" rx="1.1"/><rect x="2.5" y="7.4" width="11" height="3.2" rx="1.1"/><path d="M3.5 13.5h9"/></svg><span data-i18n="bar.tools">Menyu</span></button>
+          <div class="tools" id="tools">
+          <div class="font-ctl">
+            <button class="btn ghost icon" id="font-dec" data-i18n-title="reader.smaller">A−</button>
+            <input id="font-pct" type="text" inputmode="numeric" spellcheck="false" autocomplete="off" data-i18n-title="reader.fontPct" value="100%" />
+            <button class="btn ghost icon" id="font-inc" data-i18n-title="reader.bigger">A+</button>
+          </div>
+          <button class="btn ghost theme-btn" data-i18n-title="theme.title"><span class="theme-ico">☾</span><span data-i18n="bar.theme">Tema</span><kbd>D</kbd></button>
+          <button class="btn ghost" id="btn-edit" data-i18n-title="edit.title" aria-pressed="false"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 13.5h3M10.6 2.9l2.5 2.5L6.5 12l-3 .5.5-3z"/></svg><span data-i18n="edit.btn">Tahrir</span><kbd>E</kbd></button>
+          <button class="btn ghost" id="btn-pdf" data-i18n-title="reader.pdfTitle"><span id="pdf-label">PDF</span><kbd>⇧⌘O</kbd></button>
+          <div class="menu-wrap">
+            <button class="btn ghost" id="btn-ai" data-i18n-title="reader.aiTitle">AI ↗<kbd>⇧⌘A</kbd></button>
+            <div class="menu" id="ai-menu">
+              <button data-copy="all"><kbd>⇧⌘C</kbd><b data-i18n="ai.all">Hammasi</b><span data-i18n="ai.allSub">Matn, xulosalar va lug'at</span></button>
+              <button data-copy="notes"><b data-i18n="ai.notes">Xulosalarim</b><span data-i18n="ai.notesSub">Abzas + mening tushunganim</span></button>
+              <button data-copy="vocab"><b data-i18n="ai.vocab">Lug'atim</b><span data-i18n="ai.vocabSub">So'z, kontekst, tarjimam</span></button>
+              <div class="menu-sep"></div>
+              <button data-test="prompt"><b data-i18n="ai.test">IELTS test prompti</b><span data-i18n="ai.testSub">Passage 1 · 13 savol — istalgan AI'ga</span></button>
+              <button data-test="paste"><b data-i18n="ai.testPaste">Testni joylash</b><span data-i18n="ai.testPasteSub">AI qaytargan TXT'ni qo'shish</span></button>
+            </div>
+          </div>
+          </div>
+        </div>
+        <button class="btn ghost" id="btn-test" data-i18n-title="test.btnTitle" hidden><span data-i18n="test.btn">Test</span> <span class="count" id="test-count"></span></button>
+        <button class="btn solid" id="btn-vocab" data-i18n-title="reader.vocabTitle"><span data-i18n="lib.vocab">Lug'at</span> <span class="count" id="vocab-count">0</span></button>
+      </div>
+      <div class="progress"><div class="progress-fill" id="progress"></div></div>
+    </header>
+
+    <main class="scroller" id="scroller">
+      <article class="doc" id="doc"></article>
+      <div class="selfx" id="selfx" aria-hidden="true"></div>
+    </main>
+    <div class="pblur pblur-top" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="pblur pblur-bottom" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+    <!-- focus mode: position + way out, fades away while reading -->
+    <div class="focus-drag"></div>
+    <div class="focus-hud" id="focus-hud">
+      <span class="fh-pos" id="focus-pos"></span>
+      <span class="fh-sep"></span>
+      <span class="fh-heard" id="ra-heard"></span>
+      <button class="fh-mic" id="ra-btn" data-i18n-title="ra.title"><span class="fh-dot"></span><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="1.5" width="5" height="8.5" rx="2.5"/><path d="M3 7.5a5 5 0 0 0 10 0M8 12.5v2"/></svg><span id="ra-label" data-i18n="ra.btn">Ovoz bilan</span></button>
+      <button class="fh-vocab" id="focus-note" data-i18n-title="focus.note"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 13.5h3M10.6 2.9l2.5 2.5L6.5 12l-3 .5.5-3z"/></svg><span data-i18n="focus.noteBtn">Xulosa</span></button>
+      <button class="fh-vocab" id="focus-vocab" data-i18n-title="focus.vocab"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.5A2.5 2.5 0 0 1 13 5v8.5H5.5A2.5 2.5 0 0 1 3 11z"/><path d="M3 11a2.5 2.5 0 0 1 2.5-2.5H13"/></svg><span data-i18n="lib.vocab">Lug'at</span><span class="count" id="focus-vcount"></span></button>
+      <button class="fh-vocab fs-open" id="focus-session" data-i18n-title="fs.btn"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="9" r="5.5"/><path d="M8 6v3l2 1.4M6.5 1.5h3"/></svg><span data-i18n="bar.session">Sessiya</span></button>
+      <button class="fh-exit" id="focus-exit" data-i18n-title="focus.hint"><span data-i18n="focus.exit">Chiqish</span> <kbd>Esc</kbd></button>
+    </div>
+
+    <!-- deep focus session (session.js): the running timer, its pause/stop come out on hover -->
+    <div class="fs-chip" id="fs-chip">
+      <button class="fs-cb" id="fs-stop" data-i18n-title="fs.stop"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="2"/></svg></button>
+      <button class="fs-cb" id="fs-pause" data-i18n-title="fs.pause"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 4v8M10.5 4v8"/></svg></button>
+      <span class="fs-main"><svg class="fs-ring" viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="7"/><circle class="fs-arc" cx="9" cy="9" r="7"/></svg><span class="fs-time">0:00</span></span>
+    </div>
+
+    <!-- paragraph rail: hover for the outline, click to jump -->
+    <nav class="rail" id="rail" hidden>
+      <div class="rail-lines" id="rail-lines"></div>
+      <div class="rail-panel" id="rail-panel"></div>
+    </nav>
+  </section>
+
+  <!-- Reading statistics -->
+  <section id="stats" class="view">
+    <header class="bar">
+      <button class="btn ghost back" id="stats-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
+      <div class="bar-title show" data-i18n="st.title">Statistika</div>
+      <div></div>
+    </header>
+    <main class="scroller"><div class="stats" id="stats-body"></div></main>
+  </section>
+
+  <!-- Settings (settings.js) -->
+  <section id="settings" class="view">
+    <header class="bar">
+      <button class="btn ghost back" id="settings-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
+      <div class="bar-title show" data-i18n="set.title">Sozlamalar</div>
+      <div></div>
+    </header>
+    <main class="scroller"><div class="settings" id="settings-body"></div></main>
+  </section>
+
+  <!-- Flashcards (cards.js) -->
+  <section id="cards" class="view">
+    <header class="bar">
+      <button class="btn ghost back" id="cards-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
+      <div class="bar-title show" data-i18n="cd.title">Kartochkalar</div>
+      <div></div>
+    </header>
+    <main class="scroller"><div class="cards" id="cards-body"></div></main>
+  </section>
+
+  <!-- Selection toolbar -->
+  <div class="pop" id="pop">
+    <button data-act="hl"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.2 2.4l3.4 3.4-6.3 6.3H3.9v-3.4z" /><path class="fill" d="M2 14h12" /></svg><span data-i18n="pop.hl">Belgilash</span> <kbd>H</kbd></button>
+    <button data-act="word"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.8h6.5a2.5 2.5 0 0 1 2.5 2.5v8H5.5A2.5 2.5 0 0 1 3 10.8z" /><path d="M3 10.8a2.5 2.5 0 0 1 2.5-2.5H12" /></svg><span data-i18n="pop.word">Lug'atga</span> <kbd>W</kbd></button>
+    <button data-act="del" class="danger"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5" /></svg><span data-i18n="del">O'chirish</span> <kbd>⌫</kbd></button>
+  </div>
+
+  <!-- Translation tooltip for vocabulary words -->
+  <div class="tip" id="tip"></div>
+
+  <!-- Vocabulary drawer -->
+  <aside class="drawer" id="drawer" aria-hidden="true">
+    <header class="drawer-head">
+      <div>
+        <h2 data-i18n="vocab.title">Lug'at</h2>
+        <div class="seg small" id="vocab-scope">
+          <button data-s="article" class="on" data-i18n="vocab.article">Shu maqola</button>
+          <button data-s="all" data-i18n="vocab.all">Hammasi</button>
+        </div>
+      </div>
+      <div class="drawer-actions">
+        <button class="btn ghost" id="vocab-copy" data-i18n-title="vocab.copyTitle" data-i18n="vocab.copy">Nusxa</button>
+        <button class="btn ghost icon" id="drawer-close" data-i18n-title="vocab.close">✕</button>
+      </div>
+    </header>
+    <div class="vocab-head"><span data-i18n="vocab.word">So'z</span><span data-i18n="vocab.tr">Tarjima</span></div>
+    <div class="vocab-body" id="vocab-body"></div>
+    <div class="vocab-empty" id="vocab-empty">
+      <p data-i18n="vocab.none">Hali so'z yo'q.</p>
+      <p class="muted" data-i18n-html="vocab.hint">Tushunmagan so'zni belgilang va <b>Lug'atga</b> tugmasini bosing (yoki <kbd>W</kbd>).</p>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <!-- IELTS test pane (see test.js) -->
+  <aside class="testpane" id="testpane" aria-hidden="true">
+    <div class="tp-resize" id="tp-resize" data-i18n-title="test.resize"></div>
+    <header class="tp-head">
+      <div>
+        <div class="tp-kicker">IELTS Reading · Passage 1</div>
+        <h2 id="tp-title"></h2>
+      </div>
+      <div class="tp-actions">
+        <span class="tp-timer" id="tp-timer"></span>
+        <button class="btn ghost icon" id="tp-close" data-i18n-title="test.close">✕</button>
+      </div>
+    </header>
+    <div class="tp-body" id="tp-body"></div>
+  </aside>
+
+  <div class="modal" id="test-import" aria-hidden="true">
+    <div class="modal-card">
+      <h2 data-i18n="test.importTitle">Testni joylash</h2>
+      <p class="muted" data-i18n="test.importHint"></p>
+      <textarea id="ti-text" spellcheck="false" placeholder="#IELTS-TEST v1&#10;TITLE: …&#10;&#10;#SECTION&#10;TYPE: TFNG&#10;Q1: …"></textarea>
+      <div class="ti-err" id="ti-err"></div>
+      <div class="modal-foot">
+        <button class="btn ghost outline" id="ti-file" data-i18n="test.file">.txt fayl</button>
+        <input type="file" id="ti-input" accept=".txt,text/plain" hidden />
+        <span class="grow"></span>
+        <button class="btn ghost" id="ti-cancel" data-i18n="test.cancel">Bekor</button>
+        <button class="btn solid" id="ti-ok"><span data-i18n="test.add">Qo'shish</span> <kbd>⌘↵</kbd></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- deep focus session: every step lives in one card over a blur of the page -->
+  <div class="fs-veil" id="fs-veil"><div class="fs-shadow"><div class="fs-card" id="fs-card"></div></div></div>
+
+  <div class="drop" id="drop"><div data-i18n="drop">PDF'larni shu yerga tashlang</div></div>
+  <div class="toast" id="toast"></div>
+
+  <script src="preview-api.js"></script>
+  <script src="i18n.js"></script>
+  <script src="stats.js"></script>
+  <script src="app.js"></script>
+  <script src="test.js"></script>
+  <script src="focus.js"></script>
+  <script src="readalong.js"></script>
+  <script src="session.js"></script>
+  <script src="cards.js"></script>
+  <script src="player.js"></script>
+  <script src="settings.js"></script>
+  <script src="stats-more.js"></script>
+</body>
+</html>

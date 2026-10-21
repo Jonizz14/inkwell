@@ -1,0 +1,38 @@
+/* ── Reading statistics (shared by Mac and web) ── */
+.stats{width:min(860px,calc(100% - 40px));margin:0 auto;padding:36px 0 80px}
+.st-h{font:700 30px/1.1 var(--serif);letter-spacing:-.01em;margin:0 0 22px;color:var(--ink)}
+.st-empty{margin:-8px 0 18px;font:14px/1.5 var(--ui);color:var(--muted)}
+.st-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.st-tile{border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;min-width:0;animation:st-rise .45s cubic-bezier(.2,.8,.2,1) both}
+.st-k{font:600 11px var(--ui);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-v{font:700 26px/1.15 var(--serif);margin:8px 0 4px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-s{font:12px/1.4 var(--ui);color:var(--muted);min-height:1.4em}
+.st-extra .st-v{font-size:20px}
+.st-card{margin-top:12px;border:1px solid var(--line);border-radius:14px;padding:16px 16px 12px;animation:st-rise .45s cubic-bezier(.2,.8,.2,1) .12s both}
+.st-card-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.st-card-head h3{margin:0;font:600 14px var(--ui);color:var(--ink)}
+.st-seg{display:flex;gap:2px;padding:2px;background:var(--soft);border-radius:8px}
+.st-seg button{border:0;background:transparent;padding:4px 11px;border-radius:6px;font:12px var(--ui);color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
+.st-seg button.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.st-chart{position:relative}
+.st-chart svg{display:block;max-width:100%;height:auto;overflow:visible}
+.st-bar{fill:var(--ink);transition:opacity .15s}
+.st-zero{fill:var(--line)}
+.st-chart.hovering .st-bar{opacity:.35}
+.st-chart.hovering .st-bar.hot{opacity:1}
+.st-zero.hot{fill:var(--muted)}
+.st-hit{fill:transparent;cursor:default}
+.st-grid{stroke:var(--line);stroke-width:1}
+.st-axis{font:11px var(--ui);fill:var(--muted)}
+.st-avg{stroke:var(--ink);stroke-width:1;stroke-dasharray:3 3;opacity:.55}
+.st-avg-l{font:600 11px var(--ui);fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.st-tip{position:absolute;left:0;top:0;z-index:2;pointer-events:none;background:var(--ink);color:var(--bg);font:12px/1.45 var(--ui);padding:6px 10px;border-radius:8px;white-space:nowrap;opacity:0;transform:translate(-50%,calc(-100% - 8px));transition:opacity .12s}
+.st-tip.show{opacity:1}
+.st-table summary{cursor:pointer;margin-top:6px;font:12px var(--ui);color:var(--muted)}
+.st-table table{width:100%;border-collapse:collapse;margin-top:8px;font:12px var(--ui);color:var(--ink);font-variant-numeric:tabular-nums}
+.st-table th{text-align:left;font-weight:600;color:var(--muted);padding:6px 4px;border-bottom:1px solid var(--line)}
+.st-table td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.st-extra{margin-top:12px}
+.st-note{margin:18px 0 0;font:12px/1.55 var(--ui);color:var(--muted)}
+@keyframes st-rise{from{opacity:0;transform:translateY(8px)}}
+@media (max-width:720px){.st-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.stats{padding-top:24px}}

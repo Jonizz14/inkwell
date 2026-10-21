@@ -1,0 +1,54 @@
+/* ── More statistics (stats-more.js, Mac only) ──
+   The same cards, grid and ink as stats.css; magnitude in the heat map is one hue from light
+   to dark, the vocabulary split is three steps of the same ink, each named underneath. */
+.sx { margin-top: 8px; }
+.sx-h { margin: 34px 0 12px; font: 600 21px/1.2 var(--serif); color: var(--ink); letter-spacing: -0.01em; }
+.sx-empty { margin: 12px 0 0; }
+.sx-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.sx-card { animation-name: st-rise; }
+
+.sx-cell { fill: var(--line); }
+.sx-cell.l1 { fill: color-mix(in srgb, var(--ink) 28%, var(--bg)); }
+.sx-cell.l2 { fill: color-mix(in srgb, var(--ink) 50%, var(--bg)); }
+.sx-cell.l3 { fill: color-mix(in srgb, var(--ink) 74%, var(--bg)); }
+.sx-cell.l4 { fill: var(--ink); }
+.st-chart.hovering .sx-cell { opacity: 0.45; }
+.st-chart.hovering .sx-cell.hot { opacity: 1; stroke: var(--bg); stroke-width: 2px; paint-order: stroke; }
+.sx-legend { display: flex; align-items: center; gap: 3px; font: 11px var(--ui); color: var(--muted); }
+.sx-legend span { margin: 0 4px; }
+.sx-legend i { width: 11px; height: 11px; border-radius: 3px; background: var(--line); }
+.sx-legend i.l1 { background: color-mix(in srgb, var(--ink) 28%, var(--bg)); }
+.sx-legend i.l2 { background: color-mix(in srgb, var(--ink) 50%, var(--bg)); }
+.sx-legend i.l3 { background: color-mix(in srgb, var(--ink) 74%, var(--bg)); }
+.sx-legend i.l4 { background: var(--ink); }
+
+.sx-line { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.sx-area { fill: color-mix(in srgb, var(--ink) 7%, transparent); }
+.sx-cross { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; }
+.sx-dot { fill: var(--ink); stroke: var(--bg); stroke-width: 2; opacity: 0; }
+.st-chart.crossing .sx-cross, .st-chart.crossing .sx-dot { opacity: 1; }
+
+.sx-due { font: 12px var(--ui); color: var(--muted); }
+.sx-split { display: flex; gap: 2px; height: 14px; margin: 6px 0 12px; border-radius: 7px; overflow: hidden; }
+.sx-split i { min-width: 4px; }
+.sx-fresh { background: color-mix(in srgb, var(--ink) 22%, var(--bg)); }
+.sx-learning { background: color-mix(in srgb, var(--ink) 55%, var(--bg)); }
+.sx-learned { background: var(--ink); }
+.sx-split-l { display: flex; flex-wrap: wrap; gap: 8px 22px; font: 13px var(--ui); color: var(--ink-2); }
+.sx-split-l > span { display: inline-flex; align-items: center; gap: 7px; }
+.sx-split-l > span > i { width: 10px; height: 10px; border-radius: 3px; }
+.sx-split-l > span > b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.sx-split-l > span > small { color: var(--muted); }
+@media (max-width: 720px) { .sx-pair { grid-template-columns: 1fr; } }
+
+/* rolling numbers (stats-more.js odometer): each digit is a column 0–9–0 clipped to one row
+   (--odh, the line height of the text around it); a Web Animation spins it down to its digit.
+   .od-z is the digit itself, see-through, giving the column its width. */
+.st-v { --odh: 1.15em; }
+.sx-split-l b { --odh: 1.25em; line-height: 1.25em; }
+.od { position: relative; display: inline-block; overflow: hidden; vertical-align: bottom; height: var(--odh); line-height: var(--odh); }
+/* the real digit stays in the text (transparent) so copying the value gives the value, not the column */
+.od-z { color: transparent; }
+/* waits on 0 until it is on screen, so the value never shows first and then jumps back */
+.od-s { position: absolute; left: 0; right: 0; top: 0; display: block; text-align: center; user-select: none; pointer-events: none; }
+.od-s > span { display: block; height: var(--odh); line-height: var(--odh); }
