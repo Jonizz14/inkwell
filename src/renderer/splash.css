@@ -1,8 +1,7 @@
 /* ── Launch card (splash.js) ──
-   One continuous piece: the digits roll up into "365" with a little blur while they move, the
-   letters of "Articles" rise out of a blur one after another, a hairline draws out from the
-   middle, the greeting comes in last. Leaving, it all melts through a blur in place. Only
-   transform, opacity and filter move, so it stays on the compositor. */
+   A pen drawing: the book in one line with the nib at its tip, a few lines written on the pages,
+   one of them marked, a bookmark dropped in; then the name comes out of a blur and is underlined
+   by hand. Ink on paper in the app's own two colours. Leaving, it all melts through a blur. */
 #splash {
   --sp-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: fixed;
@@ -17,48 +16,33 @@
 }
 .sp-mark { display: flex; flex-direction: column; align-items: center; transition: opacity 560ms var(--sp-ease), filter 640ms var(--sp-ease), transform 760ms var(--sp-ease); }
 
-/* "365": three windows onto a column of numbers */
-.sp-num { display: flex; font: 600 92px/1 var(--serif); letter-spacing: -0.02em; font-variant-numeric: tabular-nums lining-nums; }
-.sp-d {
-  display: block;
-  height: 1.4em;
-  padding-top: 0.2em;
-  box-sizing: border-box;
-  margin: -0.2em 0;
-  overflow: hidden;
-  /* the numbers fade out past the window's edges, like a picker wheel; the digit at rest is whole */
-  -webkit-mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
-  mask-image: linear-gradient(transparent, #000 15%, #000 85%, transparent);
-}
-/* the numbers it rolled past go once it has stopped */
-.sp-d i:not(:last-child) { animation: sp-past 500ms var(--sp-ease) forwards 1500ms; }
-@keyframes sp-past { to { opacity: 0; } }
-.sp-d > span { display: flex; flex-direction: column; transform: translateY(calc(var(--n) * -1em)); animation: sp-roll 1500ms var(--sp-ease) both; }
-.sp-d i { display: block; height: 1em; font-style: normal; text-align: center; }
-.sp-d:nth-child(2) > span { animation-delay: 110ms; animation-duration: 1650ms; }
-.sp-d:nth-child(3) > span { animation-delay: 220ms; animation-duration: 1800ms; }
-@keyframes sp-roll {
-  0% { transform: translateY(0); filter: blur(5px); opacity: 0; }
-  12% { opacity: 1; }
-  70% { filter: blur(0.6px); }
-  100% { transform: translateY(calc(var(--n) * -1em)); filter: blur(0); opacity: 1; }
-}
+/* the drawing */
+.sp-art { width: 300px; height: 200px; overflow: visible; }
+.sp-ink { opacity: 0.55; stroke: var(--ink); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.sp-ink.sp-book { stroke-width: 1.7; opacity: 1; }
+.sp-pen { fill: var(--ink); opacity: 0; transition: opacity 180ms ease; }
+.sp-pen.on { opacity: 1; }
+/* a marker stroke behind the second line on the right page, like a highlight in the reader */
+.sp-hl { stroke: var(--ink); stroke-width: 7; stroke-linecap: butt; opacity: 0.14; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sp-stroke 520ms var(--sp-ease) forwards 2650ms; }
+/* the bookmark slips down into the top of the right page */
+.sp-ribbon { fill: var(--ink); opacity: 0; transform: translateY(-14px); clip-path: inset(0 0 0 0); animation: sp-drop 700ms var(--sp-ease) forwards 2550ms; }
+@keyframes sp-drop { to { opacity: 0.85; transform: none; } }
+@keyframes sp-stroke { to { stroke-dashoffset: 0; } }
 
-/* "Articles" */
-.sp-word { margin-top: 10px; display: flex; font: 500 30px/1.1 var(--serif); letter-spacing: 0.01em; }
-.sp-word span { display: block; animation: sp-letter 900ms var(--sp-ease) both; animation-delay: calc(900ms + var(--i) * 45ms); }
-@keyframes sp-letter { from { opacity: 0; transform: translateY(10px); filter: blur(8px); } }
+/* the name */
+.sp-word { margin-top: 8px; display: flex; font: 600 34px/1.1 var(--serif); letter-spacing: -0.01em; }
+.sp-word span { display: block; animation: sp-letter 820ms var(--sp-ease) both; animation-delay: calc(2900ms + var(--i) * 38ms); }
+@keyframes sp-letter { from { opacity: 0; transform: translateY(8px); filter: blur(8px); } }
+.sp-under { width: 210px; height: 14px; margin-top: 2px; overflow: visible; }
+.sp-under path { stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; opacity: 0.6; stroke-dasharray: 1; stroke-dashoffset: 1; animation: sp-stroke 700ms cubic-bezier(0.65, 0, 0.35, 1) forwards 3350ms; }
 
-/* the hairline, drawn out from the middle */
-.sp-line { display: block; width: 168px; height: 1px; margin: 22px 0 18px; background: var(--ink); opacity: 0.28; transform: scaleX(0); animation: sp-line 1100ms var(--sp-ease) 1500ms forwards; }
-@keyframes sp-line { to { transform: scaleX(1); } }
-
-.sp-sub { font: 13px/1.4 var(--ui); color: var(--muted); letter-spacing: 0.01em; animation: sp-letter 900ms var(--sp-ease) both 1900ms; }
+.sp-sub { margin-top: 16px; font: 13px/1.4 var(--ui); color: var(--muted); letter-spacing: 0.01em; animation: sp-letter 820ms var(--sp-ease) both 3550ms; }
 
 /* leaving: everything blurs away where it is, then the card itself goes */
 #splash.out { opacity: 0; pointer-events: none; }
 #splash.out .sp-mark { opacity: 0; filter: blur(14px); transform: scale(0.985); }
 
-/* reduced motion: just the mark, then a plain fade */
-#splash.still *, #splash.still .sp-d > span { animation: none !important; }
-#splash.still .sp-line { transform: none; }
+/* reduced motion: the finished drawing, then a plain fade */
+#splash.still *, #splash.still .sp-hl, #splash.still .sp-under path { animation: none !important; }
+#splash.still .sp-ink, #splash.still .sp-hl, #splash.still .sp-under path { stroke-dashoffset: 0; }
+#splash.still .sp-ribbon { opacity: 0.85; transform: none; }
