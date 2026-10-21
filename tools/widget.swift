@@ -93,9 +93,9 @@ struct Entry: TimelineEntry {
 }
 
 let sample = Info(
-  streak: 12, best: 12, doneToday: true, todayMin: 11, due: 4, word: "resilient", tr: "chidamli",
-  words: [Word(w: "resilient", tr: "chidamli"), Word(w: "to wane", tr: "susaymoq"), Word(w: "scarce", tr: "kam, tanqis")],
-  vocab: 214, id: nil, title: "A Sample Article", pct: 63, left: 4, goal: 15,
+  streak: 12, best: 12, doneToday: true, todayMin: 11, due: 4, word: "hypnosis", tr: "гипноз",
+  words: [Word(w: "hypnosis", tr: "гипноз"), Word(w: "resilient", tr: "chidamli"), Word(w: "to wane", tr: "susaymoq"), Word(w: "scarce", tr: "kam, tanqis")],
+  vocab: 214, id: nil, title: "What You Need to Know About Hypnosis", pct: 63, left: 4, goal: 15,
   week: [true, true, false, true, true, true, true], mins: [14, 22, 0, 9, 31, 18, 11],
   heat: [5, 0, 12, 20, 8, 0, 0, 15, 22, 30, 4, 0, 18, 9, 14, 22, 0, 9, 31, 18, 11, 25, 0, 7, 16, 28, 19, 11],
   focus: FocusInfo(min: 25, sessions: 1, away: 2, week: [0, 25, 0, 45, 10, 25, 25])
@@ -184,10 +184,12 @@ func link(_ s: String) -> URL { URL(string: "articles365://\(s)")! }
 
 let orange = Color(red: 1.0, green: 0.42, blue: 0.23)
 let amber = Color(red: 1.0, green: 0.62, blue: 0.26)
-let calm = Color(red: 0.36, green: 0.55, blue: 0.95) // focus
-let calm2 = Color(red: 0.55, green: 0.45, blue: 0.95)
-let leaf = Color(red: 0.27, green: 0.72, blue: 0.5) // goal
-let leaf2 = Color(red: 0.55, green: 0.82, blue: 0.36)
+// one warm family, a hue each: the streak and the words in orange, focus in candle-light honey,
+// the daily goal in coral — like the flame, nothing green or blue next to it
+let calm = Color(red: 0.97, green: 0.66, blue: 0.18) // focus: honey
+let calm2 = Color(red: 1.0, green: 0.80, blue: 0.38)
+let leaf = Color(red: 1.0, green: 0.42, blue: 0.40) // goal: coral
+let leaf2 = Color(red: 1.0, green: 0.62, blue: 0.47)
 let fire = LinearGradient(colors: [amber, orange], startPoint: .top, endPoint: .bottom)
 
 struct Flame: View {
@@ -471,7 +473,7 @@ struct FocusIdle: View {
         Image(systemName: "play.fill").font(.system(size: 9, weight: .bold))
         Text(L(i, "fStart")).font(.system(size: 11.5, weight: .semibold)).lineLimit(1)
       }
-      .foregroundStyle(.white)
+      .foregroundStyle(Color(red: 0.22, green: 0.12, blue: 0.02)) // dark on honey reads better than white
       .padding(.horizontal, 10)
       .frame(height: 24)
       .background(Capsule().fill(LinearGradient(colors: [calm2, calm], startPoint: .leading, endPoint: .trailing)))
