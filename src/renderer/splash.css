@@ -24,6 +24,8 @@
 .sp-line::after { content: ''; position: absolute; inset: 0; background: var(--ink); transform: scaleX(0); transform-origin: left; animation: sp-fill 1700ms cubic-bezier(0.65, 0, 0.35, 1) forwards 450ms; }
 @keyframes sp-fill { to { transform: scaleX(1); } }
 
+.sp-hi { margin-top: 18px; font: 15px/1.4 var(--ui); color: var(--ink-2); animation: sp-letter 800ms var(--sp-ease) both 1100ms; }
+
 #splash.out { opacity: 0; pointer-events: none; }
 #splash.out .sp-mark { opacity: 0; filter: blur(12px); }
 

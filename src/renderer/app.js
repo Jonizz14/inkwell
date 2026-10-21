@@ -1527,6 +1527,10 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   applyTheme(state.notes.settings.theme || (darkMq.matches ? 'dark' : 'light'));
   state.inboxPath = await api.inboxPath();
   setLang(state.notes.settings.lang || 'uz');
+  try {
+    const nm = state.notes.settings.name; // the launch card greets by it (splash.js)
+    nm ? localStorage.setItem('a365.name', nm) : localStorage.removeItem('a365.name');
+  } catch {}
   if (typeof Session !== 'undefined') Session.clear();
   Stats.init({ notes: () => state.notes, list: () => state.list, reading: () => state.view === 'reader' && document.hasFocus(), save });
   if (typeof Guardian !== 'undefined') Guardian.prepare();
@@ -1536,7 +1540,10 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   // a reminder notification was clicked: go where it pointed
   api.onRemindOpen(openTarget);
   openTarget(await api.remindTarget());
-  if (typeof Splash !== 'undefined') Splash.ready();
+  // the launch card goes once the app is up; a broken card must never keep the app from starting
+  try {
+    Splash.ready();
+  } catch {}
 })();
 
 function openTarget(t) {

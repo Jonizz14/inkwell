@@ -146,6 +146,12 @@
 }
 .pv-flame svg { width: 30px; height: 30px; }
 .pv-flame i { position: absolute; top: 19px; left: 0; right: 0; text-align: center; font: 800 12px var(--ui); font-style: normal; color: #ff5e3a; }
+.set-text {
+  width: 200px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-2);
+  background: var(--surface); color: var(--ink); font: 13px var(--ui);
+}
+.set-text::placeholder { color: var(--faint, var(--muted)); }
+.set-text:focus { outline: none; box-shadow: 0 0 0 3px var(--ring); }
 .set-time {
   height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line-2);
   background: var(--surface); color: var(--ink); font: 500 13px var(--ui); font-variant-numeric: tabular-nums;

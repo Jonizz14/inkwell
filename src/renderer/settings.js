@@ -10,6 +10,7 @@ const Settings = (() => {
     'set.kg.read': "O'qish", 'set.k.note': 'Abzasga xulosa (fokusda)', 'set.kg.menu': 'Menyu', 'set.kg.app': 'Ilova',
     'set.k.menu': 'Menyuni ochish', 'set.k.size0': "Asl o'lcham (100%)", 'set.k.edit': 'Tahrir rejimi',
     'set.k.pdf': 'Asl PDF', 'set.k.ai': 'AI menyusi', 'set.k.aicopy': 'Hammasini AI uchun nusxalash',
+    'set.name': 'Ismingiz', 'set.name.d': 'Ilova ochilganda sizni shu ism bilan kutib oladi', 'set.name.ph': 'Ism',
     'set.k.hint': "Tugma ustiga olib boring — yuqoridagi ilova o'sha tugmani o'zi bosadi", 'set.k.noteText': 'Asosiy fikr: muallif buni misol bilan tushuntiryapti.',
     'set.kd.focus': "Bitta abzas aniq, qolgani xira", 'set.kd.session': "Taymerli chuqur fokus", 'set.kd.vocab': "Saqlangan so'zlar paneli", 'set.kd.note': "Fokusdagi abzas ostiga yozish", 'set.kd.music': "Fon pleyeri", 'set.kd.ra': "Abzasni ovoz bilan o'qiydi", 'set.kd.test': "Maqola bo'yicha savollar", 'set.kd.edit': "Matnni joyida tuzatish", 'set.kd.menu': "Kam ishlatiladigan asboblar", 'set.kd.size': "Kattaroq / kichikroq matn", 'set.kd.size0': "⌘+ / ⌘− ni bekor qiladi", 'set.kd.theme': "Yorug' / qorong'i", 'set.kd.pdf': "Maqolaning asl nusxasi", 'set.kd.ai': "Maqolani AI'da ochish", 'set.kd.aicopy': "Matn va savollar buferga", 'set.kd.search': "Kutubxonadan maqola topish", 'set.kd.set': "Shu sahifa", 'set.kd.back': "Oldingi ekranga",
     'set.title': 'Sozlamalar',
@@ -84,6 +85,7 @@ const Settings = (() => {
     'set.kg.read': 'Reading', 'set.k.note': 'Note on the paragraph (in focus)', 'set.kg.menu': 'Menu', 'set.kg.app': 'App',
     'set.k.menu': 'Open the Menu', 'set.k.size0': 'Actual size (100%)', 'set.k.edit': 'Edit mode',
     'set.k.pdf': 'Original PDF', 'set.k.ai': 'AI menu', 'set.k.aicopy': 'Copy everything for AI',
+    'set.name': 'Your name', 'set.name.d': 'The app greets you by it when it opens', 'set.name.ph': 'Name',
     'set.k.hint': 'Hover a shortcut — the app above presses it for real', 'set.k.noteText': 'Main idea: the author shows it with an example.',
     'set.kd.focus': "One paragraph sharp, the rest dimmed", 'set.kd.session': "Timed deep focus", 'set.kd.vocab': "Saved words panel", 'set.kd.note': "Write under the focused paragraph", 'set.kd.music': "Background player", 'set.kd.ra': "Reads the paragraph out loud", 'set.kd.test': "Questions on the article", 'set.kd.edit': "Fix the text in place", 'set.kd.menu': "Less-used tools", 'set.kd.size': "Bigger / smaller text", 'set.kd.size0': "Undoes ⌘+ / ⌘−", 'set.kd.theme': "Light / dark", 'set.kd.pdf': "The original article", 'set.kd.ai': "Open the article in an AI", 'set.kd.aicopy': "Text and questions to clipboard", 'set.kd.search': "Find an article in the library", 'set.kd.set': "This page", 'set.kd.back': "Previous screen",
     'set.title': 'Settings',
@@ -158,6 +160,7 @@ const Settings = (() => {
     'set.kg.read': 'Чтение', 'set.k.note': 'Вывод к абзацу (в фокусе)', 'set.kg.menu': 'Меню', 'set.kg.app': 'Приложение',
     'set.k.menu': 'Открыть меню', 'set.k.size0': 'Исходный размер (100%)', 'set.k.edit': 'Режим правки',
     'set.k.pdf': 'Исходный PDF', 'set.k.ai': 'Меню AI', 'set.k.aicopy': 'Скопировать всё для AI',
+    'set.name': 'Ваше имя', 'set.name.d': 'Приложение поприветствует вас по имени при запуске', 'set.name.ph': 'Имя',
     'set.k.hint': 'Наведите на клавишу — приложение выше нажмёт её по-настоящему', 'set.k.noteText': 'Главная мысль: автор объясняет это на примере.',
     'set.kd.focus': "Один абзац чёткий, остальное приглушено", 'set.kd.session': "Глубокий фокус с таймером", 'set.kd.vocab': "Панель сохранённых слов", 'set.kd.note': "Заметка под абзацем в фокусе", 'set.kd.music': "Фоновый плеер", 'set.kd.ra': "Читает абзац вслух", 'set.kd.test': "Вопросы по статье", 'set.kd.edit': "Править текст на месте", 'set.kd.menu': "Редко нужные инструменты", 'set.kd.size': "Крупнее / мельче", 'set.kd.size0': "Отменяет ⌘+ / ⌘−", 'set.kd.theme': "Светлая / тёмная", 'set.kd.pdf': "Оригинал статьи", 'set.kd.ai': "Открыть статью в AI", 'set.kd.aicopy': "Текст и вопросы в буфер", 'set.kd.search': "Найти статью в библиотеке", 'set.kd.set': "Эта страница", 'set.kd.back': "Предыдущий экран",
     'set.title': 'Настройки',
@@ -589,6 +592,7 @@ const Settings = (() => {
         lookPv(),
         row(t('set.theme'), themeCards(themeNow()), t('set.theme.d')),
         row(t('set.lang'), seg('lang', [['uz', "O'zbek"], ['en', 'English'], ['ru', 'Русский']], lang)),
+        row(t('set.name'), `<input class="set-text" data-k="name" maxlength="40" spellcheck="false" autocomplete="off" placeholder="${esc(t('set.name.ph'))}" value="${esc(S().name || '')}" />`, t('set.name.d')),
       ], 0)
       + group(t('set.read'), [
         `<div class="set-preview"><p>${esc(t('set.preview')).replace('focused', '<mark class="word">focused</mark>').replace('consciously', '<mark class="hl">consciously</mark>')}</p></div>`,
@@ -676,6 +680,17 @@ const Settings = (() => {
   });
 
   root.addEventListener('input', (e) => {
+    // the name the launch card greets with (splash.js reads the copy in localStorage)
+    if (e.target.matches('input[data-k="name"]')) {
+      const v = e.target.value.trim();
+      if (v) S().name = v;
+      else delete S().name;
+      save();
+      try {
+        v ? localStorage.setItem('a365.name', v) : localStorage.removeItem('a365.name');
+      } catch {}
+      return;
+    }
     const inp = e.target.closest('input[type="range"]');
     if (!inp) return;
     const k = inp.dataset.k;
