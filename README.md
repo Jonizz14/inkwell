@@ -40,7 +40,7 @@ The installer isn't code-signed, so SmartScreen may warn you: choose *More info 
 Download the `.dmg` from [Releases](../../releases). Or build it on your Mac (needs Node.js 20+ and the Xcode command line tools):
 
 ```bash
-git clone https://github.com/<you>/365-articles-reader.git
+git clone https://github.com/Jonizz14/365-articles-reader.git
 cd 365-articles-reader
 npm run install:mac
 ```
