@@ -1,0 +1,22 @@
+name: Accessibility barrier
+description: Something in Inkwell is hard or impossible to use for you
+labels: [accessibility]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What were you trying to do, and what got in the way?
+    validations:
+      required: true
+  - type: input
+    id: at
+    attributes:
+      label: Assistive technology (if any)
+      placeholder: VoiceOver, NVDA, zoom, keyboard only …
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options: [macOS, Windows]
+    validations:
+      required: true

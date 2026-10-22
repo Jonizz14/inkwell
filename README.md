@@ -23,12 +23,12 @@ Runs on **macOS** and **Windows**. Works with no internet connection or account,
 | **Deep-focus session** (`S`) | A timer card with breaks. Every session is logged in the statistics |
 | **Flashcards & test** | Review saved words. Paste a test and answer it beside the text |
 | **AI export** | One shortcut copies the text, your notes and vocabulary as a ready prompt for any AI chat |
-| **Statistics** | Streak, minutes, words read, goals |
+| **Statistics** | Streak with a flame, rings for today's goal, facts and records, focus and vocabulary charts. **Day and week recaps** play as full-window slides |
 | **Reminders** | Daily notifications at your usual reading time (launchd on macOS, Task Scheduler on Windows) |
 | **Music** | A small background player for YouTube links you add |
 | **Languages** | Uzbek, English, Russian interface |
 
-macOS-only extras: **read-along** (`R`, which follows your voice with on-device speech recognition) and **desktop widgets**.
+macOS-only extras: **read-along** (`R`, which follows your voice with on-device speech recognition), **desktop widgets** and **trackpad haptics** (soft taps as paragraphs pass in focus mode, on sliders, charts and card swipes; off in Settings).
 
 All shortcuts are listed, with a live demo, in **Settings → Shortcuts**. On Windows, read `⌘` as `Ctrl`.
 
@@ -80,6 +80,12 @@ Layout:
 - `tools/`: Swift helpers for macOS
 
 Every push to `main` builds the macOS and Windows installers in GitHub Actions and publishes them as a new release.
+
+## Contributing
+
+Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md), the
+[Code of Conduct](CODE_OF_CONDUCT.md), [SECURITY.md](SECURITY.md) for reporting vulnerabilities, and
+[ACCESSIBILITY.md](ACCESSIBILITY.md) for what works and what doesn't yet.
 
 ## License
 
