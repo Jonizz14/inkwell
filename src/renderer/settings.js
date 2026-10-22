@@ -741,6 +741,20 @@ const Settings = (() => {
 
   $('#btn-settings').addEventListener('click', open);
   $('#settings-back').addEventListener('click', backToLibrary);
+  // the live demo is a whole second copy of the app: once Settings has slid away, it's let go
+  // (open() builds a fresh one), instead of running unseen behind the library
+  let dropT = 0;
+  new MutationObserver(() => {
+    clearTimeout(dropT);
+    if ($('#settings').classList.contains('is-active')) return;
+    dropT = setTimeout(() => {
+      if (state.view === 'settings') return;
+      looping = false;
+      clearTimeout(resumeT);
+      const f = $('.kv-live iframe', root);
+      if (f) f.remove();
+    }, 700);
+  }).observe($('#settings'), { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === ',') {
       e.preventDefault();

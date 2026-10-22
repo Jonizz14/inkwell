@@ -109,7 +109,12 @@
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const escH = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const num = (n) => new Intl.NumberFormat(lang).format(Math.round(n));
-  const fmtDay = (d, opts = { weekday: 'short', day: 'numeric', month: 'short' }) => new Intl.DateTimeFormat(lang, opts).format(d);
+  const fmts = new Map();
+  const fmtDay = (d, opts = { weekday: 'short', day: 'numeric', month: 'short' }) => {
+    const k = lang + JSON.stringify(opts);
+    if (!fmts.has(k)) fmts.set(k, new Intl.DateTimeFormat(lang, opts));
+    return fmts.get(k).format(d);
+  };
   const dur = (sec) => {
     const m = Math.round(sec / 60);
     return m < 60 ? t('st.min', m) : t('st.hm', Math.floor(m / 60), m % 60);
@@ -384,7 +389,13 @@
 
   function draw(d) {
     if (!root || !root.isConnected) return;
-    const W = (id) => Math.max(260, root.querySelector('#' + id).clientWidth || 600);
+    // every width is read before any chart is written: one layout instead of one per chart
+    const widths = {};
+    for (const id of ['sx-focus', 'sx-fhours', 'sx-hours', 'sx-week', 'sx-heat', 'sx-growth']) {
+      const el = root.querySelector('#' + id);
+      widths[id] = Math.max(260, (el && el.clientWidth) || 600);
+    }
+    const W = (id) => widths[id];
     const put = (id, svg, tipOf) => {
       const box = root.querySelector('#' + id);
       box.innerHTML = svg + '<div class="st-tip"></div>';
@@ -423,7 +434,8 @@
      rest and no script runs per frame. Digits start from the right, a little apart; a value
      scrolled out of sight starts when it comes in. */
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
-  const COL = '<span class="od-s">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => `<span>${n}</span>`).join('') + '</span>';
+  // one block of text, a digit per line (a span per digit made ~11 elements for every digit)
+  const COL = '<span class="od-s">0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0</span>';
   let io = null;
   function odometer(host, sel = '.st-v, .sx-split-l b') {
     if (reduce.matches) return;

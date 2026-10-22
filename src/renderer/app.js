@@ -892,6 +892,7 @@ function addMarks(parts, type, fromSel) {
       const known = r.vocab.find((x) => x.word.trim().toLowerCase() === part.text.trim().toLowerCase());
       if (known) {
         if (!drawerOpen()) (setScope('article'), openDrawer());
+        flushVocab();
         const el = $(`#vocab-body .vrow[data-v="${known.id}"]`);
         if (el) (el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), markNewRow(el, 0));
         continue;
@@ -1256,19 +1257,43 @@ function vrowHtml({ v, id }, i) {
 }
 
 // enter: replay the staggered entrance (drawer opening, scope switch); otherwise refresh quietly
+// When the drawer opens, only the rows that can be on screen are built before it slides in;
+// the rest (below the fold, where nothing animates) are added once the slide is done.
+// Anything that looks a row up calls flushVocab() first, so it always finds it.
+let vocabRest = null;
+function flushVocab() {
+  if (!vocabRest) return;
+  const { html, t } = vocabRest;
+  vocabRest = null;
+  clearTimeout(t);
+  const body = $('#vocab-body');
+  const at = body.children.length;
+  body.insertAdjacentHTML('beforeend', html);
+  const added = [...body.children].slice(at);
+  added.forEach((el) => el.classList.add('below'));
+  const tas = added.map((el) => $('.vtr', el)).filter(Boolean);
+  tas.forEach((ta) => (ta.style.height = 'auto'));
+  tas.map((ta) => ta.scrollHeight).forEach((h, i) => (tas[i].style.height = h + 'px'));
+}
 function renderVocab(focusHlId, enter) {
+  if (vocabRest) (clearTimeout(vocabRest.t), (vocabRest = null));
   const rows = vocabRows();
   const body = $('#vocab-body');
   $('#drawer').classList.toggle('has-rows', rows.length > 0);
   body.classList.toggle('enter', !!enter);
-  body.innerHTML = rows.map(vrowHtml).join('');
+  const html = rows.map(vrowHtml);
+  const first = enter && !focusHlId ? Math.ceil(innerHeight / 48) + 8 : html.length;
+  body.innerHTML = html.slice(0, first).join('');
+  if (html.length > first) vocabRest = { html: html.slice(first).join(''), t: setTimeout(flushVocab, 600) };
   // all writes, then all reads, then all writes: one layout for the whole list, not one per row
   const tas = $$('#vocab-body .vtr');
   tas.forEach((ta) => (ta.style.height = 'auto'));
   tas.map((ta) => ta.scrollHeight).forEach((h, i) => (tas[i].style.height = h + 'px'));
   if (enter) {
     const fold = body.getBoundingClientRect().top + body.clientHeight;
-    for (const el of body.children) if (el.getBoundingClientRect().top > fold) el.classList.add('below');
+    // every row is measured before any is marked: one layout, not one per row
+    const below = [...body.children].filter((el) => el.getBoundingClientRect().top > fold);
+    below.forEach((el) => el.classList.add('below'));
   }
   if (focusHlId) {
     const row = rows.find((r) => r.v.hlId === focusHlId);
@@ -1282,6 +1307,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 // A freshly added word drops in at the top of the open list: the row grows from zero
 // height (pushing the others down) while it fades in from a light blur.
 function prependVocab(hlId) {
+  flushVocab();
   const rows = vocabRows();
   const row = rows.find((r) => r.v.hlId === hlId);
   if (!row) return renderVocab();
@@ -1314,6 +1340,7 @@ function markNewRow(el, delay) {
 
 // collapse a row smoothly and drop it from the list
 function removeVocabRow(vId) {
+  flushVocab();
   const el = $(`#vocab-body .vrow[data-v="${vId}"]`);
   if (!el) return;
   const done = () => {

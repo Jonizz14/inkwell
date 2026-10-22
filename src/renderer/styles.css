@@ -142,12 +142,19 @@ code { font: 12px "SF Mono", Menlo, monospace; background: var(--soft); padding:
   visibility: hidden;
   will-change: transform;
   backface-visibility: hidden;
-  transition: transform var(--push), visibility 0s linear 520ms;
+  /* once a page has slid away, the browser skips it completely (no style, layout or paint
+     until it comes back, and it comes back from its cached state); it switches together with
+     visibility, after the slide, so both pages are drawn for the whole push */
+  content-visibility: hidden;
+  transition: transform var(--push), visibility 0s linear 520ms, content-visibility 0s linear 520ms;
+  transition-behavior: allow-discrete;
 }
 .view.is-active {
   visibility: visible;
+  content-visibility: visible;
   transform: none;
-  transition: transform var(--push), visibility 0s;
+  transition: transform var(--push), visibility 0s, content-visibility 0s;
+  transition-behavior: allow-discrete;
 }
 #library:not(.is-active) { transform: translate3d(-28%, 0, 0); }
 #reader, #stats, #cards, #settings { z-index: 2; transform: translate3d(100%, 0, 0); box-shadow: -1px 0 0 var(--line), -24px 0 48px rgba(0, 0, 0, 0.12); }

@@ -134,14 +134,20 @@
   const dateOf = (k) => new Date(k + 'T00:00');
 
   // a flame: an outer tongue and an inner one, each flickering on its own beat
-  const FLAME = `<svg class="hx-flame" viewBox="0 0 24 30" aria-hidden="true">
-    <defs>
-      <linearGradient id="hx-fo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3b00"/><stop offset=".55" stop-color="#ff7a00"/><stop offset="1" stop-color="#ffb300"/></linearGradient>
-      <linearGradient id="hx-fi" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#fff4c2"/></linearGradient>
-    </defs>
-    <g class="hx-fo"><path d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z" fill="url(#hx-fo)"/></g>
-    <g class="hx-fi"><path d="M12 13.2c1.9 1.9 3.3 3.6 3.3 5.9a3.3 3.3 0 0 1-6.6 0c0-1.8 1-3 2-4 .1 1.3.6 2 1.3 2.2-.1-1.5-.2-2.7 0-4.1z" fill="url(#hx-fi)"/></g>
-  </svg>`;
+  // a flame: an outer tongue and an inner one, each breathing on its own beat. Each tongue is
+  // its own HTML layer holding its own SVG, so the motion runs on the compositor (a transform on
+  // an SVG <g> would repaint every frame on the main thread).
+  const FLAME = `<div class="hx-flame" aria-hidden="true">
+    <span class="hx-fo"><svg viewBox="0 0 24 30">
+      <defs><linearGradient id="hx-fo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3b00"/><stop offset=".55" stop-color="#ff7a00"/><stop offset="1" stop-color="#ffb300"/></linearGradient></defs>
+      <path class="hx-glow" d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z"/>
+      <path d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z" fill="url(#hx-fo)"/>
+    </svg></span>
+    <span class="hx-fi"><svg viewBox="0 0 24 30">
+      <defs><linearGradient id="hx-fi" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#fff4c2"/></linearGradient></defs>
+      <path d="M12 13.2c1.9 1.9 3.3 3.6 3.3 5.9a3.3 3.3 0 0 1-6.6 0c0-1.8 1-3 2-4 .1 1.3.6 2 1.3 2.2-.1-1.5-.2-2.7 0-4.1z" fill="url(#hx-fi)"/>
+    </svg></span>
+  </div>`;
   const mini = (on) => `<svg class="hx-mini${on ? ' on' : ''}" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z"/></svg>`;
 
   function data() {
@@ -302,7 +308,12 @@
     if (!host) return;
     const d = data();
     const h = host.querySelector('.st-h');
-    if (h && !host.querySelector('.hx-hero')) h.insertAdjacentHTML('afterend', hero(d));
+    if (h && !host.querySelector('.hx-hero')) {
+      h.insertAdjacentHTML('afterend', hero(d));
+      // scrolled out of sight, the flame rests (and carries on when it comes back)
+      const card = host.querySelector('.hx-streak');
+      new IntersectionObserver(([e]) => card.classList.toggle('away', !e.isIntersecting)).observe(card);
+    }
     const sx = host.querySelector('.sx');
     if (sx && !host.querySelector('.hx-more')) sx.insertAdjacentHTML('beforebegin', `<div class="hx-more">${facts(d)}${records(d)}</div>`);
     // the streak is in the hero already: the tile row under it shows the week instead

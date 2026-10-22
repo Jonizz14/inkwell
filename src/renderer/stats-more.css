@@ -50,5 +50,4 @@
 /* the real digit stays in the text (transparent) so copying the value gives the value, not the column */
 .od-z { color: transparent; }
 /* waits on 0 until it is on screen, so the value never shows first and then jumps back */
-.od-s { position: absolute; left: 0; right: 0; top: 0; display: block; text-align: center; user-select: none; pointer-events: none; }
-.od-s > span { display: block; height: var(--odh); line-height: var(--odh); }
+.od-s { position: absolute; left: 0; right: 0; top: 0; display: block; text-align: center; white-space: pre; line-height: var(--odh); user-select: none; pointer-events: none; }
