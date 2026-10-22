@@ -251,12 +251,17 @@ window.addEventListener('dragenter', (e) => {
 window.addEventListener('dragleave', () => {
   if (--dragDepth <= 0) ((dragDepth = 0), $('#drop').classList.remove('show'));
 });
-window.addEventListener('dragover', (e) => e.preventDefault());
+window.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  // Windows shows a "no" cursor and drops nothing unless the drop says it copies
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+});
 window.addEventListener('drop', async (e) => {
   e.preventDefault();
   dragDepth = 0;
   $('#drop').classList.remove('show');
   if (!e.dataTransfer.files.length) return;
+  // a drag of a .pdf (or a folder of them) from anywhere: Explorer, Finder, the desktop
   afterImport(await api.importFiles(e.dataTransfer.files));
 });
 

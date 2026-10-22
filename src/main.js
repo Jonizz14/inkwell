@@ -236,7 +236,11 @@ ipcMain.handle('library:dir', () => LIB());
 ipcMain.handle('library:pick', async () => {
   const r = await dialog.showOpenDialog(win, {
     title: 'PDF maqolalarni tanlang',
-    properties: ['openFile', 'openDirectory', 'multiSelections'],
+    defaultPath: app.getPath('documents'),
+    // Windows (and Linux) can't pick files and folders in one dialog: asked for both, they show a
+    // folder picker only, so PDFs couldn't be chosen at all. There it picks files (from any
+    // folder); a whole folder can still be dragged onto the window.
+    properties: process.platform === 'darwin' ? ['openFile', 'openDirectory', 'multiSelections'] : ['openFile', 'multiSelections'],
     filters: [{ name: 'PDF', extensions: ['pdf'] }],
   });
   if (r.canceled) return null;
