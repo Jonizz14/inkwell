@@ -241,7 +241,7 @@ const Settings = (() => {
   ];
   // [opacity of far paragraphs, blur of far paragraphs]
   const BLUR = { off: [0.5, 0], soft: [0.3, 2], mid: [0.16, 4], strong: [0.08, 7] };
-  const DEF = { readFont: 'iowan', lineH: 1.72, col: 680, marks: 'both', fGrow: 22, fBlur: 'mid', duck: 50, goalMin: 15, fGuard: 'on', fFull: 'off' };
+  const DEF = { readFont: 'iowan', lineH: 1.72, col: 680, marks: 'both', fGrow: 22, fBlur: 'mid', duck: 50, goalMin: 15, fGuard: 'on', fFull: 'off', haptic: 'on' };
 
   const S = () => state.notes.settings;
   const get = (k) => (S()[k] ?? DEF[k]);
@@ -592,6 +592,7 @@ const Settings = (() => {
         lookPv(),
         row(t('set.theme'), themeCards(themeNow()), t('set.theme.d')),
         row(t('set.lang'), seg('lang', [['uz', "O'zbek"], ['en', 'English'], ['ru', 'Русский']], lang)),
+        ...(api.haptic && api.platform === 'darwin' ? [row(t('set.haptic'), seg('haptic', [['on', t('set.on')], ['off', t('set.off')]], get('haptic')), t('set.haptic.d'))] : []),
         row(t('set.name'), `<input class="set-text" data-k="name" maxlength="40" spellcheck="false" autocomplete="off" placeholder="${esc(t('set.name.ph'))}" value="${esc(S().name || '')}" />`, t('set.name.d')),
       ], 0)
       + group(t('set.read'), [
@@ -651,7 +652,14 @@ const Settings = (() => {
         $$('input[type="range"]', root).forEach(fill);
         return paintPreviews();
       }
-      return set(k, v);
+      set(k, v);
+      if (k === 'haptic') {
+        try {
+          localStorage.setItem('a365.haptic', v); // the launch card plays before the notes load
+        } catch {}
+        if (v === 'on') Haptic.level(); // so you feel what you turned on
+      }
+      return;
     }
     const a = e.target.closest('[data-act]');
     if (!a) return;
@@ -695,6 +703,7 @@ const Settings = (() => {
     if (!inp) return;
     const k = inp.dataset.k;
     const v = +inp.value;
+    v === +inp.min || v === +inp.max ? Haptic.level() : Haptic.align();
     inp.nextElementSibling.textContent = FMT[k](v);
     fill(inp);
     if (k === 'size') return setFontPct(v);

@@ -8,6 +8,7 @@ npm ci
 # Apple Vision OCR helper used for scanned pages (needs Xcode command line tools)
 mkdir -p src/bin
 swiftc -O tools/vision-ocr.swift -o src/bin/vision-ocr
+./scripts/build-haptic.sh
 # read-along: follows your voice with macOS speech recognition
 swiftc -O tools/read-along.swift -o src/bin/read-along
 npx electron-builder --mac dir --publish never

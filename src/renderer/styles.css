@@ -160,7 +160,7 @@ body.in-reader #dim { opacity: 0.18; }
 
 /* ---------- library ---------- */
 #library { overflow-y: auto; padding: 0; }
-#library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur) { width: min(860px, calc(100% - 64px)); margin-left: auto; margin-right: auto; }
+#library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur) { width: min(1000px, calc(100% - 64px)); margin-left: auto; margin-right: auto; }
 /* the header stays pinned while the list scrolls under it (top: -24px keeps
    the title clear of the window buttons once it sticks) */
 .lib-top { position: sticky; top: -24px; z-index: 20; padding-top: 56px; background: var(--bg); }
@@ -700,6 +700,11 @@ body.drawer-open #library { padding-right: var(--drawer-w); }
   body.drawer-open .scroller, body.drawer-open .bar, body.drawer-open #library { padding-right: 0; }
   .scrim { display: block; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.08); z-index: 29; opacity: 0; pointer-events: none; transition: opacity var(--t); }
   body.drawer-open .scrim { opacity: 1; pointer-events: auto; }
+}
+/* the library's 1000px column only fits beside the vocabulary on a wide screen; anywhere
+   smaller the drawer opens over the list instead of squeezing the rows and links */
+@media (max-width: 1500px) {
+  body.drawer-open #library { padding-right: 0; }
 }
 @media (max-width: 900px) {
   .ptool { left: -40px; }

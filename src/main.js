@@ -292,6 +292,19 @@ ipcMain.handle('win:fullscreen', (_e, on) => {
     win.setFullScreen(!!on);
   });
 });
+// trackpad taps (tools/haptic.swift as a Node addon); felt only while a finger is on the trackpad
+let haptic;
+ipcMain.on('haptic', (_e, k) => {
+  if (haptic === undefined) {
+    try {
+      haptic = process.platform === 'darwin' ? require(path.join(__dirname, 'bin', 'haptic.node')) : null;
+    } catch (e) {
+      console.error('haptic', e.message);
+      haptic = null;
+    }
+  }
+  if (haptic) haptic.tap(k | 0);
+});
 ipcMain.handle('clipboard:write', (_e, text) => clipboard.writeText(String(text)));
 ipcMain.handle('clipboard:read', () => clipboard.readText());
 

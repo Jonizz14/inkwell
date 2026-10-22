@@ -707,7 +707,7 @@ const Cards = (() => {
   /* ---------------- dragging / swiping ---------------- */
 
   function bindDrag(card) {
-    let x0 = 0, y0 = 0, dx = 0, drag = false, id = null;
+    let x0 = 0, y0 = 0, dx = 0, drag = false, id = null, over = false;
     card.addEventListener('pointerdown', (e) => {
       if (S.busy || e.button > 0 || e.target.closest('button, input')) return;
       id = e.pointerId;
@@ -715,6 +715,7 @@ const Cards = (() => {
       y0 = e.clientY;
       dx = 0;
       drag = false;
+      over = false;
     });
     card.addEventListener('pointermove', (e) => {
       if (e.pointerId !== id || S.mode === 'type') return;
@@ -726,6 +727,8 @@ const Cards = (() => {
         card.setPointerCapture(id);
         card.classList.add('dragging');
       }
+      const past = Math.abs(dx) > Math.min(120, card.offsetWidth * 0.28);
+      if (past !== over) (over = past) ? Haptic.level() : Haptic.align();
       card.style.transform = `translate(${dx}px, ${Math.abs(dx) * 0.04}px) rotate(${dx / 18}deg)`;
       card.style.setProperty('--tg', Math.max(0, Math.min(1, dx / 120)));
       card.style.setProperty('--tb', Math.max(0, Math.min(1, -dx / 120)));

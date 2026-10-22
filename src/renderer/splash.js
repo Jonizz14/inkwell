@@ -48,6 +48,15 @@ const Splash = (() => {
       </div>`;
     if (name) el.querySelector('.sp-hi').textContent = greeting();
     document.body.prepend(el);
+    feel();
+  }
+
+  // the trackpad plays the name (times follow splash.css): one tap per letter as it lands.
+  // Settings → Vibration off (a copy in localStorage) keeps it silent.
+  function feel() {
+    const api = window.api;
+    if (!api || !api.haptic || read('a365.haptic') === 'off' || still) return;
+    for (let i = 0; i < 7; i++) setTimeout(() => api.haptic(i === 0 ? 1 : 0), 330 + i * 40); // I n k w e l l
   }
 
   // the app has booted: leave once the drawing is done

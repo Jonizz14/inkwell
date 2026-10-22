@@ -482,8 +482,10 @@ for (const [sc, view] of [[$('#library'), $('#library')], [$('#scroller'), $('#r
 // the gap between the two thresholds keeps it from flickering as its height changes
 $('#library').addEventListener('scroll', (e) => {
   const lib = e.currentTarget;
+  const was = lib.classList.contains('compact');
   if (lib.scrollTop > 60) lib.classList.add('compact');
   else if (lib.scrollTop < 8) lib.classList.remove('compact');
+  if (was !== lib.classList.contains('compact')) Haptic.level();
 }, { passive: true });
 
 $('#btn-back').addEventListener('click', backToLibrary);

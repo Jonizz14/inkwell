@@ -26,5 +26,6 @@ contextBridge.exposeInMainWorld('api', {
   fullscreen: (on) => ipcRenderer.invoke('win:fullscreen', on),
   libDir: () => ipcRenderer.invoke('library:dir'),
   onLibraryChanged: (fn) => void ipcRenderer.on('library:changed', () => fn()),
+  haptic: (k) => ipcRenderer.send('haptic', k),
   platform: process.platform,
 });

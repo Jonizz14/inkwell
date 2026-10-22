@@ -15,7 +15,8 @@
     "install:mac": "bash scripts/install-mac.sh",
     "build:ocr": "mkdir -p src/bin && swiftc -O tools/vision-ocr.swift -o src/bin/vision-ocr",
     "build:read": "mkdir -p src/bin && swiftc -O tools/read-along.swift -o src/bin/read-along",
-    "build:mac-tools": "npm run build:ocr && npm run build:read",
+    "build:haptic": "bash scripts/build-haptic.sh",
+    "build:mac-tools": "npm run build:ocr && npm run build:read && npm run build:haptic",
     "reextract": "node scripts/reextract.mjs --apply"
   },
   "dependencies": {

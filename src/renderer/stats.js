@@ -237,11 +237,13 @@ const Stats = (() => {
     box.innerHTML = chartSvg(s, Math.max(280, box.clientWidth || 600)) + '<div class="st-tip" id="st-tip"></div>';
     const tip = box.querySelector('#st-tip');
     const svg = box.querySelector('svg');
+    let felt = -1; // a tick on the trackpad per bar the pointer passes
     const show = (e) => {
       const hit = e.target.closest && e.target.closest('.st-hit');
       box.querySelectorAll('.hot').forEach((x) => x.classList.remove('hot'));
-      if (!hit) return (tip.classList.remove('show'), box.classList.remove('hovering'));
+      if (!hit) return (tip.classList.remove('show'), box.classList.remove('hovering'), (felt = -1));
       const i = +hit.dataset.i;
+      if (i !== felt) (felt = i), Haptic.align();
       const d = s.series[i];
       const bar = box.querySelector(`.st-bar[data-i="${i}"], .st-zero[data-i="${i}"]`);
       bar.classList.add('hot');
@@ -257,6 +259,7 @@ const Stats = (() => {
     svg.addEventListener('pointermove', show);
     svg.addEventListener('pointerdown', show);
     svg.addEventListener('pointerleave', () => {
+      felt = -1;
       tip.classList.remove('show');
       box.classList.remove('hovering');
       box.querySelectorAll('.hot').forEach((x) => x.classList.remove('hot'));

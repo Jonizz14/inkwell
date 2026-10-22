@@ -425,14 +425,14 @@
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
   const COL = '<span class="od-s">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((n) => `<span>${n}</span>`).join('') + '</span>';
   let io = null;
-  function odometer(host) {
+  function odometer(host, sel = '.st-v, .sx-split-l b') {
     if (reduce.matches) return;
     io ||= new IntersectionObserver((es) => es.forEach((e) => {
       if (!e.isIntersecting) return;
       io.unobserve(e.target);
       roll(e.target);
     }), { threshold: 0.2 });
-    host.querySelectorAll('.st-v, .sx-split-l b').forEach((el, n) => {
+    host.querySelectorAll(sel).forEach((el, n) => {
       const text = el.textContent;
       if (!/\d/.test(text) || el.querySelector('.od')) return;
       const chars = [...text];
@@ -469,6 +469,7 @@
   }
 
   // under the shared statistics, every time they're drawn
+  Stats.odometer = odometer; // recap.js and stats-hero.js roll their numbers the same way
   const base = Stats.render;
   Stats.render = (target) => {
     base(target);

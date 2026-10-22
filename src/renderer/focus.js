@@ -49,7 +49,10 @@ const Focus = (() => {
   function go(i, smooth = true, byUser = true) {
     const list = paras();
     if (!list.length) return;
+    const was = idx;
     idx = Math.max(0, Math.min(list.length - 1, i));
+    if (byUser && idx !== was) Haptic.align();
+    felt = idx;
     list.forEach((el, j) => {
       el.classList.toggle('f-on', j === idx);
       el.classList.toggle('f-near', Math.abs(j - idx) === 1);
@@ -110,8 +113,23 @@ const Focus = (() => {
 
   // manual scrolling: the paragraph nearest the middle takes the focus
   let scrollT = 0;
+  // under the finger, each paragraph that crosses the middle is a soft tick on the trackpad,
+  // right as it passes (the focus itself moves once the scroll rests)
+  let felt = 0;
+  let feelRaf = 0;
+  const feel = () => {
+    feelRaf = 0;
+    const list = paras();
+    if (!list.length) return;
+    const mid = sc.getBoundingClientRect().top + sc.clientHeight / 2;
+    let j = Math.max(0, Math.min(list.length - 1, felt));
+    while (j < list.length - 1 && list[j].getBoundingClientRect().bottom < mid) j++;
+    while (j > 0 && list[j].getBoundingClientRect().top > mid) j--;
+    if (j !== felt) (felt = j), Haptic.align();
+  };
   sc.addEventListener('scroll', () => {
     if (!isOn() || auto) return;
+    if (!feelRaf) feelRaf = requestAnimationFrame(feel);
     clearTimeout(scrollT);
     scrollT = setTimeout(() => {
       const mid = sc.getBoundingClientRect().top + sc.clientHeight / 2;
