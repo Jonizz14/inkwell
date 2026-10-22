@@ -24,7 +24,7 @@ xattr -cr "/Applications/Inkwell.app" 2>/dev/null || true
 
 # Desktop shortcut (Finder alias)
 osascript -e 'tell application "Finder" to make alias file to POSIX file "/Applications/Inkwell.app" at POSIX file (POSIX path of (path to desktop folder))' >/dev/null 2>&1 \
-  || ln -sf "/Applications/Inkwell.app" "$HOME/Desktop/Inkwell"
+  || ln -sfn "/Applications/Inkwell.app" "$HOME/Desktop/Inkwell"
 
 mkdir -p "$HOME/Documents/Inkwell"
 echo
