@@ -277,6 +277,9 @@ const Settings = (() => {
     `<div class="set-range"><input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${val}" /><output>${fmt(val)}</output></div>`;
   const row = (label, ctl, desc = '') =>
     `<div class="set-row"><div class="set-l"><div>${esc(label)}</div>${desc ? `<small>${esc(desc)}</small>` : ''}</div><div class="set-c">${ctl}</div></div>`;
+  // groups an add-on puts in (Settings.add): { html({ group, row, esc }), click(e, root), input(e, root) },
+  // each handler returning true when the event was its own
+  const extras = [];
   const group = (title, rows, i) => `<section class="set-group" style="--i:${i}"><h3>${esc(title)}</h3><div class="set-card">${rows.join('')}</div></section>`;
 
   const FMT = {
@@ -619,6 +622,7 @@ const Settings = (() => {
         row(t('set.pos'), `<button class="btn outline set-btn" data-act="pos">${esc(t('set.pos.reset'))}</button>`, t('set.pos.d')),
       ], 3)
       + (api.remindSync ? group(t('set.remind'), remindRows(), 4).replace('<section class="set-group"', '<section class="set-group" data-g="remind"') : '')
+      + extras.map((x) => x.html({ group, row, esc })).join('')
       + group(t('set.keys'), keysRows(), 5).replace('<section class="set-group"', '<section class="set-group" data-g="keys"')
       + `<div class="set-foot" style="--i:6"><button class="btn ghost set-btn" data-act="reset">${esc(t('set.reset'))}</button></div>`;
 
@@ -626,6 +630,7 @@ const Settings = (() => {
   }
 
   root.addEventListener('click', (e) => {
+    if (extras.some((x) => x.click && x.click(e, root))) return;
     const th = e.target.closest('.pv-theme');
     if (th) {
       $$('.pv-theme', root).forEach((x) => x.classList.toggle('on', x === th));
@@ -689,6 +694,7 @@ const Settings = (() => {
   });
 
   root.addEventListener('input', (e) => {
+    if (extras.some((x) => x.input && x.input(e, root))) return;
     // the name the launch card greets with (splash.js reads the copy in localStorage)
     if (e.target.matches('input[data-k="name"]')) {
       const v = e.target.value.trim();
@@ -766,5 +772,5 @@ const Settings = (() => {
 
   applyI18n();
   syncRemind();
-  return { open, apply, render };
+  return { open, apply, render, add: (x) => extras.push(x) };
 })();

@@ -1,0 +1,84 @@
+/* ── Listening (listen.js) ──
+   On the shelf: library rows (date, title, thumbnail, ring). An episode opens on its own page,
+   like an article: the video and its controls on one side, a page to write on in the article's
+   type on the other. */
+
+/* the rows */
+.ls-row.done .item-title { color: var(--ink-2); }
+.ls-tick { font-size: 15px; line-height: 18px; color: var(--ink); }
+.ls-x { display: none; margin: 0 -4px 0 8px; font-style: normal; opacity: 0.7; }
+.ls-x:hover { opacity: 1; }
+#chips button.on .ls-x { display: inline; }
+
+/* the page: the video and its controls on the left stay where they are while the writing on
+   the right scrolls; narrow, the video stays at the top and the writing runs under it */
+.watch { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr); gap: 44px; align-items: start; width: min(1280px, calc(100% - 56px)); margin: 0 auto; padding: 28px 0 120px; }
+.wt-left { position: sticky; top: 24px; }
+.wt-video { position: relative; border-radius: 16px; overflow: hidden; background: var(--hover-2); box-shadow: 0 0 0 1px var(--line); }
+.wt-frame { position: relative; aspect-ratio: 16 / 9; }
+.wt-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+
+.wt-title { margin: 0 0 6px; font: 600 26px/1.22 var(--serif); letter-spacing: -0.01em; color: var(--ink); }
+.wt-meta { margin: 0; font: 13px var(--ui); color: var(--muted); }
+
+/* the time line: its own row under the video, wide and easy to grab */
+.wt-bar { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.ls-time { min-width: 38px; font: 500 12.5px var(--ui); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ls-time:last-child { text-align: right; }
+.ls-track { position: relative; flex: 1; height: 20px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
+.ls-track::after { content: ''; position: absolute; left: 0; right: 0; height: 4px; border-radius: 2px; background: var(--line-2); }
+.ls-track i { position: relative; z-index: 1; display: block; width: 100%; height: 4px; border-radius: 2px; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 260ms linear; }
+.ls-track b { position: absolute; z-index: 2; left: -7px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 3px var(--bg); transition: transform 260ms linear; }
+.ls-track.drag i, .ls-track.drag b { transition: none; }
+
+/* play in the middle of its two jumps; the speed with its name on the right */
+.wt-ctl { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.wt-sp { flex: 1; }
+.wt-skip { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 12px 0 10px; border: 0; border-radius: 18px; background: transparent; color: var(--ink); cursor: pointer; transition: background var(--t-fast) var(--ease); }
+.wt-skip:hover { background: var(--hover); }
+.wt-skip:active { transform: scale(0.94); }
+.wt-skip svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.wt-skip span { font: 600 13px var(--ui); font-variant-numeric: tabular-nums; }
+.ls-play { display: grid; place-items: center; width: 48px; height: 48px; flex: none; border: 0; border-radius: 50%; background: var(--ink); color: var(--on-ink); cursor: pointer; transition: transform 120ms var(--ease); }
+.ls-play:active { transform: scale(0.93); }
+.ls-play svg { width: 18px; height: 18px; fill: currentColor; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.ls-play .i-pause { display: none; fill: none; }
+#watch.playing .ls-play .i-play { display: none; }
+#watch.playing .ls-play .i-pause { display: block; }
+.wt-lab { font: 500 12px var(--ui); color: var(--muted); }
+.ls-rate button { height: 28px; padding: 0 9px; font-size: 12.5px; }
+
+/* subtitles as a switch, listened as a tick; the keys as a quiet hint */
+.wt-opts { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.wt-tog { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--line-2); border-radius: 16px; background: transparent; color: var(--ink-2); font: 500 12.5px var(--ui); cursor: pointer; transition: background var(--t) var(--ease), color var(--t) var(--ease), border-color var(--t) var(--ease); }
+.wt-tog:hover { color: var(--ink); border-color: var(--ink-2); }
+.wt-tog.on { color: var(--ink); background: var(--soft); border-color: transparent; }
+.wt-cc { padding: 1px 4px; border: 1.3px solid currentColor; border-radius: 4px; font: 700 9px var(--ui); letter-spacing: 0.03em; }
+.wt-sw { position: relative; width: 26px; height: 16px; border-radius: 8px; background: var(--line-2); transition: background var(--t) var(--ease); }
+.wt-sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); transition: transform 220ms var(--ease); }
+.wt-tog.on .wt-sw { background: var(--ink); }
+.wt-tog.on .wt-sw::after { transform: translateX(10px); }
+.wt-ck { display: inline-grid; place-items: center; flex: none; width: 16px; height: 16px; box-sizing: border-box; border: 1.4px solid var(--muted); border-radius: 50%; font-size: 9px; line-height: 1; color: transparent; transition: color var(--t) var(--ease), background var(--t) var(--ease); }
+.ls-done.on .wt-ck { color: var(--on-ink); background: var(--ink); border-color: var(--ink); }
+.wt-keys { font: 11.5px var(--ui); color: var(--muted); white-space: nowrap; }
+
+/* the writing: a page under the video, in the article's own type, size and spacing */
+.wt-write { margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+.wt-wh { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 10px; }
+.wt-wh h2 { margin: 0; font: 600 11px var(--ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.wt-wh span { font: 12px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+#wt-note {
+  display: block; width: 100%; min-height: 9em; box-sizing: border-box; padding: 0; margin: 0;
+  border: 0; outline: none; resize: none; overflow: hidden; background: transparent;
+  font: var(--read-size)/var(--read-lh, 1.72) var(--read-font, var(--serif)); color: var(--doc-ink);
+}
+#wt-note::placeholder { color: var(--faint, var(--muted)); }
+
+@media (max-width: 1020px) {
+  .watch { grid-template-columns: 1fr; gap: 24px; width: min(860px, calc(100% - 48px)); }
+  .wt-left { top: 0; z-index: 3; padding: 12px 0 14px; background: var(--bg); }
+  .wt-keys { display: none; }
+}
+/* buttons clicked keep no browser focus ring; from the keyboard they get the app's soft one */
+#watch button:focus { outline: none; }
+#watch button:focus-visible { box-shadow: 0 0 0 3px var(--ring); }

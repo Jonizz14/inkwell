@@ -7,6 +7,7 @@ const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
 const remind = require('./notify');
 const update = require('./update');
+const listen = require('./listen');
 
 // started by the reminder agent: no window, no Dock icon unless the notification is clicked
 const REMIND_RUN = process.argv.includes('--remind');
@@ -23,7 +24,12 @@ const LIB = () => path.join(DATA(), 'library');
 const INDEX = () => path.join(DATA(), 'index.json');
 const NOTES = () => path.join(DATA(), 'notes.json');
 // Folder scanned on every start: PDFs dropped here are imported.
-const INBOX = () => path.join(app.getPath('documents'), 'Inkwell');
+const INBOX = () => {
+  const now = path.join(app.getPath('documents'), 'Inkwell');
+  // the folder the app used before it was renamed is still read, when it is the one there
+  const before = path.join(app.getPath('documents'), '365 Articles');
+  return !fs.existsSync(now) && fs.existsSync(before) ? before : now;
+};
 
 let win;
 let extractor;
@@ -144,6 +150,25 @@ function allowYouTubeEmbeds() {
   });
 }
 
+// Once a day, on start, notes.json (highlights, words, notes, listening, statistics) is copied to
+// backups/notes-YYYY-MM-DD.json beside it; the last 7 days are kept. Nothing written is ever
+// only in one file.
+function backupNotes() {
+  try {
+    if (!fs.existsSync(NOTES())) return;
+    const dir = path.join(DATA(), 'backups');
+    fs.mkdirSync(dir, { recursive: true });
+    const d = new Date();
+    const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const to = path.join(dir, `notes-${day}.json`);
+    if (!fs.existsSync(to)) fs.copyFileSync(NOTES(), to);
+    const old = fs.readdirSync(dir).filter((f) => /^notes-\d{4}-\d\d-\d\d\.json$/.test(f)).sort().slice(0, -7);
+    for (const f of old) fs.rmSync(path.join(dir, f), { force: true });
+  } catch (e) {
+    console.error('backup', e.message);
+  }
+}
+
 // the window opens in the theme the app was left in (the launch card is drawn in it too)
 function savedDark() {
   try {
@@ -174,6 +199,8 @@ function createWindow() {
   });
   win.loadFile(path.join(__dirname, 'renderer', 'index.html'));
   win.once('ready-to-show', () => win.show());
+  // not while an update is being written (update.js); the window says why
+  win.on('close', (e) => update.hold(e));
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
@@ -223,8 +250,6 @@ ipcMain.handle('remind:target', async () => {
 ipcMain.handle('remind:settings', () => shell.openExternal(process.platform === 'win32' ? 'ms-settings:notifications' : 'x-apple.systempreferences:com.apple.Notifications-Settings.extension'));
 ipcMain.handle('remind:sync', async (_e, notes) => ({ times: await remind.schedule(notes), usual: remind.usualHour(notes || {}) }));
 ipcMain.handle('remind:test', () => remind.test(openFrom));
-ipcMain.handle('update:pending', () => update.pending());
-ipcMain.handle('update:restart', () => update.restartNow());
 
 ipcMain.handle('library:list', () => readJson(INDEX(), []));
 ipcMain.handle('library:article', (_e, id) => readJson(path.join(LIB(), String(id).replace(/\W/g, '') + '.json'), null));
@@ -236,6 +261,27 @@ ipcMain.handle('library:openPdf', async (_e, id) => {
 });
 
 ipcMain.handle('library:dir', () => LIB());
+// Listening (listen.js): a show's newest episodes, and a pasted YouTube link made into a show
+ipcMain.handle('listen:feed', (_e, kind, id) => listen.feed(kind, id).then((items) => ({ ok: true, items }), (e) => ({ ok: false, err: e.message })));
+ipcMain.handle('listen:resolve', (_e, url) => listen.resolve(url).catch(() => null));
+
+// Add-ons kept beside the app and out of the repository: src/private/<name>-main.js for this
+// process, src/renderer/private/<name>.js (and .css) for the window, which loads the ones listed.
+const inPrivate = (dir, end) => {
+  try {
+    return fs.readdirSync(path.join(__dirname, ...dir)).filter((f) => f.endsWith(end)).map((f) => f.slice(0, -end.length));
+  } catch {
+    return [];
+  }
+};
+ipcMain.handle('addons:list', () => inPrivate(['renderer', 'private'], '.js'));
+for (const n of inPrivate(['private'], '-main.js')) {
+  try {
+    require(path.join(__dirname, 'private', n + '-main.js'))({ app, ipcMain, shell, crypto, fsp, path, readJson, writeJson, INDEX, NOTES, LIB, win: () => win });
+  } catch (e) {
+    console.error('add-on', n, e.message);
+  }
+}
 ipcMain.handle('library:pick', async () => {
   const r = await dialog.showOpenDialog(win, {
     title: 'PDF maqolalarni tanlang',
@@ -357,6 +403,7 @@ app.on('before-quit', stopListening);
 
 app.whenReady().then(async () => {
   if (!primary) return;
+  backupNotes();
   app.on('activate', async () => {
     if (app.dock) app.dock.show();
     if (BrowserWindow.getAllWindows().length === 0) return createWindow(); // asks for the target itself
@@ -368,8 +415,8 @@ app.whenReady().then(async () => {
     createWindow();
     remind.schedule().catch((e) => console.error('remind schedule', e));
     remind.widget().catch((e) => console.error('widget', e));
-    // a newer build is downloaded in the background and goes in when the app quits
-    update.start((v) => win && !win.isDestroyed() && win.webContents.send('update:ready', v));
+    // a newer release is announced in the window; it comes down when the reader asks (update.js)
+    update.start(() => win);
     return;
   }
   if (app.dock) app.dock.hide();

@@ -267,7 +267,7 @@ function facts(notes, list) {
     .filter(({ a }) => a && a.progress > 0.03 && a.progress < 0.95)
     .sort((x, y) => (y.a.opened || 0) - (x.a.opened || 0))[0];
   const natural = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' });
-  const fresh = list.filter((m) => m.kind !== 'guardian' && (!arts[m.id] || !arts[m.id].progress)).sort((a, b) => natural.compare(a.file, b.file))[0];
+  const fresh = list.filter((m) => !m.kind && (!arts[m.id] || !arts[m.id].progress)).sort((a, b) => natural.compare(a.file, b.file))[0];
 
   return {
     doneToday,

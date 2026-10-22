@@ -15,10 +15,11 @@ const state = {
   current: null, // { id, meta, data }
   vocabScope: 'article',
   pop: null, // { mode, sel?, hlId? }
-  shelf: '365',
+  shelf: '365', // '365' (the PDFs), 'listen', or an add-on's shelf (shelves.js)
 };
-// the articles on the shelf being shown; everything else (vocabulary, cards, stats) uses them all
-const onShelf = (m) => (m.kind === 'guardian') === (state.shelf === 'guardian');
+// the articles on the shelf being shown; everything else (vocabulary, cards, stats) uses them all.
+// An article saved by an add-on carries its shelf as kind; Listening draws its own list.
+const onShelf = (m) => (m.kind || '365') === (state.shelf === 'listen' ? '365' : state.shelf);
 
 if (api.platform === 'darwin') document.documentElement.classList.add('mac');
 
@@ -123,7 +124,7 @@ function ring(p) {
   return `<svg class="ring" viewBox="0 0 18 18"><circle class="bg" cx="9" cy="9" r="${r}"/><circle class="fg" cx="9" cy="9" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p)}"/></svg>`;
 }
 
-// a saved Guardian article's picture, from the library folder (shown offline too)
+// a saved web article's picture, from the library folder (shown offline too)
 const libImg = (m) => (m.img && state.libDir ? encodeURI('file://' + state.libDir + '/' + m.img) : null);
 
 function itemHtml(m, i, num) {
@@ -150,7 +151,8 @@ function libHeader() {
   const totalWords = Object.values(state.notes.articles).reduce((n, a) => n + ((a.vocab && a.vocab.length) || 0), 0);
   const shelf = state.list.filter(onShelf);
   const done = shelf.filter((m) => statusOf(m.id) === 'done').length;
-  $('#lib-stats').textContent = t(state.shelf === 'guardian' ? 'gd.stats' : 'lib.stats', shelf.length, done, totalWords);
+  const own = typeof Shelves !== 'undefined' && Shelves.stats(shelf.length, done, totalWords);
+  $('#lib-stats').textContent = own || t('lib.stats', shelf.length, done, totalWords);
   $('#vocab-total').textContent = totalWords;
   if (typeof Cards !== 'undefined') Cards.badge();
 }
@@ -162,8 +164,8 @@ const libKeyNow = () => `${lang}|${state.shelf}|${state.filter}|${state.query}|$
 // quiet: refresh in place without replaying the list's entrance animation
 function renderLibrary(quiet) {
   $('#list').classList.toggle('quiet', !!quiet);
-  // the Guardian shelf showing a section's new articles draws its own list
-  if (typeof Guardian !== 'undefined' && Guardian.render(quiet)) return (libKey = libKeyNow());
+  // a shelf with a list of its own (Listening, an add-on's feed) draws it itself
+  if (typeof Shelves !== 'undefined' && Shelves.render(quiet)) return (libKey = libKeyNow());
   const q = state.query.trim().toLowerCase();
   const shelf = state.list.filter(onShelf);
   const items = shelf.filter((m) => {
@@ -172,7 +174,7 @@ function renderLibrary(quiet) {
     return (titleOf(m) + ' ' + m.excerpt + ' ' + m.file).toLowerCase().includes(q);
   });
   libHeader();
-  $('#empty').hidden = shelf.length > 0 || state.shelf === 'guardian';
+  $('#empty').hidden = shelf.length > 0 || state.shelf !== '365';
   const nums = new Map(shelf.map((m, k) => [m.id, k + 1]));
   $('#list').innerHTML = items.map((m, i) => itemHtml(m, i, nums.get(m.id))).join('');
   libKey = libKeyNow();
@@ -182,7 +184,7 @@ function renderLibrary(quiet) {
 // that was read), so the other 170-odd keep their layout; a filter or search that could add
 // or drop rows still redraws the whole list
 function refreshItem() {
-  if (state.filter !== 'all' || state.query.trim() || libKey !== libKeyNow() || (typeof Guardian !== 'undefined' && Guardian.feedShown())) return renderLibrary(true);
+  if (state.filter !== 'all' || state.query.trim() || libKey !== libKeyNow() || (typeof Shelves !== 'undefined' && Shelves.feedShown())) return renderLibrary(true);
   const rows = $('#list').children;
   const shelf = state.list.filter(onShelf);
   if (rows.length !== shelf.length) return renderLibrary(true);
@@ -198,7 +200,7 @@ function refreshItem() {
 
 $('#list').addEventListener('click', (e) => {
   const li = e.target.closest('.item');
-  if (li && li.dataset.id) openArticle(li.dataset.id); // a Guardian row not saved yet is guardian.js's
+  if (li && li.dataset.id) openArticle(li.dataset.id); // a feed row not saved yet is its shelf's own
 });
 $('#search').addEventListener('input', (e) => {
   state.query = e.target.value;
@@ -288,10 +290,10 @@ async function openArticle(id) {
   showView('reader');
 }
 
-// minutes · words · author · date · The Guardian
-function docMetaGuardian(meta, mins) {
+// an article saved from the web: minutes · words · author · date · where it is from
+function docMetaWeb(meta, mins) {
   const date = meta.date ? new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(meta.date)) : '';
-  return [t('gd.meta', mins, meta.words), meta.by, date, 'The Guardian'].filter(Boolean).map(esc).join(' · ');
+  return [t('doc.metaWeb', mins, meta.words), meta.by, date, meta.file].filter(Boolean).map(esc).join(' · ');
 }
 
 function renderDoc() {
@@ -301,9 +303,9 @@ function renderDoc() {
   $('#bar-title').textContent = title;
   const mins = Math.max(1, Math.round(meta.words / 220));
   let html = `<h1 id="doc-title" title="${esc(t('doc.renameTitle'))}">${esc(title)}</h1>
-    <div class="doc-meta">${meta.kind === 'guardian' ? docMetaGuardian(meta, mins) : `${t('doc.meta', mins, meta.words, meta.pages)} · ${esc(meta.file)}`}</div>`;
-  // a Guardian article has its web page where a PDF would be
-  $('#pdf-label').textContent = meta.kind === 'guardian' ? 'Guardian ↗' : 'PDF';
+    <div class="doc-meta">${meta.url ? docMetaWeb(meta, mins) : `${t('doc.meta', mins, meta.words, meta.pages)} · ${esc(meta.file)}`}</div>`;
+  // an article from the web has its page where a PDF would be
+  $('#pdf-label').textContent = meta.url ? `${meta.file} ↗` : 'PDF';
   const hero = libImg(meta);
   if (hero) html += `<figure class="doc-hero"><img src="${esc(hero)}" alt="" decoding="async" />${meta.caption ? `<figcaption>${esc(meta.caption)}</figcaption>` : ''}</figure>`;
   data.blocks.forEach((b, p) => {
@@ -485,12 +487,44 @@ for (const [sc, view] of [[$('#library'), $('#library')], [$('#scroller'), $('#r
 }
 // the pinned library header condenses to one slim row once the list is under way;
 // the gap between the two thresholds keeps it from flickering as its height changes
+// The change is one continuous move (FLIP): every part of the header is measured, the compact
+// layout is put in at once, and each part glides from where it was to where it now is by
+// transform only — the title scales down as it goes, the buttons move up beside it, the chips,
+// the search row and the list follow. Nothing is laid out frame by frame.
+const FLIP_PARTS = ['.lib-head h1', '.lib-actions', '.lib-chips', '.lib-tools', '#import-bar', '#list', '.lib-top .pblur-top'];
+// the header's own background is a layer of its own, so it can shrink with the rest (by scale)
+const libBg = Object.assign(document.createElement('i'), { className: 'lib-bg' });
+$('.lib-top').prepend(libBg);
+function setCompact(lib, on) {
+  if (lib.classList.contains('compact') === on) return;
+  Haptic.level();
+  if (reduceMotion.matches) return void lib.classList.toggle('compact', on);
+  const els = FLIP_PARTS.map((s) => $(s, lib)).filter((el) => el && !el.hidden);
+  for (const el of els) el.getAnimations().forEach((a) => a.finish());
+  const top = $('.lib-top', lib);
+  const before = els.map((el) => el.getBoundingClientRect());
+  const hA = top.offsetHeight;
+  lib.classList.add('flip');
+  lib.classList.toggle('compact', on);
+  const after = els.map((el) => el.getBoundingClientRect());
+  const hB = top.offsetHeight;
+  lib.classList.remove('flip');
+  libBg.getAnimations().forEach((a) => a.finish());
+  if (hB && Math.abs(hA - hB) > 0.5) libBg.animate([{ transform: `scaleY(${hA / hB})` }, { transform: 'none' }], { duration: 460, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+  els.forEach((el, i) => {
+    const a = before[i];
+    const b = after[i];
+    const dx = a.left - b.left;
+    const dy = a.top - b.top;
+    const s = el.matches('h1') && b.height ? a.height / b.height : 1;
+    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(s - 1) < 0.005) return;
+    el.animate([{ transformOrigin: '0 0', transform: `translate(${dx}px, ${dy}px) scale(${s})` }, { transformOrigin: '0 0', transform: 'none' }], { duration: 460, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
+  });
+}
 $('#library').addEventListener('scroll', (e) => {
   const lib = e.currentTarget;
-  const was = lib.classList.contains('compact');
-  if (lib.scrollTop > 60) lib.classList.add('compact');
-  else if (lib.scrollTop < 8) lib.classList.remove('compact');
-  if (was !== lib.classList.contains('compact')) Haptic.level();
+  if (lib.scrollTop > 60) setCompact(lib, true);
+  else if (lib.scrollTop < 8) setCompact(lib, false);
 }, { passive: true });
 
 $('#btn-back').addEventListener('click', backToLibrary);
@@ -506,7 +540,7 @@ async function backToLibrary() {
 }
 // two-finger swipe right on the trackpad goes back, like the iOS edge swipe
 let swipeX = 0, swipeT;
-for (const v of [$('#reader'), $('#stats'), $('#cards'), $('#settings')]) v.addEventListener('wheel', (e) => {
+for (const v of [$('#reader'), $('#stats'), $('#cards'), $('#settings'), $('#watch')]) v.addEventListener('wheel', (e) => {
   if (state.view === 'library' || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
   swipeX = e.deltaX < 0 ? swipeX - e.deltaX : 0;
   clearTimeout(swipeT);
@@ -1510,7 +1544,7 @@ document.addEventListener('keydown', (e) => {
   if (mod && e.key === '-') return (e.preventDefault(), changeFont(-1));
   if (mod && !e.shiftKey && e.code === 'Digit0') return (e.preventDefault(), setFontPct(100));
   // the Menu's tools, by key position so any keyboard layout works:
-  // ⌘K the Menu, ⇧⌘O the original (PDF / Guardian), ⇧⌘A the AI menu, ⇧⌘C everything copied for AI
+  // ⌘K the Menu, ⇧⌘O the original (PDF / web page), ⇧⌘A the AI menu, ⇧⌘C everything copied for AI
   if (mod && !e.altKey && state.view === 'reader' && state.current && !$('.modal.show, .fs-veil.show')) {
     const act = {
       KeyK: () => showTools(!$('#tools').classList.contains('show')),
@@ -1542,7 +1576,7 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// pictures (Guardian thumbnails and the article's picture) come out of a blur once loaded
+// pictures (row thumbnails and the article's picture) come out of a blur once loaded
 document.addEventListener('load', (e) => e.target.matches && e.target.matches('.item-img, .doc-hero img') && e.target.classList.add('ok'), true);
 document.addEventListener('error', (e) => e.target.matches && e.target.matches('.item-img, .doc-hero img') && e.target.classList.add('gone'), true);
 
@@ -1550,7 +1584,7 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
 
 (async function boot() {
   state.notes = await api.loadNotes();
-  // the notes can arrive while the later scripts (session.js, guardian.js…) are still loading:
+  // the notes can arrive while the later scripts (session.js, shelves.js…) are still loading:
   // everything below expects them all to be there
   if (document.readyState === 'loading') await new Promise((ok) => document.addEventListener('DOMContentLoaded', ok, { once: true }));
   state.libDir = api.libDir ? await api.libDir() : null;
@@ -1567,20 +1601,36 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   } catch {}
   if (typeof Session !== 'undefined') Session.clear();
   Stats.init({ notes: () => state.notes, list: () => state.list, reading: () => state.view === 'reader' && document.hasFocus(), save });
-  if (typeof Guardian !== 'undefined') Guardian.prepare();
+  await loadAddons();
+  if (typeof Shelves !== 'undefined') Shelves.prepare();
   await loadLibrary();
-  if (typeof Guardian !== 'undefined') Guardian.restore();
+  if (typeof Shelves !== 'undefined') Shelves.restore();
   Stats.seed();
   // a reminder notification was clicked: go where it pointed
   api.onRemindOpen(openTarget);
-  // a newer version was downloaded (update.js); it goes in when the app quits
-  api.onUpdateReady((v) => toast(t('update.ready', v), 5000));
   openTarget(await api.remindTarget());
   // the launch card goes once the app is up; a broken card must never keep the app from starting
   try {
     Splash.ready();
   } catch {}
+  // the bell of the notification centre (inbox.js)
+  if (typeof Inbox !== 'undefined') Inbox.setup();
 })();
+
+// Add-ons kept beside the app and out of the repository (src/renderer/private/<name>.js and .css,
+// listed by main.js): each one loads before the library is drawn, so it can add a shelf.
+async function loadAddons() {
+  const names = api.addons ? await api.addons().catch(() => []) : [];
+  for (const n of names) {
+    const css = Object.assign(document.createElement('link'), { rel: 'stylesheet', href: `private/${n}.css` });
+    document.head.appendChild(css);
+    await new Promise((ok) => {
+      const s = Object.assign(document.createElement('script'), { src: `private/${n}.js` });
+      s.onload = s.onerror = ok;
+      document.body.appendChild(s);
+    });
+  }
+}
 
 function openTarget(t) {
   if (!t) return;

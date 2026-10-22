@@ -5,3 +5,5 @@ samples/
 test/shots/
 *.log
 .DS_Store
+src/private/
+src/renderer/private/

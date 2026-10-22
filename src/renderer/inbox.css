@@ -1,0 +1,55 @@
+/* Notification centre (inbox.js): the bell in the library bar opens a panel that slides in
+   from the right edge on the app's push curve; its cards follow one after another. */
+.ib-bell { position: relative; }
+.ib-bell svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+.ib-dot { position: absolute; top: 5px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); box-shadow: 0 0 0 2px var(--bg); transform: scale(0); transition: transform 420ms cubic-bezier(0.34, 1.5, 0.5, 1); }
+.ib-bell.unread .ib-dot { transform: none; }
+
+.ib-scrim { position: fixed; inset: 0; z-index: 940; }
+.ib-scrim:not(.open) { pointer-events: none; }
+.ib-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 950; width: min(380px, 100%);
+  display: flex; flex-direction: column;
+  background: color-mix(in srgb, var(--bg) 72%, transparent);
+  backdrop-filter: blur(34px) saturate(1.5); -webkit-backdrop-filter: blur(34px) saturate(1.5);
+  border-left: 1px solid var(--line);
+  box-shadow: -24px 0 48px rgba(0, 0, 0, 0.12);
+  transform: translate3d(calc(100% + 48px), 0, 0);
+  transition: transform 620ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+[data-theme="dark"] .ib-panel { box-shadow: -24px 0 48px rgba(0, 0, 0, 0.5); }
+.ib-panel.open { transform: none; }
+.ib-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 56px 20px 10px; }
+.ib-head h2 { margin: 0; font: 700 24px/1.15 var(--serif); letter-spacing: -0.01em; color: var(--ink); }
+.ib-clear { border: 0; background: none; padding: 4px 2px; font: 500 12.5px var(--ui); color: var(--muted); cursor: pointer; transition: color 160ms; }
+.ib-clear:hover { color: var(--ink); }
+.ib-clear[hidden] { display: none; }
+.ib-list { flex: 1; overflow-y: auto; padding: 4px 12px 20px; display: grid; align-content: start; gap: 8px; }
+.ib-group { margin: 10px 8px 2px; font: 600 11px var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.ib-card {
+  display: grid; grid-template-columns: 38px 1fr; gap: 12px; align-items: center; width: 100%; text-align: left;
+  padding: 12px; border-radius: 16px; border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  background: color-mix(in srgb, var(--surface) 86%, transparent); color: var(--ink); font: inherit; cursor: pointer;
+  transition: transform 160ms var(--ease), background 160ms;
+}
+.ib-card:hover { background: var(--surface); }
+.ib-card:active { transform: scale(0.98); }
+/* the cards follow the panel in, each a little later, from the same edge */
+.ib-panel .ib-card, .ib-panel .ib-group, .ib-panel .ib-empty { transform: translate3d(60px, 0, 0); transition: transform 680ms cubic-bezier(0.32, 0.72, 0, 1); transition-delay: calc(60ms + var(--k, 0) * 45ms); }
+.ib-panel.open .ib-card, .ib-panel.open .ib-group, .ib-panel.open .ib-empty { transform: none; }
+.ib-panel.open .ib-card:active { transform: scale(0.98); transition-delay: 0s; }
+
+.ib-icon { position: relative; width: 38px; height: 38px; }
+.ib-icon img { width: 38px; height: 38px; border-radius: 9px; display: block; }
+.ib-badge { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; box-shadow: 0 0 0 2px var(--surface); }
+.ib-badge svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.ib-body { min-width: 0; }
+.ib-top { display: flex; align-items: baseline; gap: 8px; }
+.ib-top b { flex: 1; min-width: 0; font: 600 13.5px/1.3 var(--ui); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ib-top time { flex: none; font: 11.5px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+.ib-new { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--ink); align-self: center; }
+.ib-sub { display: block; margin-top: 1px; font: 12.5px/1.35 var(--ui); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ib-empty { margin: 40px 8px; text-align: center; font: 13px/1.5 var(--ui); color: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) { .ib-panel, .ib-panel * { transition-duration: 1ms !important; transition-delay: 0s !important; } }

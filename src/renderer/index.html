@@ -14,7 +14,11 @@
   <link rel="stylesheet" href="player.css" />
   <link rel="stylesheet" href="settings.css" />
   <link rel="stylesheet" href="session.css" />
+  <link rel="stylesheet" href="listen.css" />
   <link rel="stylesheet" href="splash.css" />
+  <link rel="stylesheet" href="shelves.css" />
+  <link rel="stylesheet" href="update-ui.css" />
+  <link rel="stylesheet" href="inbox.css" />
 </head>
 <body>
   <script src="splash.js"></script>
@@ -25,7 +29,7 @@
     <div class="lib-top">
     <header class="lib-head">
       <div>
-        <h1>Inkwell</h1>
+        <h1 class="shelf" id="shelf"><button data-s="365" class="on">Articles</button><button data-s="listen">Listening</button></h1>
         <p class="muted" id="lib-stats"></p>
       </div>
       <div class="lib-actions">
@@ -50,6 +54,9 @@
         </div>
       </div>
     </header>
+
+    <!-- a shelf's chips (shelves.js): opens under the titles on every shelf but Articles -->
+    <div class="lib-chips"><div class="chips" id="chips"><i class="chip-pill"></i></div></div>
 
     <div class="lib-tools">
       <input id="search" type="search" placeholder="Qidirish…  (⌘F)" data-i18n-ph="lib.search" autocomplete="off" spellcheck="false" />
@@ -164,6 +171,16 @@
     <main class="scroller"><div class="stats" id="stats-body"></div></main>
   </section>
 
+  <!-- a Listening episode (listen.js): its own page, like an article -->
+  <section id="watch" class="view">
+    <header class="bar">
+      <button class="btn ghost back" id="watch-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
+      <div class="bar-title show" id="watch-title"></div>
+      <div></div>
+    </header>
+    <main class="scroller"><div class="watch" id="watch-body"></div></main>
+  </section>
+
   <!-- Settings (settings.js) -->
   <section id="settings" class="view">
     <header class="bar">
@@ -265,11 +282,15 @@
   <script src="focus.js"></script>
   <script src="readalong.js"></script>
   <script src="session.js"></script>
+  <script src="shelves.js"></script>
   <script src="cards.js"></script>
   <script src="player.js"></script>
   <script src="settings.js"></script>
+  <script src="listen.js"></script>
   <script src="stats-more.js"></script>
   <script src="stats-hero.js"></script>
   <script src="recap.js"></script>
+  <script src="update-ui.js"></script>
+  <script src="inbox.js"></script>
 </body>
 </html>

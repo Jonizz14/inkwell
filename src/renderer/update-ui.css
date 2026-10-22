@@ -1,0 +1,161 @@
+/* The update banner (update.js), drawn like a macOS notification in the window's top-right
+   corner. It slides in from beyond the edge on the app's push curve and slides back out the
+   same way; nothing fades. Inside, the text and the button change through a blur in place. */
+.up-card {
+  position: fixed; top: 12px; right: 12px; z-index: 900; width: min(360px, calc(100% - 24px));
+  display: grid; grid-template-columns: 38px 1fr auto; gap: 12px; align-items: center;
+  padding: 12px; border-radius: 18px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(30px) saturate(1.6); -webkit-backdrop-filter: blur(30px) saturate(1.6);
+  border: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.06), 0 10px 32px rgba(0, 0, 0, 0.18);
+  transform: translate3d(calc(100% + 24px), 0, 0);
+  transition: transform 720ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+[data-theme="dark"] .up-card { box-shadow: 0 0 0 0.5px rgba(255, 255, 255, 0.08) inset, 0 10px 32px rgba(0, 0, 0, 0.55); }
+.up-card.show { transform: none; }
+/* hide: a small round button on the top-left corner, shown while the pointer is on the banner */
+.up-x { position: absolute; top: -7px; left: -7px; z-index: 1; width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent); background: var(--surface); color: var(--ink-2, var(--muted)); display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18); opacity: 0; filter: blur(4px); transform: scale(0.7); transition: opacity 220ms var(--ease), filter 220ms var(--ease), transform 300ms cubic-bezier(0.34, 1.4, 0.5, 1), color 160ms; }
+.up-x svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.up-card:hover .up-x, .up-x:focus-visible { opacity: 1; filter: blur(0); transform: none; }
+.up-x:hover { color: var(--ink); }
+.up-x:active { transform: scale(0.9); }
+.up-card:not(.show) { pointer-events: none; }
+
+/* the app icon with a small badge: an arrow while updating, a tick when done */
+.up-icon { position: relative; width: 38px; height: 38px; }
+.up-icon img { width: 38px; height: 38px; border-radius: 9px; display: block; }
+.up-badge { position: absolute; right: -4px; bottom: -4px; width: 18px; height: 18px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; box-shadow: 0 0 0 2px var(--surface); }
+.up-badge svg { position: absolute; width: 11px; height: 11px; transition: opacity 320ms var(--ease), filter 320ms var(--ease), transform 460ms cubic-bezier(0.34, 1.4, 0.5, 1); }
+.up-check { opacity: 0; filter: blur(3px); transform: scale(0.5); }
+.up-card.loading .up-arrow { animation: up-nudge 0.9s var(--ease) infinite; }
+.up-card.done .up-arrow { opacity: 0; filter: blur(3px); transform: scale(0.5); }
+.up-card.done .up-check { opacity: 1; filter: blur(0); transform: none; }
+@keyframes up-nudge { 0%, 100% { transform: translateY(-1px); } 50% { transform: translateY(1.5px); } }
+
+/* the texts: one grid cell, so the banner keeps its height through every step */
+.up-txt { grid-row: 1; grid-column: 2; display: grid; min-width: 0; cursor: pointer; }
+.up-card.loading .up-txt { grid-column: 2 / 4; cursor: default; }
+.up-txt > div { grid-area: 1 / 1; min-width: 0; align-self: center; transition: opacity 340ms var(--ease), filter 340ms var(--ease); }
+.up-txt > div.off, .up-btn.off { opacity: 0; filter: blur(6px); pointer-events: none; }
+.up-txt b { display: block; font: 600 13.5px/1.3 var(--ui); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-txt small { display: block; margin-top: 1px; font: 12.5px/1.35 var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-more { transition: color 160ms; }
+.up-txt:hover .up-more { color: var(--ink); }
+
+.up-btns { grid-row: 1; grid-column: 3; display: grid; }
+.up-btn { grid-area: 1 / 1; justify-self: end; height: 28px; padding: 0 12px; border: 0; border-radius: 999px; background: color-mix(in srgb, var(--ink) 9%, transparent); color: var(--ink); font: 600 12px var(--ui); cursor: pointer; white-space: nowrap; transition: transform 160ms var(--ease), background 160ms, opacity 340ms var(--ease), filter 340ms var(--ease); }
+.up-btn:hover { background: color-mix(in srgb, var(--ink) 14%, transparent); }
+.up-btn:active { transform: scale(0.95); }
+
+/* progress: a hairline under the count, filled from the left */
+.up-track { position: relative; height: 3px; margin-top: 7px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.up-fill { position: absolute; inset: 0; background: var(--ink); border-radius: 3px; transform: scaleX(0); transform-origin: left; transition: transform 300ms var(--ease); }
+
+/* rolling digits */
+.up-odo { display: inline-flex; height: 1.35em; overflow: hidden; vertical-align: bottom; }
+.up-odo > span { display: block; transition: transform 520ms var(--ease); }
+.up-odo i { display: block; height: 1.35em; line-height: 1.35em; font-style: normal; text-align: center; }
+
+/* "What's new": a page that slides in like Statistics or Settings */
+#whatsnew { z-index: 2; transform: translate3d(100%, 0, 0); box-shadow: -1px 0 0 var(--line), -24px 0 48px rgba(0, 0, 0, 0.12); }
+#whatsnew.is-active { transform: none; }
+[data-theme="dark"] #whatsnew { box-shadow: -1px 0 0 var(--line), -24px 0 48px rgba(0, 0, 0, 0.5); }
+.wn { width: min(640px, calc(100% - 64px)); margin: 0 auto; padding: 36px 0 80px; }
+.wn-ver { margin: 0; font: 700 44px/1.1 var(--serif); letter-spacing: -0.02em; color: var(--ink); }
+.wn-meta { margin: 8px 0 0; font: 13px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+.wn-act { height: 36px; padding: 0 16px; border: 0; border-radius: 999px; background: var(--ink); color: var(--bg); font: 600 13px var(--ui); cursor: pointer; transition: transform 160ms var(--ease); }
+.wn-act:active { transform: scale(0.96); }
+.wn-act[hidden] { display: none; }
+.wn-state { margin-top: 22px; }
+.wn-state:empty { display: none; }
+/* each step comes in through a blur in the same place */
+.wn-state > * { animation: wn-in 560ms var(--ease) both; }
+
+/* the update in progress: a big rolling percentage, the message, a bar with a soft light running along it */
+.wn-prog { padding: 18px 20px 20px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.wn-top { display: flex; align-items: center; gap: 18px; }
+.wn-pct { display: flex; align-items: baseline; font: 700 46px/1 var(--serif); letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.wn-pct small { margin-left: 2px; font: 600 20px var(--serif); color: var(--muted); }
+.wn-msg { min-width: 0; display: grid; gap: 2px; }
+.wn-msg b { font: 600 15px/1.3 var(--ui); color: var(--ink); }
+.wn-msg span { font: 13px/1.4 var(--ui); color: var(--muted); }
+.wn-prog .wn-msg span { color: var(--ink-2, var(--muted)); }
+.wn-msg.nudge { animation: wn-nudge 520ms cubic-bezier(0.36, 0.07, 0.19, 0.97); }
+@keyframes wn-nudge { 20% { transform: translateX(-6px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+.wn-bar { position: relative; height: 4px; margin-top: 18px; border-radius: 4px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; }
+.wn-bar i { position: absolute; inset: 0; border-radius: 4px; background: var(--ink); transform: scaleX(0); transform-origin: left; transition: transform 520ms var(--ease); }
+.wn-bar::after { content: ''; position: absolute; inset: 0; width: 30%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg) 45%, transparent), transparent); animation: wn-run 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+@keyframes wn-run { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+/* done: the tick draws itself, then the button to reopen */
+.wn-ok { display: flex; align-items: center; gap: 14px; padding: 16px 16px 16px 18px; border: 1px solid var(--line); border-radius: 18px; background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.wn-ok .wn-msg { flex: 1; }
+.wn-tick { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; animation: wn-pop 620ms cubic-bezier(0.34, 1.5, 0.5, 1) both 120ms; }
+.wn-tick svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; animation: wn-draw 520ms var(--ease) forwards 380ms; }
+@keyframes wn-pop { from { transform: scale(0.4); filter: blur(4px); } }
+@keyframes wn-draw { to { stroke-dashoffset: 0; } }
+
+/* the changed files: waiting (faint), coming down (a breathing dot), in (a tick) */
+.wn-files div { align-items: center; }
+.wn-fn { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wn-st { position: relative; flex: none; width: 16px; height: 16px; display: grid; place-items: center; }
+.wn-st i { width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--ink) 22%, transparent); transition: opacity 260ms, transform 260ms; }
+.wn-st svg { position: absolute; width: 14px; height: 14px; fill: none; stroke: var(--ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 24; stroke-dashoffset: 24; transition: stroke-dashoffset 460ms var(--ease) 80ms; }
+.wn-files div.busy .wn-st i { background: var(--ink); animation: wn-breathe 900ms var(--ease) infinite alternate; }
+.wn-files div.busy .wn-fn, .wn-files div.ok .wn-fn { color: var(--ink); transition: color 300ms; }
+.wn-files div.ok .wn-st i { opacity: 0; transform: scale(0.3); }
+.wn-files div.ok .wn-st svg { stroke-dashoffset: 0; }
+@keyframes wn-breathe { from { transform: scale(0.7); opacity: 0.55; } to { transform: scale(1.25); opacity: 1; } }
+.wn-sec { margin-top: 36px; }
+.wn-sec h3 { margin: 0 0 6px; font: 600 11.5px var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.wn-item { padding: 14px 0; border-top: 1px solid var(--line); }
+.wn-item b { display: block; font: 600 17px/1.35 var(--serif); color: var(--ink); }
+.wn-item p { margin: 4px 0 0; font: 14px/1.55 var(--ui); color: var(--ink-2, var(--muted)); max-width: 60ch; }
+.wn-files div { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-top: 1px solid var(--line); font: 12.5px var(--ui); color: var(--ink-2, var(--muted)); }
+.wn-files span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+/* the parts come in one after another through a blur when the page opens */
+#whatsnew.is-active .wn > * { animation: wn-in 640ms var(--ease) both; animation-delay: calc(180ms + var(--k, 0) * 70ms); }
+@keyframes wn-in { from { opacity: 0; filter: blur(8px); } }
+
+@media (prefers-reduced-motion: reduce) { .up-card, .up-card *, #whatsnew * { animation-duration: 1ms !important; transition-duration: 1ms !important; } }
+
+/* the update itself: black from edge to edge in every theme. The black grows as a circle out of
+   the pressed button; the words rise through a blur in one place. */
+.uo {
+  position: fixed; inset: 0; z-index: 2000; background: #000; color: #f2f2f2;
+  display: grid; place-items: center; -webkit-app-region: no-drag;
+  clip-path: circle(0 at var(--x) var(--y));
+  transition: clip-path 900ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+.uo.on { clip-path: circle(150% at var(--x) var(--y)); }
+.uo-in { width: min(520px, calc(100% - 64px)); }
+.uo-in > *, .uo-ver { opacity: 0; filter: blur(10px); transition: opacity 700ms var(--ease), filter 700ms var(--ease); }
+.uo.on .uo-in > *, .uo.on .uo-ver { opacity: 1; filter: blur(0); }
+.uo.on .uo-row { transition-delay: 520ms; }
+.uo.on .uo-sub { transition-delay: 640ms; }
+.uo.on .uo-bar { transition-delay: 740ms; }
+.uo.on .uo-note { transition-delay: 860ms; }
+.uo.on .uo-ver { transition-delay: 980ms; }
+
+.uo-row { display: flex; align-items: baseline; gap: 14px; font: 600 30px/1.2 var(--serif); letter-spacing: -0.01em; }
+.uo-star { flex: none; display: inline-block; width: 1em; text-align: center; font: 400 28px/1 var(--ui); color: #fff; }
+.uo-words { position: relative; flex: 1; min-width: 0; display: grid; height: 1.25em; }
+.uo-w { grid-area: 1 / 1; white-space: nowrap; transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1), opacity 460ms var(--ease), filter 460ms var(--ease); }
+.uo-w.in { transform: translateY(0.45em); opacity: 0; filter: blur(8px); }
+.uo-w.out { transform: translateY(-0.45em); opacity: 0; filter: blur(8px); }
+.uo-sec { flex: none; font: 14px var(--ui); color: rgba(255, 255, 255, 0.4); font-variant-numeric: tabular-nums; }
+
+.uo-sub { margin: 18px 0 0 calc(28px + 14px); font: 13.5px var(--ui); color: rgba(255, 255, 255, 0.55); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uo-sub .up-odo { color: #fff; }
+.uo-file { color: rgba(255, 255, 255, 0.8); }
+.uo-bar { position: relative; height: 3px; margin: 16px 0 0 calc(28px + 14px); border-radius: 3px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.uo-bar i { position: absolute; inset: 0; border-radius: 3px; background: #fff; transform: scaleX(0); transform-origin: left; transition: transform 520ms var(--ease); }
+.uo-bar::after { content: ''; position: absolute; inset: 0; width: 30%; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.35), transparent); animation: wn-run 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+.uo-note { margin: 22px 0 0 calc(28px + 14px); font: 13px var(--ui); color: rgba(255, 255, 255, 0.4); }
+.uo-ver { position: absolute; bottom: 28px; left: 0; right: 0; text-align: center; font: 600 11px var(--ui); letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.3); }
+/* done: the bar has filled, the note goes, the star rests */
+.uo.done .uo-note { opacity: 0; filter: blur(8px); transition-delay: 0s; }
+.uo.done .uo-bar::after { animation: none; opacity: 0; }
+
+@media (prefers-reduced-motion: reduce) { .uo, .uo * { transition-duration: 1ms !important; animation-duration: 1ms !important; transition-delay: 0s !important; } }

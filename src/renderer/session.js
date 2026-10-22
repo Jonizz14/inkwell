@@ -779,7 +779,7 @@ const Session = (() => {
     const reading = state.list
       .filter((m) => arts[m.id] && arts[m.id].progress > 0.03 && arts[m.id].progress < 0.95)
       .sort((a, b) => (arts[b.id].opened || 0) - (arts[a.id].opened || 0))[0];
-    const next = reading || state.list.find((m) => m.kind !== 'guardian' && (!arts[m.id] || !arts[m.id].progress)) || state.list[0];
+    const next = reading || state.list.find((m) => !m.kind && (!arts[m.id] || !arts[m.id].progress)) || state.list[0];
     if (!next) return;
     await openArticle(next.id);
     setTimeout(open, 520); // once the reader has slid in

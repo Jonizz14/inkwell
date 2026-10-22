@@ -2,8 +2,9 @@
 
 // The launch card (splash.css): drawn before anything else loads, in the theme and language the
 // app was left in (applyTheme / setLang keep a copy in localStorage, since the notes arrive later).
-// Just the name: its letters come out of a blur one after another and a hairline fills under it;
-// with a name set in Settings, a greeting for it comes in underneath.
+// The mark grows into the name, where the name will stand: the round dot of the "i" appears, its
+// stem rises under it (the app's icon), then "nkwell" comes out of a blur letter by letter beside
+// it; with a name set in Settings a greeting follows underneath. Nothing slides across.
 // When the app has booted it melts away through a blur where it stands.
 const Splash = (() => {
   const html = document.documentElement;
@@ -20,7 +21,7 @@ const Splash = (() => {
   const name = (read('a365.name') || '').trim();
   const inFrame = window !== window.top;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const MIN = still ? 300 : name ? 2900 : 2200; // the name comes in fully, even when the app is ready sooner
+  const MIN = still ? 300 : name ? 2900 : 2500; // the name comes in fully, even when the app is ready sooner
   const t0 = performance.now();
   const GREET = {
     uz: ['Xayrli tun', 'Xayrli tong', 'Xayrli kun', 'Xayrli kech'],
@@ -42,8 +43,7 @@ const Splash = (() => {
     el.setAttribute('aria-hidden', 'true');
     if (still) el.className = 'still';
     el.innerHTML = `<div class="sp-mark">
-        <div class="sp-word">${[...'Inkwell'].map((c, i) => `<span style="--i:${i}">${c === ' ' ? '&nbsp;' : c}</span>`).join('')}</div>
-        <i class="sp-line"></i>
+        <div class="sp-word"><span class="sp-i"><b class="sp-stem">ı</b><i class="sp-dot"></i></span>${[...'nkwell'].map((c, i) => `<span class="sp-l" style="--i:${i}">${c}</span>`).join('')}</div>
         ${name ? `<div class="sp-hi"></div>` : ''}
       </div>`;
     if (name) el.querySelector('.sp-hi').textContent = greeting();
@@ -51,12 +51,16 @@ const Splash = (() => {
     feel();
   }
 
-  // the trackpad plays the name (times follow splash.css): one tap per letter as it lands.
-  // Settings → Vibration off (a copy in localStorage) keeps it silent.
+  // the trackpad plays the drawing (times follow splash.css), one tap per part: the dot, the
+  // stem, then each letter of "nkwell". Settings → Vibration off (a copy in localStorage) keeps it silent.
   function feel() {
     const api = window.api;
-    if (!api || !api.haptic || read('a365.haptic') === 'off' || still) return;
-    for (let i = 0; i < 7; i++) setTimeout(() => api.haptic(i === 0 ? 1 : 0), 330 + i * 40); // I n k w e l l
+    if (!api || !api.haptic || read('a365.haptic') === 'off') return;
+    const at = (ms, k) => setTimeout(() => api.haptic(k), ms);
+    at(260, 1); // the dot
+    if (still) return;
+    at(560, 1); // the stem
+    for (let i = 0; i < 6; i++) at(1120 + i * 70, 0); // n k w e l l
   }
 
   // the app has booted: leave once the drawing is done

@@ -11,6 +11,16 @@
 (() => {
   Object.assign(I18N.uz, {
     'sx.focus': 'Chuqur fokus',
+    'sx.listen': 'Tinglash',
+    'sx.lToday': 'Bugun tinglangan',
+    'sx.lTotal': 'Jami tinglangan',
+    'sx.lEps': 'Epizodlar',
+    'sx.lEpsSub': (n) => `${n} tasi boshlangan`,
+    'sx.lDict': "Yozilgan so'zlar",
+    'sx.lDictSub': (n) => `${n} ta epizod haqida`,
+    'sx.lChart': "Tinglash daqiqalari — so'nggi 30 kun",
+    'sx.lNone': "Hali hech narsa tinglanmagan. Kutubxonada Listening'ni oching — birinchisi shu yerda paydo bo'ladi.",
+    'sx.lTip': (m) => `${m} daq. tinglangan`,
     'sx.fToday': 'Bugun fokusda',
     'sx.fTotal': 'Jami fokus',
     'sx.fSessions': 'Sessiyalar',
@@ -42,6 +52,16 @@
   });
   Object.assign(I18N.en, {
     'sx.focus': 'Deep focus',
+    'sx.listen': 'Listening',
+    'sx.lToday': 'Listened today',
+    'sx.lTotal': 'Listened in all',
+    'sx.lEps': 'Episodes',
+    'sx.lEpsSub': (n) => `${n} started`,
+    'sx.lDict': 'Words written',
+    'sx.lDictSub': (n) => `about ${n} episodes`,
+    'sx.lChart': 'Minutes listened — last 30 days',
+    'sx.lNone': 'Nothing listened to yet. Open Listening in the library and the first one shows here.',
+    'sx.lTip': (m) => `${m} min listened`,
     'sx.fToday': 'Focused today',
     'sx.fTotal': 'Total focus',
     'sx.fSessions': 'Sessions',
@@ -73,6 +93,16 @@
   });
   Object.assign(I18N.ru, {
     'sx.focus': 'Глубокий фокус',
+    'sx.listen': 'Аудирование',
+    'sx.lToday': 'Сегодня прослушано',
+    'sx.lTotal': 'Всего прослушано',
+    'sx.lEps': 'Выпуски',
+    'sx.lEpsSub': (n) => `начато: ${n}`,
+    'sx.lDict': 'Написано слов',
+    'sx.lDictSub': (n) => `о ${n} выпусках`,
+    'sx.lChart': 'Минуты аудирования — последние 30 дней',
+    'sx.lNone': 'Пока ничего не прослушано. Откройте Listening в библиотеке — первое появится здесь.',
+    'sx.lTip': (m) => `прослушано ${m} мин`,
     'sx.fToday': 'Сегодня в фокусе',
     'sx.fTotal': 'Всего в фокусе',
     'sx.fSessions': 'Сессии',
@@ -193,7 +223,25 @@
       due: withTr.filter((v) => v.srs && v.srs.due <= now).length,
     };
 
+    // listening (listen.js): seconds per day, episodes, words written about them
+    const ls = state.notes.listen || {};
+    const ldays = ls.days || {};
+    const listen30 = [];
+    for (let i = 29; i >= 0; i--) listen30.push({ date: addDays(today, -i), sec: ldays[key(addDays(today, -i))] || 0 });
+    const eps = Object.values(ls.eps || {});
+    const wrote = eps.filter((e) => e.wn);
+    const listen = {
+      today: ldays[key(today)] || 0,
+      total: Object.values(ldays).reduce((s, x) => s + x, 0),
+      done: eps.filter((e) => e.done).length,
+      started: eps.filter((e) => e.t > 5 && !e.done).length,
+      words: wrote.reduce((s, e) => s + e.wn, 0),
+      wrote: wrote.length,
+      any: eps.length > 0,
+    };
+
     return {
+      listen30, listen,
       focus30, fToday: fd(key(today)).sec, fTotal, sessions: log.length, done,
       avgSec: log.length ? log.reduce((s, x) => s + x.sec, 0) / log.length : 0,
       avgAway: log.length ? log.reduce((s, x) => s + (x.away || 0), 0) / log.length : 0,
@@ -306,7 +354,10 @@
   function hover(box, tipOf) {
     const tip = box.querySelector('.st-tip');
     const svg = box.querySelector('svg');
+    let felt = -1; // a tick on the trackpad per day/bar the pointer passes
+    const feel = (i) => i !== felt && ((felt = i), Haptic.align());
     const off = () => {
+      felt = -1;
       tip.classList.remove('show');
       box.classList.remove('hovering', 'crossing');
       box.querySelectorAll('.hot').forEach((x) => x.classList.remove('hot'));
@@ -325,6 +376,7 @@
         const n = +zone.dataset.n;
         const i = Math.max(0, Math.min(n - 1, Math.round((((e.clientX - r.left) / k - +zone.dataset.l) / +zone.dataset.pw) * (n - 1))));
         const g = svg.querySelector(`g[data-i="${i}"]`);
+        feel(i);
         const cx = +g.dataset.x;
         const cy = +g.dataset.y;
         svg.querySelector('.sx-cross').setAttribute('x1', cx);
@@ -341,6 +393,7 @@
       const i = +hit.dataset.i;
       const mark = box.querySelector(`.st-bar[data-i="${i}"], .st-zero[data-i="${i}"], .sx-cell[data-i="${i}"]`);
       if (!mark) return off();
+      feel(i);
       mark.classList.add('hot');
       box.classList.add('hovering');
       tip.innerHTML = tipOf(i);
@@ -375,6 +428,15 @@
       ${d.anyFocus ? '' : `<p class="st-empty sx-empty">${escH(t('sx.fNone'))}</p>`}
       ${card(t('sx.fChart'), 'sx-focus', 80)}
       ${card(t('sx.fHours'), 'sx-fhours', 120)}
+      <h2 class="sx-h">${escH(t('sx.listen'))}</h2>
+      <div class="st-tiles">
+        ${tile(t('sx.lToday'), dur(d.listen.today), '', 4)}
+        ${tile(t('sx.lTotal'), dur(d.listen.total), '', 5)}
+        ${tile(t('sx.lEps'), num(d.listen.done), d.listen.started ? t('sx.lEpsSub', d.listen.started) : '', 6)}
+        ${tile(t('sx.lDict'), num(d.listen.words), d.listen.wrote ? t('sx.lDictSub', d.listen.wrote) : '', 7)}
+      </div>
+      ${d.listen.any ? '' : `<p class="st-empty sx-empty">${escH(t('sx.lNone'))}</p>`}
+      ${card(t('sx.lChart'), 'sx-listen', 140)}
       <h2 class="sx-h">${escH(t('sx.habits'))}</h2>
       <div class="sx-pair">
         ${card(t('sx.hours'), 'sx-hours', 160)}
@@ -391,7 +453,7 @@
     if (!root || !root.isConnected) return;
     // every width is read before any chart is written: one layout instead of one per chart
     const widths = {};
-    for (const id of ['sx-focus', 'sx-fhours', 'sx-hours', 'sx-week', 'sx-heat', 'sx-growth']) {
+    for (const id of ['sx-focus', 'sx-listen', 'sx-fhours', 'sx-hours', 'sx-week', 'sx-heat', 'sx-growth']) {
       const el = root.querySelector('#' + id);
       widths[id] = Math.max(260, (el && el.clientWidth) || 600);
     }
@@ -405,6 +467,10 @@
     put('sx-focus', bars(d.focus30.map((x) => x.sec / 60), { W: W('sx-focus'), today: 29, axis: minAxis, label: (i) => ((29 - i) % 7 === 0 ? fmtDay(d.focus30[i].date, { day: 'numeric', month: 'short' }) : '') }), (i) => {
       const x = d.focus30[i];
       return `<b>${escH(i === 29 ? t('st.today') : fmtDay(x.date))}</b><br>${escH(t('sx.fTip', Math.round(x.sec / 60), x.sessions || 0, x.away || 0))}`;
+    });
+    put('sx-listen', bars(d.listen30.map((x) => x.sec / 60), { W: W('sx-listen'), today: 29, axis: minAxis, label: (i) => ((29 - i) % 7 === 0 ? fmtDay(d.listen30[i].date, { day: 'numeric', month: 'short' }) : '') }), (i) => {
+      const x = d.listen30[i];
+      return `<b>${escH(i === 29 ? t('st.today') : fmtDay(x.date))}</b><br>${escH(t('sx.lTip', Math.round(x.sec / 60)))}`;
     });
     put('sx-fhours', bars(d.fHours, { W: W('sx-fhours'), H: 140, every: 3, label: (i) => pad(i), axis: (v) => Math.round(v) }), (i) => `<b>${pad(i)}:00–${pad(i)}:59</b><br>${escH(t('sx.fSessions'))}: ${d.fHours[i]}`);
     put('sx-hours', bars(d.hours, { W: W('sx-hours'), H: 150, every: 3, label: (i) => pad(i), axis: minAxis }), (i) => escH(t('sx.hourTip', pad(i), dur(d.hours[i] * 60))));
