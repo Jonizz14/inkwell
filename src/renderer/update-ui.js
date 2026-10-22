@@ -32,7 +32,7 @@ const UpdateUI = (() => {
     // release notes are written in English, whatever the app's language
     changes: {
       add: [
-        ['Built-in fonts', 'Inter and Literata now ship with the app, so fonts installed on your computer no longer change how it looks.'],
+        ['Listening', 'A shelf beside Articles for YouTube shows, each episode on its own page with a place to write.'],
         ['Updates itself', 'New versions are announced here, and only the files that changed are downloaded.'],
       ],
       better: [
@@ -41,7 +41,7 @@ const UpdateUI = (() => {
       ],
       fix: [['Reminders', 'Fixed a reminder that kept opening by itself every hour.']],
     },
-    files: [['renderer/app.js', 148], ['renderer/styles.css', 62], ['renderer/focus.js', 31], ['renderer/fonts/fonts.css', 6]],
+    files: [['renderer/app.js', 148], ['renderer/styles.css', 62], ['renderer/focus.js', 31], ['renderer/listen.js', 6]],
   };
   let el, page, info, stage = 'come', from = 'library', timers = [];
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
@@ -369,6 +369,39 @@ const UpdateUI = (() => {
 
   return { demo: () => show(SAMPLE), announce: (i) => show({ ...i, real: true }), welcome, openPage };
 })();
+
+// ⋯ menu → "Check for updates": asks GitHub now and answers in a toast, or with the banner when
+// there is something new; the version installed stands beside it
+Object.assign(I18N.uz, {
+  'up.check': 'Yangilanish', 'up.checking': 'Tekshirilmoqda…', 'up.latest': (v) => `Sizda eng yangi versiya · v${v}`,
+  'up.error': "Tekshirib bo'lmadi — internetni tekshiring", 'up.dev': "Bu nusxa o'zi yangilanmaydi (o'zingiz yig'gan nusxa)",
+  'up.ready': 'Yangilanish tayyor — ilovani qayta oching', 'up.busy': 'Yangilanmoqda…',
+});
+Object.assign(I18N.en, {
+  'up.check': 'Updates', 'up.checking': 'Checking…', 'up.latest': (v) => `You have the latest version · v${v}`,
+  'up.error': "Couldn't check — look at the connection", 'up.dev': "This copy doesn't update itself (a build of your own)",
+  'up.ready': 'The update is ready — reopen the app', 'up.busy': 'Updating…',
+});
+Object.assign(I18N.ru, {
+  'up.check': 'Обновления', 'up.checking': 'Проверяю…', 'up.latest': (v) => `У вас последняя версия · v${v}`,
+  'up.error': 'Не удалось проверить — проверьте интернет', 'up.dev': 'Эта копия не обновляется сама (собрана вами)',
+  'up.ready': 'Обновление готово — перезапустите приложение', 'up.busy': 'Обновляется…',
+});
+if (typeof api !== 'undefined' && api.updateCheck && document.querySelector('#btn-update')) {
+  const btn = document.querySelector('#btn-update');
+  if (api.appVersion) api.appVersion().then((v) => (document.querySelector('#app-ver').textContent = v ? 'v' + v : ''));
+  let asking = false;
+  btn.addEventListener('click', async () => {
+    closeMenu();
+    if (asking) return;
+    asking = true;
+    toast(t('up.checking'), 4000);
+    const r = await api.updateCheck().catch(() => ({ state: 'error' }));
+    asking = false;
+    if (r.state === 'found') return (toast(''), document.querySelector('#toast').classList.remove('show'), UpdateUI.announce(r.info));
+    toast(r.state === 'latest' ? t('up.latest', r.current) : t('up.' + r.state), 3200);
+  });
+}
 
 // main.js (update.js) found a newer release on GitHub
 if (typeof api !== 'undefined' && api.onUpdateAvailable) api.onUpdateAvailable((i) => setTimeout(() => UpdateUI.announce(i), 2600));

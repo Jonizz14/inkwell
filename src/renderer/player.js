@@ -293,9 +293,9 @@ const Player = (() => {
         root.classList.toggle('no-art', !th);
         // the new colours fade in instead of snapping
         const fading = [poster, ...$$('.mp-tint, .mp-art', root)];
+        // taken off for one frame and put back, so the fade starts again without a forced layout
         fading.forEach((el) => el.classList.remove('swap'));
-        void root.offsetWidth;
-        fading.forEach((el) => el.classList.add('swap'));
+        requestAnimationFrame(() => requestAnimationFrame(() => fading.forEach((el) => el.classList.add('swap'))));
       };
       // decoded first, so no frame of an animation waits on the image
       if (!th) apply();
@@ -332,7 +332,8 @@ const Player = (() => {
     $$('.mp-fold', root).forEach((b) => (b.title = t('mp.collapse')));
     $('.mp-open', root).title = t('mp.expand');
     $$('.mp-btn').forEach((b) => (b.title = t('mp.btn')));
-    renderList();
+    // the list is drawn when it is opened (setLib); drawing it at every start was wasted work
+    if (root.classList.contains('lib')) renderList();
     paint();
   }
 
@@ -630,9 +631,10 @@ const Player = (() => {
     root.style.setProperty('--mp-gsx', ((PILL_W + 20) / (w + 28)).toFixed(4));
     root.style.setProperty('--mp-gsy', ((PILL_H + 28) / (h + 32)).toFixed(4));
   };
-  // the title arrives later and the fonts may load late: follow every change of size
+  // the title arrives later and the fonts may load late: follow every change of size. The
+  // observer also reports the first size, after the page's own first layout, so nothing here
+  // makes the browser lay the page out early while it is still loading.
   new ResizeObserver(fit).observe(card);
-  fit();
 
   /* While reading in focus the music steps back to half, and to a quarter while the
      microphone listens for read-along, so it neither pulls the eye's attention nor gets heard

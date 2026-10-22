@@ -29,6 +29,8 @@ contextBridge.exposeInMainWorld('api', {
   onUpdateFailed: (fn) => void ipcRenderer.on('update:failed', (_e, m) => fn(m)),
   onUpdateHold: (fn) => void ipcRenderer.on('update:hold', () => fn()),
   updateRun: () => ipcRenderer.invoke('update:run'),
+  updateCheck: () => ipcRenderer.invoke('update:check'),
+  appVersion: () => ipcRenderer.invoke('app:version'),
   updateDone: () => ipcRenderer.invoke('update:done'),
   updateDemo: () => ipcRenderer.invoke('update:demo'),
   updateRestart: (v) => ipcRenderer.invoke('update:restart', v),

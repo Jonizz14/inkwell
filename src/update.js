@@ -71,24 +71,30 @@ function notesOf(body) {
   return { add: out };
 }
 
-async function check() {
-  if (busy || staged || !supported()) return;
+// manual: asked for from the menu, which shows the answer itself (no announcement then)
+async function check(manual) {
+  if (staged) return { state: 'ready' };
+  if (busy) return { state: 'busy' };
+  if (!supported()) return { state: 'dev' };
   try {
     const r = await net.fetch(`https://api.github.com/repos/${REPO}/releases/latest`, {
       headers: { 'User-Agent': 'Inkwell', Accept: 'application/vnd.github+json' },
     });
-    if (!r.ok) return;
+    if (!r.ok) return { state: 'error' };
     const rel = await r.json();
     const version = String(rel.tag_name || '').replace(/^v/, '');
-    if (!newer(version, app.getVersion())) return;
+    if (!newer(version, app.getVersion())) return { state: 'latest' };
     const want = process.platform === 'darwin' ? /-mac\.zip$/ : /^Inkwell-Setup-.*\.exe$/;
     const asset = (rel.assets || []).find((a) => want.test(a.name));
-    if (!asset) return; // an older release without the update file
+    if (!asset) return { state: 'latest' }; // an older release without the update file
     const date = rel.published_at ? new Date(rel.published_at).toLocaleDateString('en-GB').replace(/\//g, '.') : '';
     found = { version, date, changes: notesOf(rel.body), files: [[asset.name, Math.round(asset.size / 1024)]], asset };
-    send('update:available', { version, date, changes: found.changes, files: found.files });
+    const info = { version, date, changes: found.changes, files: found.files };
+    if (!manual) send('update:available', info);
+    return { state: 'found', info };
   } catch (e) {
     console.error('update check', e.message);
+    return { state: 'error' };
   }
 }
 
@@ -186,6 +192,8 @@ function start(win) {
     return d;
   });
   ipcMain.on('update:busy', (_e, on) => (busy = !!on));
+  ipcMain.handle('update:check', async () => ({ ...(await check(true)), current: app.getVersion() }));
+  ipcMain.handle('app:version', () => app.getVersion());
   ipcMain.handle('update:run', () => ((busy = true), download()));
   // "Reopen": the downloaded build goes in and opens; in the demo the app just restarts
   ipcMain.handle('update:restart', async (_e, v) => {

@@ -25,10 +25,9 @@
   --t-slow: 420ms;
   --drawer-w: 420px;
   --read-size: 20px;
-  /* fonts/fonts.css: shipped with the app, so installed fonts never change how it looks */
-  --ui: "Inkwell UI", sans-serif;
-  --serif: "Inkwell Literata", serif;
-  --mono: "Inkwell Mono", monospace;
+  --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
+  --serif: "Iowan Old Style", "Charter", "Source Serif Pro", Georgia, "Times New Roman", serif;
+  --mono: "SF Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   color-scheme: light;
 }
 [data-theme="dark"] {
@@ -1161,3 +1160,6 @@ body.ra-on .fh-heard:not(:empty) { display: block; }
 /* the key for each tool, quiet on the right like a macOS menu */
 .tools .btn > kbd { margin-left: auto; border: 0; padding: 0; font: 11.5px var(--ui); letter-spacing: 0.08em; color: var(--muted); }
 #ai-menu kbd { float: right; margin-top: 1px; }
+
+/* ⋯ menu: the installed version beside "Check for updates" */
+.mn-ver { font: 12px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }

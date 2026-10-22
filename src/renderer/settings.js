@@ -233,12 +233,11 @@ const Settings = (() => {
   });
 
   const FONTS = [
-    // all shipped in fonts/ (the ids are the ones saved before the fonts were bundled)
-    ['iowan', 'Literata', '"Inkwell Literata", serif'],
-    ['charter', 'Source Serif', '"Inkwell Source Serif", serif'],
-    ['georgia', 'Lora', '"Inkwell Lora", serif'],
-    ['palatino', 'Garamond', '"Inkwell Garamond", serif'],
-    ['sans', 'Inter', '"Inkwell UI", sans-serif'],
+    ['iowan', 'Iowan', '"Iowan Old Style", "Charter", Georgia, serif'],
+    ['charter', 'Charter', '"Charter", "Iowan Old Style", Georgia, serif'],
+    ['georgia', 'Georgia', 'Georgia, "Times New Roman", serif'],
+    ['palatino', 'Palatino', '"Palatino", "Palatino Linotype", Georgia, serif'],
+    ['sans', 'SF Pro', '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'],
   ];
   // [opacity of far paragraphs, blur of far paragraphs]
   const BLUR = { off: [0.5, 0], soft: [0.3, 2], mid: [0.16, 4], strong: [0.08, 7] };

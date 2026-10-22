@@ -131,7 +131,7 @@
   align-items: baseline;
   padding: 2px 10px;
   border-radius: 16px;
-  font: 600 76px/1 var(--ui);
+  font: 600 76px/1 ui-rounded, "SF Pro Rounded", var(--ui);
   letter-spacing: -0.02em;
   color: var(--ink);
   cursor: text;
