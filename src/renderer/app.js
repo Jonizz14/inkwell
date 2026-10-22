@@ -42,12 +42,12 @@ function rec(id) {
 /* ---------------- small UI helpers ---------------- */
 
 let toastTimer;
-function toast(msg) {
+function toast(msg, ms = 1800) {
   const t = $('#toast');
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
 function bump(el) {
@@ -1573,6 +1573,8 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   Stats.seed();
   // a reminder notification was clicked: go where it pointed
   api.onRemindOpen(openTarget);
+  // a newer version was downloaded (update.js); it goes in when the app quits
+  api.onUpdateReady((v) => toast(t('update.ready', v), 5000));
   openTarget(await api.remindTarget());
   // the launch card goes once the app is up; a broken card must never keep the app from starting
   try {

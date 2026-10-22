@@ -7,6 +7,7 @@ const LANGS = ['uz', 'en', 'ru'];
 
 const I18N = {
   uz: {
+    'update.ready': (v) => `Inkwell ${v} yuklab olindi — ilova yopilganda yangilanadi`,
     'lang.uz': "O'zbekcha", 'lang.en': 'English', 'lang.ru': 'Русский',
     'st.title': 'Statistika',
     'st.today': 'Bugun',
@@ -102,6 +103,7 @@ const I18N = {
     'drop': "PDF'larni shu yerga tashlang",
   },
   en: {
+    'update.ready': (v) => `Inkwell ${v} is downloaded — it installs when you quit`,
     'lang.uz': "O'zbekcha", 'lang.en': 'English', 'lang.ru': 'Русский',
     'st.title': 'Statistics',
     'st.today': 'Today',
@@ -197,6 +199,7 @@ const I18N = {
     'drop': 'Drop PDFs here',
   },
   ru: {
+    'update.ready': (v) => `Inkwell ${v} загружен — обновится при выходе`,
     'lang.uz': "O'zbekcha", 'lang.en': 'English', 'lang.ru': 'Русский',
     'st.title': 'Статистика',
     'st.today': 'Сегодня',

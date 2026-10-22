@@ -33,12 +33,24 @@ jobs:
       # macOS: the native helpers (Vision OCR, read-along); Windows uses tesseract.js instead
       - if: matrix.os == 'macos-latest'
         run: npm run build:mac-tools
-      - run: npx electron-builder ${{ matrix.os == 'macos-latest' && '--mac' || '--win' }} --publish never
+      # macOS: the app first, then the reminder helper and the widgets go inside it (as
+      # install-mac.sh does); the zip is what installed apps update from (src/update.js)
+      - if: matrix.os == 'macos-latest'
+        run: |
+          npx electron-builder --mac dir --publish never
+          APP=$(ls -d dist/mac*/Inkwell.app | head -1)
+          bash scripts/build-remind.sh "$APP"
+          bash scripts/build-widget.sh "$APP"
+          ditto -c -k --keepParent "$APP" "dist/Inkwell-${{ env.VERSION }}-mac.zip"
+          npx electron-builder --mac dmg --prepackaged "$APP" --publish never
+      - if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win --publish never
       - uses: actions/upload-artifact@v4
         with:
           name: inkwell-${{ matrix.os }}
           path: |
             dist/*.dmg
+            dist/*-mac.zip
             dist/*.exe
 
   release:
@@ -59,6 +71,7 @@ jobs:
           body: |
             ${{ github.event.head_commit.message }}
 
-            **macOS:** `Inkwell-${{ env.VERSION }}-arm64.dmg` · **Windows:** `Inkwell Setup ${{ env.VERSION }}.exe`
+            **macOS:** `Inkwell-${{ env.VERSION }}-arm64.dmg` · **Windows:** `Inkwell-Setup-${{ env.VERSION }}.exe`
             Not code-signed: on Windows choose *More info → Run anyway*; on macOS right-click → *Open*.
+            Installed apps update themselves from here (`-mac.zip` on macOS, the installer on Windows).
           files: out/*

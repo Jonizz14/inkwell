@@ -517,6 +517,8 @@ async function schedule(notesArg) {
   const notes = notesArg || (await readJson(path.join(app.getPath('userData'), 'notes.json'), { settings: {} }));
   const s = slots(notes);
   const times = s.map((x) => `${pad(x.h)}:${pad(x.m)}`);
+  // a dev run (electron . / a test copy) must not take over the installed app's reminders
+  if (!app.isPackaged) return times;
   if (process.platform === 'win32') return scheduleWin(times);
   const target = `gui/${process.getuid()}`;
   if (!s.length) {

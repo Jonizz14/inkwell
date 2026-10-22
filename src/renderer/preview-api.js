@@ -43,7 +43,7 @@ if (PREVIEW && !window.api) {
     saveNotes: none, copy: none, openPdf: none, pick: none, importFiles: async () => [], scanInbox: none, openInbox: none,
     readClipboard: async () => '', remindTarget: none, remindSync: none, remindTest: none, remindSettings: none,
     widgetNow: none, fullscreen: none,
-    onImportProgress() {}, onRemindOpen() {}, onLibraryChanged() {},
+    onImportProgress() {}, onRemindOpen() {}, onLibraryChanged() {}, onUpdateReady() {}, updatePending: none, updateRestart: none,
     onRead: (fn) => void (onRead = fn),
     readStart: async () => {
       clearInterval(voice);

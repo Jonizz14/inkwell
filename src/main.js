@@ -6,6 +6,7 @@ const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const crypto = require('node:crypto');
 const remind = require('./notify');
+const update = require('./update');
 
 // started by the reminder agent: no window, no Dock icon unless the notification is clicked
 const REMIND_RUN = process.argv.includes('--remind');
@@ -222,6 +223,8 @@ ipcMain.handle('remind:target', async () => {
 ipcMain.handle('remind:settings', () => shell.openExternal(process.platform === 'win32' ? 'ms-settings:notifications' : 'x-apple.systempreferences:com.apple.Notifications-Settings.extension'));
 ipcMain.handle('remind:sync', async (_e, notes) => ({ times: await remind.schedule(notes), usual: remind.usualHour(notes || {}) }));
 ipcMain.handle('remind:test', () => remind.test(openFrom));
+ipcMain.handle('update:pending', () => update.pending());
+ipcMain.handle('update:restart', () => update.restartNow());
 
 ipcMain.handle('library:list', () => readJson(INDEX(), []));
 ipcMain.handle('library:article', (_e, id) => readJson(path.join(LIB(), String(id).replace(/\W/g, '') + '.json'), null));
@@ -365,6 +368,8 @@ app.whenReady().then(async () => {
     createWindow();
     remind.schedule().catch((e) => console.error('remind schedule', e));
     remind.widget().catch((e) => console.error('widget', e));
+    // a newer build is downloaded in the background and goes in when the app quits
+    update.start((v) => win && !win.isDestroyed() && win.webContents.send('update:ready', v));
     return;
   }
   if (app.dock) app.dock.hide();
@@ -376,7 +381,8 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  // on a Mac the app stays up without a window, unless a downloaded update is waiting to go in
+  if (process.platform !== 'darwin' || update.pending()) app.quit();
 });
 
 // Make sure pending note writes reach the disk before quitting.

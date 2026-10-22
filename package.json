@@ -67,6 +67,7 @@
     },
     "nsis": {
       "oneClick": true,
+      "artifactName": "Inkwell-Setup-${version}.${ext}",
       "createDesktopShortcut": "always",
       "shortcutName": "Inkwell"
     },
