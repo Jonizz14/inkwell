@@ -17,7 +17,11 @@
     "build:read": "mkdir -p src/bin && swiftc -O tools/read-along.swift -o src/bin/read-along",
     "build:haptic": "bash scripts/build-haptic.sh",
     "build:mac-tools": "npm run build:ocr && npm run build:read && npm run build:haptic",
-    "reextract": "node scripts/reextract.mjs --apply"
+    "reextract": "node scripts/reextract.mjs --apply",
+    "web:content": "node scripts/web-content.mjs",
+    "web:build": "node scripts/build-web.mjs",
+    "web:dev": "node scripts/build-web.mjs && npx -y serve web/dist -l 5173",
+    "web:deploy": "node scripts/build-web.mjs && cd web/dist && npx -y vercel@latest deploy --prod --yes"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.100",
@@ -27,7 +31,8 @@
   },
   "devDependencies": {
     "electron": "38.2.0",
-    "electron-builder": "26.0.12"
+    "electron-builder": "26.0.12",
+    "esbuild": "^0.28.2"
   },
   "build": {
     "appId": "uz.javohir.articles365",
@@ -42,7 +47,8 @@
       "package.json",
       "!**/*.map",
       "!**/*.d.ts",
-      "!**/*.d.mts"
+      "!**/*.d.mts",
+      "!web/**"
     ],
     "mac": {
       "target": [

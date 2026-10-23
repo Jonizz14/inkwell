@@ -1,0 +1,29 @@
+/* The web version (web/api.js adds html.web): no window chrome to make room for, no folder to
+   open, and reading aloud only where the browser can recognise speech. */
+html.web .dragbar { display: none; }
+html.web.mac .bar { padding-left: 16px; }
+html.web #btn-inbox { display: none; }
+html.web.speech.mac #ra-btn { display: revert; }
+html.web:not(.speech) #ra-btn { display: none; }
+
+/* A phone: the desktop window is never narrower than 760px, so below that the page folds the
+   library's rows and buttons and the reader's bar down to fit, nothing scrolling sideways. */
+@media (max-width: 700px) {
+  html, body { overflow-x: hidden; }
+  #library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur):not(.lib-bg) { width: calc(100% - 32px); }
+  .lib-top { padding-top: 24px; }
+  .lib-head { flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+  .lib-head h1 { font-size: 28px; }
+  .lib-actions { flex-wrap: wrap; gap: 4px; }
+  .lib-tools { flex-direction: column; align-items: stretch; gap: 10px; margin-top: 18px; }
+  .lib-tools .seg { overflow-x: auto; scrollbar-width: none; }
+  .item { grid-template-columns: 1fr auto; gap: 12px; padding: 16px 4px; }
+  .item .item-num { display: none; }
+  .bar { grid-template-columns: auto 1fr; padding: 0 8px; }
+  .bar-title { display: none; }
+  .bar-actions { overflow-x: auto; scrollbar-width: none; max-width: calc(100vw - 120px); }
+  .bar-actions > .btn:not(#btn-vocab) > span:not(.count), .tools-btn > span { display: none; }
+  .rail { display: none !important; }
+  .doc { width: calc(100% - 40px) !important; }
+  .ptool { display: none; }
+}

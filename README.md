@@ -78,6 +78,17 @@ Layout:
 - `src/notify.js`: reminders and widget data
 - `src/renderer/`: the interface
 - `tools/`: Swift helpers for macOS
+- `web/`: the web version: `api.js` stands in for the Electron bridge in a browser (IndexedDB storage, PDFs read in the page), `api/listen.js` fetches YouTube feeds for Listening
+
+### Web version
+
+The site is built from the same `src/renderer`, so the desktop app and the web never drift apart.
+
+```bash
+npm run web:content     # web/content/data.json: the articles the site ships with, from your desktop library (not in git)
+npm run web:dev         # build into web/dist and serve it on http://localhost:5173
+npm run web:deploy      # build and deploy web/dist to Vercel
+```
 
 Every push to `main` builds the macOS and Windows installers in GitHub Actions and publishes them as a new release.
 

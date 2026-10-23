@@ -30,6 +30,7 @@ const Listen = (() => {
     'ls.remove': "O'chirish",
     'ls.loading': 'Yuklanmoqda…',
     'ls.fail': "Epizodlarni yuklab bo'lmadi. Internetni tekshiring",
+    'ls.retry': 'Qayta urinish',
     'ls.empty': "Bu yerda hozircha epizod yo'q",
     'ls.done': 'Tinglandi',
     'ls.mark': 'Tinglandi deb belgilash',
@@ -56,6 +57,7 @@ const Listen = (() => {
     'ls.remove': 'Remove',
     'ls.loading': 'Loading…',
     'ls.fail': "Couldn't load the episodes. Check the connection",
+    'ls.retry': 'Try again',
     'ls.empty': 'No episodes here yet',
     'ls.done': 'Listened',
     'ls.mark': 'Mark as listened',
@@ -82,6 +84,7 @@ const Listen = (() => {
     'ls.remove': 'Удалить',
     'ls.loading': 'Загрузка…',
     'ls.fail': 'Не удалось загрузить выпуски. Проверьте интернет',
+    'ls.retry': 'Повторить',
     'ls.empty': 'Здесь пока нет выпусков',
     'ls.done': 'Прослушано',
     'ls.mark': 'Отметить как прослушанное',
@@ -206,7 +209,7 @@ const Listen = (() => {
     }
     load(s); // refreshes quietly when it's old
     if (c.err && !c.items.length) {
-      $('#list').innerHTML = `<li class="gd-msg">${esc(t('ls.fail'))} <button class="btn ghost ls-retry">${esc(t('gd.retry'))}</button></li>`;
+      $('#list').innerHTML = `<li class="gd-msg">${esc(t('ls.fail'))} <button class="btn ghost ls-retry">${esc(t('ls.retry'))}</button></li>`;
       return true;
     }
     const q = state.query.trim().toLowerCase();

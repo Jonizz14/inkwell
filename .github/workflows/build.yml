@@ -1,9 +1,11 @@
 name: build
 # Every push to main builds macOS and Windows and publishes them as a new release
-# (v1.1.<run number>); pull requests only build, to check.
+# (v1.1.<run number>); pull requests only build, to check. A push that only touches the web
+# version (or the docs) makes no release: the installed apps would announce an empty update.
 on:
   push:
     branches: [main]
+    paths-ignore: ['web/**', 'scripts/build-web.mjs', 'scripts/web-content.mjs', '**/*.md']
   pull_request:
   workflow_dispatch:
 permissions:

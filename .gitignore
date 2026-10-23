@@ -7,3 +7,6 @@ test/shots/
 .DS_Store
 src/private/
 src/renderer/private/
+web/dist/
+web/content/
+web/.vercel/
