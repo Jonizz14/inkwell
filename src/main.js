@@ -1,4 +1,4 @@
-const { app, session, BrowserWindow, ipcMain, dialog, clipboard, shell, nativeTheme, systemPreferences } = require('electron');
+const { app, session, BrowserWindow, ipcMain, dialog, clipboard, shell, nativeTheme, systemPreferences, nativeImage } = require('electron');
 const { spawn } = require('node:child_process');
 const readline = require('node:readline');
 const path = require('node:path');
@@ -252,7 +252,34 @@ ipcMain.handle('remind:settings', () => shell.openExternal(process.platform === 
 ipcMain.handle('remind:sync', async (_e, notes) => ({ times: await remind.schedule(notes), usual: remind.usualHour(notes || {}) }));
 ipcMain.handle('remind:test', () => remind.test(openFrom));
 
-ipcMain.handle('library:list', () => readJson(INDEX(), []));
+// The library rows show a picture 112 px wide, but a saved article's picture is ~1500 px: decoding
+// and scaling dozens of those while the list scrolls or switches shelves stalled the frames. Each
+// gets a small copy beside it (<id>.t.jpg, 336 px: three times the row), made once, in the
+// background; a row uses it as soon as it exists (m.thumb), the article page keeps the big one.
+const thumbing = new Set();
+function thumbs(list) {
+  const todo = list.filter((m) => m.img && !/^https?:/.test(m.img) && !thumbing.has(m.img));
+  (async () => {
+    for (const m of todo) {
+      const src = path.join(LIB(), m.img);
+      const dst = src.replace(/\.[a-z]+$/i, '') + '.t.jpg';
+      if (fs.existsSync(dst)) continue;
+      thumbing.add(m.img);
+      try {
+        const im = nativeImage.createFromPath(src);
+        if (!im.isEmpty()) await fsp.writeFile(dst, im.resize({ width: Math.min(336, im.getSize().width), quality: 'best' }).toJPEG(82));
+      } catch {}
+      await new Promise((ok) => setTimeout(ok, 15)); // a little at a time: the window stays smooth
+    }
+  })();
+  for (const m of list) {
+    if (!m.img || /^https?:/.test(m.img)) continue;
+    const t = m.img.replace(/\.[a-z]+$/i, '') + '.t.jpg';
+    if (fs.existsSync(path.join(LIB(), t))) m.thumb = t;
+  }
+  return list;
+}
+ipcMain.handle('library:list', async () => thumbs(await readJson(INDEX(), [])));
 ipcMain.handle('library:article', async (_e, id) => {
   const file = path.join(LIB(), String(id).replace(/\W/g, '') + '.json');
   const index = await readJson(INDEX(), []);

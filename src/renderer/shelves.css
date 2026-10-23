@@ -3,12 +3,20 @@
    colour changes, nothing moves or grows. A shelf's chips are a row with one pill that slides
    to the chosen one. Rows are the library's own. */
 .shelf { display: flex; align-items: baseline; gap: 18px; margin: 0 0 6px; white-space: nowrap; }
-/* the two names never break onto two lines. Both fit beside the buttons in the library's
-   1000px column; only in a narrow window do the buttons go under them. The counts line under
-   the names doesn't widen the block (it ends in "…" instead). */
+/* the names never break onto two lines and always sit beside the buttons (fitHead in app.js:
+   smaller type in a narrow window, then "+ Add" becomes "+"). The counts line under the names
+   doesn't widen the block (it ends in "…" instead). */
 .lib-head h1.shelf { font-size: 28px; }
-.lib-head { flex-wrap: wrap; row-gap: 14px; }
-.lib-head > div:first-child { flex: 1 1 0; min-width: min-content; }
+#library:not(.compact) .lib-head h1.shelf { font-size: var(--shelf-size, 28px); }
+.lib-head { flex-wrap: nowrap; }
+.lib-head > div:first-child { flex: 1 1 0; min-width: 0; }
+.lib-actions { flex: none; gap: 3px; }
+.lib-actions > .btn:not(.icon) { padding: 0 10px; }
+/* the tightest row: "+ Add" keeps only its plus (the full label is its tooltip) */
+.lib-head.tight #btn-add { font-size: 0; min-width: 0 !important; width: 34px; padding: 0; }
+.lib-head.tight #btn-add::before { content: '+'; font: 400 20px/1 var(--ui); }
+.lib-head.tight .lib-actions { gap: 0; }
+.lib-head.tight .lib-actions > .btn:not(.icon):not(#btn-add) { padding: 0 7px; }
 .lib-head #lib-stats { width: 0; min-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .shelf button { flex: none; padding: 0; border: 0; background: none; font: inherit; text-align: left; white-space: nowrap; letter-spacing: inherit; color: var(--faint); cursor: pointer; transition: color var(--t) var(--ease); -webkit-app-region: no-drag; }
 .shelf button:hover { color: var(--muted); }
@@ -18,8 +26,8 @@
    nothing slides) and its chips come out of a blur one after another */
 .lib-chips { display: grid; grid-template-rows: 0fr; margin-top: 0; }
 .lib-chips > .chips { min-height: 0; }
-#library.gd .lib-chips { grid-template-rows: 1fr; margin-top: 18px; }
-#library.gd.compact .lib-chips { margin-top: 10px; }
+#library.gd .lib-chips { grid-template-rows: 1fr; margin-top: 8px; }
+#library.gd.compact .lib-chips { margin-top: 6px; }
 #search.busy, #btn-add.busy { opacity: 0.6; pointer-events: none; }
 #btn-add { justify-content: center; transition: opacity 160ms ease, filter 200ms ease; }
 #btn-add.swap, #lib-stats.swap, #filter button.swap { opacity: 0; filter: blur(4px); }

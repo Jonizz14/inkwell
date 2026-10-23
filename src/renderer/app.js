@@ -128,9 +128,12 @@ function ring(p) {
 // (a Guardian picture is shown from the Guardian's servers: m.img is its address)
 const libImg = (m) => (!m.img ? null : /^https:\/\//.test(m.img) ? m.img : state.libDir ? encodeURI('file://' + state.libDir + '/' + m.img) : null);
 
+// a row's picture: its small copy when main.js has made one (the big one cost frames to decode)
+const rowImg = (m) => (m.thumb && state.libDir ? encodeURI('file://' + state.libDir + '/' + m.thumb) : libImg(m));
+
 function itemHtml(m, i, num) {
   const a = state.notes.articles[m.id] || {};
-  const img = libImg(m);
+  const img = rowImg(m);
   const p = a.progress || 0;
   const v = (a.vocab && a.vocab.length) || 0;
   const n = Object.values(a.notes || {}).filter((t) => t.trim()).length;
@@ -147,7 +150,7 @@ function itemHtml(m, i, num) {
 function itemSig(m) {
   const a = state.notes.articles[m.id] || {};
   const n = Object.values(a.notes || {}).filter((t) => t.trim()).length;
-  return [statusOf(m.id), (a.progress || 0).toFixed(4), (a.vocab && a.vocab.length) || 0, n, titleOf(m), m.img || ''].join('|');
+  return [statusOf(m.id), (a.progress || 0).toFixed(4), (a.vocab && a.vocab.length) || 0, n, titleOf(m), m.thumb || m.img || ''].join('|');
 }
 
 function libHeader() {
@@ -296,6 +299,9 @@ async function openArticle(id) {
   sc.scrollTop = (r.pos ?? r.progress ?? 0) * (sc.scrollHeight - sc.clientHeight);
   onScroll();
   // let the new article lay out and paint first, so the slide starts on a clean frame
+  // the article's picture is decoded before the slide, not during it (a 1500 px photo cost a frame)
+  const hero = $('.doc-hero img');
+  if (hero && !(hero.complete && hero.naturalWidth)) await Promise.race([hero.decode().catch(() => {}), new Promise((ok) => setTimeout(ok, 200))]);
   await settled();
   showView('reader');
 }
@@ -531,6 +537,43 @@ function setCompact(lib, on) {
     el.animate([{ transformOrigin: '0 0', transform: `translate(${dx}px, ${dy}px) scale(${s})` }, { transformOrigin: '0 0', transform: 'none' }], { duration: 460, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
   });
 }
+// The shelf titles and the buttons share one row. When the row is narrower than both, the titles'
+// type shrinks to fit (down to 18px) rather than the buttons wrapping under them.
+(function fitHead() {
+  const head = $('.lib-head');
+  const shelf = $('#shelf');
+  const acts = $('.lib-actions');
+  if (!head || !shelf || !acts) return;
+  const BASE = 28;
+  const TIGHT = 20; // below this the "+ Add" button gives up its words first
+  const add = $('#btn-add');
+  let actsFull = 0; // the buttons' width with "+ Add"'s words and their usual spacing
+  const fit = () => {
+    if ($('#library').classList.contains('compact') || !head.clientWidth) return;
+    const cs = getComputedStyle(shelf);
+    const cur = parseFloat(cs.fontSize) || BASE;
+    const btns = [...shelf.children];
+    const gaps = (parseFloat(cs.columnGap) || 0) * (btns.length - 1);
+    const text = btns.reduce((n, b) => n + b.getBoundingClientRect().width, 0);
+    const tight = head.classList.contains('tight');
+    const actsW = acts.getBoundingClientRect().width;
+    if (!tight) actsFull = actsW;
+    const room = head.clientWidth - actsW - (parseFloat(getComputedStyle(head).columnGap) || 0) - gaps - 2;
+    const size = (r) => Math.floor(((cur * r) / text) * 4) / 4;
+    // with its words back, would the names still be at least TIGHT + 1?
+    const full = tight ? size(room - (actsFull - actsW)) : size(room);
+    if (add) {
+      if (!tight && full < TIGHT) return (add.title = add.textContent), head.classList.add('tight');
+      if (tight && full >= TIGHT + 1) return head.classList.remove('tight');
+    }
+    const want = Math.max(14, Math.min(BASE, size(room)));
+    if (Math.abs(want - cur) >= 0.25) head.style.setProperty('--shelf-size', want + 'px');
+  };
+  const ro = new ResizeObserver(() => requestAnimationFrame(fit));
+  ro.observe(head);
+  ro.observe(acts);
+  document.fonts.ready.then(fit);
+})();
 $('#library').addEventListener('scroll', (e) => {
   const lib = e.currentTarget;
   if (lib.scrollTop > 60) setCompact(lib, true);
@@ -629,7 +672,10 @@ $('#btn-stats').addEventListener('click', () => {
   closeMenu();
   closeDrawer();
   Stats.render($('#stats-body'));
-  settled().then(() => showView('stats'));
+  // ~9,000 elements: styled and laid out while the page still waits off screen (.warm), so the
+  // slide's first frame doesn't do it all at once (it dropped a frame every time)
+  $('#stats').classList.add('warm');
+  settled().then(() => (showView('stats'), $('#stats').classList.remove('warm')));
 });
 $('#stats-back').addEventListener('click', backToLibrary);
 
