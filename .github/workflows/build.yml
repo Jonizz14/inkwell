@@ -5,7 +5,7 @@ name: build
 on:
   push:
     branches: [main]
-    paths-ignore: ['web/**', 'scripts/build-web.mjs', 'scripts/web-content.mjs', '**/*.md']
+    paths-ignore: ['web/**', 'docs/**', 'scripts/build-web.mjs', 'scripts/web-content.mjs', '**/*.md']
   pull_request:
   workflow_dispatch:
 permissions:

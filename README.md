@@ -1,5 +1,10 @@
 <p align="center"><img src="build/icon.png" width="128" alt="Inkwell"></p>
 
+<p align="center">
+  <a href="https://github.com/Jonizz14/inkwell/releases/download/v1.1.26/Inkwell-presentation.mp4"><img src="docs/presentation.webp" width="880" alt="Inkwell: a one-minute presentation"></a>
+  <br><sub>▶ <a href="https://github.com/Jonizz14/inkwell/releases/download/v1.1.26/Inkwell-presentation.mp4">Watch the full presentation</a> (1 min, 1080p, with music)</sub>
+</p>
+
 # Inkwell
 
 An offline desktop reader for PDF articles, made for daily English reading practice.
@@ -8,10 +13,33 @@ their context, write what you understood under each paragraph, read in focus mod
 
 Runs on **macOS** and **Windows**. Works with no internet connection or account, and has no tracking.
 
-**▶ [Watch the 1-minute presentation](https://github.com/Jonizz14/inkwell/releases/download/v1.1.26/Inkwell-presentation.mp4)** (MP4, 1080p, with music)
-
 > Unofficial. This project is not affiliated with any publisher or channel. It ships **no articles**:
 > you read your own PDFs.
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/library.jpg" alt="The library"><br><sub><b>Library</b>: your PDF articles, offline</sub></td>
+    <td width="50%"><img src="docs/screenshots/reader.jpg" alt="Reading an article"><br><sub><b>Reading</b>: highlights and saved words in the text</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/vocabulary.jpg" alt="Vocabulary drawer"><br><sub><b>Vocabulary</b>: every saved word with its translation</sub></td>
+    <td><img src="docs/screenshots/focus.jpg" alt="Focus mode"><br><sub><b>Focus</b>: one paragraph at a time</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/plan.jpg" alt="Today's plan"><br><sub><b>Plan</b>: one podcast and one article, every day</sub></td>
+    <td><img src="docs/screenshots/podcast.jpg" alt="A podcast episode"><br><sub><b>Listening</b>: watch, then write it in your own words</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/listening.jpg" alt="Listening shelf"><br><sub><b>Podcasts</b>: BBC, TED, The Economist and any YouTube channel</sub></td>
+    <td><img src="docs/screenshots/guardian.jpg" alt="The Guardian shelf"><br><sub><b>The Guardian</b>: long reads and sections, with your own key</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/statistics.jpg" alt="Statistics"><br><sub><b>Statistics</b>: streak, daily goal, reading time</sub></td>
+    <td><img src="docs/screenshots/light.jpg" alt="Light theme"><br><sub><b>Light and dark</b>: press D</sub></td>
+  </tr>
+</table>
 
 ## Features
 
