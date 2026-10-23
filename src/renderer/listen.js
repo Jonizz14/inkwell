@@ -146,15 +146,22 @@ const Listen = (() => {
     save();
   }
 
-  async function load(s, force) {
+  const pending = new Map(); // show key -> the feed being fetched (the plan page waits on it too)
+  function load(s, force) {
     const k = s[0];
     const c = cache.get(k);
-    if (loading.has(k) || (!force && c && Date.now() - c.at < 20 * 60000 && !c.err)) return;
+    if (loading.has(k)) return pending.get(k);
+    if (!force && c && Date.now() - c.at < 20 * 60000 && !c.err) return Promise.resolve();
     loading.add(k);
-    const r = await api.listenFeed(s[2], s[3]).catch((e) => ({ ok: false, err: e.message }));
-    loading.delete(k);
-    cache.set(k, r && r.ok ? { at: Date.now(), items: tidy(r.items, nameOf(s)) } : { at: Date.now(), items: (c && c.items) || [], err: (r && r.err) || 'fail' });
-    if (state.shelf === 'listen' && state.view === 'library' && showNow()[0] === k) Shelves.swapList();
+    const p = (async () => {
+      const r = await api.listenFeed(s[2], s[3]).catch((e) => ({ ok: false, err: e.message }));
+      loading.delete(k);
+      pending.delete(k);
+      cache.set(k, r && r.ok ? { at: Date.now(), items: tidy(r.items, nameOf(s)) } : { at: Date.now(), items: (c && c.items) || [], err: (r && r.err) || 'fail' });
+      if (state.shelf === 'listen' && state.view === 'library' && showNow()[0] === k) Shelves.swapList();
+    })();
+    pending.set(k, p);
+    return p;
   }
 
   // titles without emoji, hashtags or the show's own name tacked on the end ("… ⏲️ 6 Minute
@@ -598,5 +605,15 @@ const Listen = (() => {
   }).observe(page, { attributes: true, attributeFilter: ['class'] });
   $('#watch-back').addEventListener('click', backToLibrary);
 
-  return { chipsHtml, pick, removeShow, render, header, addFromButton, leave: () => {} };
+  // for the plan page (plan.js): the shows, a show's episodes, an episode's state, and its page
+  const showList = () => shows().map((s) => ({ key: s[0], name: nameOf(s) }));
+  async function episodes(key) {
+    const s = shows().find((x) => x[0] === key) || showNow();
+    await load(s);
+    const c = cache.get(s[0]) || {};
+    return { key: s[0], items: c.items || [], err: !(c.items || []).length && c.err };
+  }
+  const ep = (v) => L().eps[v] || {};
+
+  return { chipsHtml, pick, removeShow, render, header, addFromButton, leave: () => {}, showList, showNow: () => showNow()[0], episodes, ep, open };
 })();

@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="guardian.css" />
   <link rel="stylesheet" href="update-ui.css" />
   <link rel="stylesheet" href="inbox.css" />
+  <link rel="stylesheet" href="plan.css" />
 </head>
 <body>
   <script src="splash.js"></script>
@@ -90,6 +91,16 @@
 
   <!-- Reader -->
   <div id="dim"></div>
+
+  <!-- the day's plan (plan.js): one podcast and one article, both to the end -->
+  <section id="plan" class="view">
+    <header class="bar">
+      <button class="btn ghost back" id="plan-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
+      <div class="bar-title show" data-i18n="pl.title">Reja</div>
+      <div></div>
+    </header>
+    <main class="scroller"><div class="plan" id="plan-body"></div></main>
+  </section>
   <section id="reader" class="view">
     <header class="bar">
       <button class="btn ghost back" id="btn-back" data-i18n-title="reader.backTitle" data-i18n-html="reader.back">←&nbsp; Kutubxona</button>
@@ -295,5 +306,6 @@
   <script src="recap.js"></script>
   <script src="update-ui.js"></script>
   <script src="inbox.js"></script>
+  <script src="plan.js"></script>
 </body>
 </html>

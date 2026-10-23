@@ -546,11 +546,15 @@ async function backToLibrary() {
   if (state.vocabScope === 'article') closeDrawer();
   refreshItem();
   await settled();
+  // an article or an episode opened from the plan page goes back there (plan.js)
+  const to = state.backTo;
+  state.backTo = null;
+  if (to === 'plan' && state.view !== 'plan' && typeof Plan !== 'undefined') return Plan.back();
   showView('library');
 }
 // two-finger swipe right on the trackpad goes back, like the iOS edge swipe
 let swipeX = 0, swipeT;
-for (const v of [$('#reader'), $('#stats'), $('#cards'), $('#settings'), $('#watch')]) v.addEventListener('wheel', (e) => {
+for (const v of [$('#reader'), $('#stats'), $('#cards'), $('#settings'), $('#watch'), $('#plan')]) v.addEventListener('wheel', (e) => {
   if (state.view === 'library' || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
   swipeX = e.deltaX < 0 ? swipeX - e.deltaX : 0;
   clearTimeout(swipeT);
@@ -571,6 +575,7 @@ function setLang(l) {
   if (typeof Test !== 'undefined' && Test.isOpen()) Test.render();
   if (state.view === 'cards') Cards.render();
   if (typeof Player !== 'undefined') Player.render();
+  if (typeof Plan !== 'undefined') state.view === 'plan' ? Plan.render() : Plan.badge();
 }
 // stats, folder, theme and language live in the ⋯ menu to keep the header calm
 $('#btn-more').addEventListener('click', () => $('#more-menu').classList.toggle('show'));
@@ -1617,6 +1622,7 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   if (typeof Shelves !== 'undefined') Shelves.prepare();
   await loadLibrary();
   if (typeof Shelves !== 'undefined') Shelves.restore();
+  if (typeof Plan !== 'undefined') Plan.stamp(), Plan.badge();
   Stats.seed();
   // a reminder notification was clicked: go where it pointed
   api.onRemindOpen(openTarget);
