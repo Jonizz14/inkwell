@@ -1,0 +1,23 @@
+/* The Guardian shelf (guardian.js): its feed rows, the card asking for a key, and its Settings group. The shelf
+   itself (title switch, chips, list, messages) is styled by shelves.css. */
+.gd-row .item-num { white-space: nowrap; }
+.gd-dl { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 11px; color: var(--muted); transition: color var(--t-fast), background var(--t-fast); }
+.gd-dl svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.gd-row:hover .gd-dl { color: var(--ink); background: var(--soft); }
+/* saving: a line runs along the row's bottom edge */
+.gd-load { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--ink); transform: scaleX(0); transform-origin: left; opacity: 0; pointer-events: none; }
+.gd-row.loading { cursor: progress; }
+.gd-row.loading .gd-load { opacity: 1; animation: gd-load 1.4s cubic-bezier(0.3, 0.6, 0.2, 1) infinite; }
+@keyframes gd-load { 0% { transform: scaleX(0); transform-origin: left; } 50% { transform: scaleX(1); transform-origin: left; } 50.01% { transform-origin: right; } 100% { transform: scaleX(0); transform-origin: right; } }
+
+
+/* The Guardian key: the field and its Check button on one line, the answer under them */
+.set-gkey { display: flex; gap: 8px; align-items: center; }
+.set-gkey .set-text { flex: 1; min-width: 0; font-family: var(--mono, monospace); font-size: 12.5px; }
+.set-gstat { margin-top: 6px; min-height: 1.3em; font: 12.5px var(--ui); color: var(--muted); }
+.set-gstat.ok { color: var(--ink); }
+
+/* no key yet: what it is for, and the two ways to it */
+.gd-key { display: grid; justify-items: center; gap: 16px; max-width: 460px; margin: 0 auto; }
+.gd-key span { display: flex; gap: 8px; }
+.gd-key .btn { margin-left: 0; }

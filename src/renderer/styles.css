@@ -165,7 +165,7 @@ code { font: 12px var(--mono); background: var(--soft); padding: 1px 5px; border
 body.in-reader #dim { opacity: 0.18; }
 /* the edge blurs and the bar's glass ride along with the page while it slides in: they are
    there from the first frame, never popping in after it lands */
-#list.quiet .item { animation: none; }
+#list.quiet .item, #list .item.still { animation: none; }
 
 /* ---------- library ---------- */
 #library { overflow-y: auto; padding: 0; }

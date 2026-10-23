@@ -125,7 +125,8 @@ function ring(p) {
 }
 
 // a saved web article's picture, from the library folder (shown offline too)
-const libImg = (m) => (m.img && state.libDir ? encodeURI('file://' + state.libDir + '/' + m.img) : null);
+// (a Guardian picture is shown from the Guardian's servers: m.img is its address)
+const libImg = (m) => (!m.img ? null : /^https:\/\//.test(m.img) ? m.img : state.libDir ? encodeURI('file://' + state.libDir + '/' + m.img) : null);
 
 function itemHtml(m, i, num) {
   const a = state.notes.articles[m.id] || {};
@@ -133,7 +134,9 @@ function itemHtml(m, i, num) {
   const p = a.progress || 0;
   const v = (a.vocab && a.vocab.length) || 0;
   const n = Object.values(a.notes || {}).filter((t) => t.trim()).length;
-  return `<li class="item ${statusOf(m.id)}${img ? ' has-img' : ''}" data-id="${m.id}" data-sig="${esc(itemSig(m))}" style="animation-delay:${Math.min(i, 14) * 22}ms">
+  // rows past the first screens come in still: nobody sees them rise, and 170 rows blurring at once
+  // cost a whole style pass every frame
+  return `<li class="item ${statusOf(m.id)}${img ? ' has-img' : ''}${i >= 24 ? ' still' : ''}" data-id="${m.id}" data-sig="${esc(itemSig(m))}" style="animation-delay:${Math.min(i, 14) * 22}ms">
         <div class="item-num">${String(num).padStart(3, '0')}</div>
         <div><h3 class="item-title">${esc(titleOf(m))}</h3><p class="item-ex">${esc(m.excerpt)}</p></div>${img ? `<img class="item-img" src="${esc(img)}" alt="" loading="lazy" decoding="async" />` : ''}
         <div class="item-meta">${ring(p)}<span>${t('lib.min', Math.max(1, Math.round(m.words / 220)))}</span>${v ? `<span>${t('lib.words', v)}</span>` : ''}${n ? `<span>${t('lib.notes', n)}</span>` : ''}</div>
@@ -272,9 +275,16 @@ window.addEventListener('drop', async (e) => {
 async function openArticle(id) {
   const meta = state.list.find((m) => m.id === id);
   const data = await api.article(id);
+  // a Guardian article whose day-old text couldn't be fetched again (no key, no internet)
+  if (data && data.err) return toast(typeof Guardian !== 'undefined' ? Guardian.why(data.err) : t('reader.openFail'));
   if (!meta || !data) return toast(t('reader.openFail'));
   state.current = { id, meta, data };
   const r = rec(id);
+  // its text was edited since it was last fetched: highlights and notes find their places again
+  if (data.moved != null && typeof migrateRecord === 'function') {
+    migrateRecord(r, Array.from({ length: data.moved }, () => ({ text: '' })), data.blocks);
+    delete data.moved;
+  }
   applyEdits(data, r);
   r.opened = Date.now();
   save();
@@ -1602,6 +1612,8 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   if (typeof Session !== 'undefined') Session.clear();
   Stats.init({ notes: () => state.notes, list: () => state.list, reading: () => state.view === 'reader' && document.hasFocus(), save });
   await loadAddons();
+  // the Guardian shelf, unless an add-on brought its own
+  if (typeof Guardian !== 'undefined' && typeof Shelves !== 'undefined' && !Shelves.has('guardian')) Guardian.setup();
   if (typeof Shelves !== 'undefined') Shelves.prepare();
   await loadLibrary();
   if (typeof Shelves !== 'undefined') Shelves.restore();

@@ -25,6 +25,8 @@ Runs on **macOS** and **Windows**. Works with no internet connection or account,
 | **AI export** | One shortcut copies the text, your notes and vocabulary as a ready prompt for any AI chat |
 | **Statistics** | Streak with a flame, rings for today's goal, facts and records, focus and vocabulary charts. **Day and week recaps** play as full-window slides |
 | **Reminders** | Daily notifications at your usual reading time (launchd on macOS, Task Scheduler on Windows) |
+| **The Guardian** | A shelf beside your PDFs: the newest Long Reads, Science, Culture and more, saved and read like any article. Runs on your own free key from [open-platform.theguardian.com](https://open-platform.theguardian.com/access/) (Settings → The Guardian). As the Guardian's terms ask, article text is kept for 24 hours at most: your highlights, words and notes stay, the text is fetched again when you open it later. Non-commercial use only |
+| **Listening** | YouTube shows (BBC Learning English, TED and others) with speed, subtitles and a page to write what you heard |
 | **Music** | A small background player for YouTube links you add |
 | **Languages** | Uzbek, English, Russian interface |
 

@@ -44,7 +44,7 @@ if (PREVIEW && !window.api) {
     readClipboard: async () => '', remindTarget: none, remindSync: none, remindTest: none, remindSettings: none,
     widgetNow: none, fullscreen: none,
     onImportProgress() {}, onRemindOpen() {}, onLibraryChanged() {},
-    listenFeed: async () => ({ ok: true, items: [] }), listenResolve: none, addons: async () => [], appVersion: async () => '', updateCheck: async () => ({ state: 'dev' }),
+    listenFeed: async () => ({ ok: true, items: [] }), listenResolve: none, addons: async () => [], guardian: async () => ({ ok: true, items: [] }), appVersion: async () => '', updateCheck: async () => ({ state: 'dev' }),
     onRead: (fn) => void (onRead = fn),
     readStart: async () => {
       clearInterval(voice);

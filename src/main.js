@@ -8,6 +8,7 @@ const crypto = require('node:crypto');
 const remind = require('./notify');
 const update = require('./update');
 const listen = require('./listen');
+const guardian = require('./guardian');
 
 // started by the reminder agent: no window, no Dock icon unless the notification is clicked
 const REMIND_RUN = process.argv.includes('--remind');
@@ -252,7 +253,77 @@ ipcMain.handle('remind:sync', async (_e, notes) => ({ times: await remind.schedu
 ipcMain.handle('remind:test', () => remind.test(openFrom));
 
 ipcMain.handle('library:list', () => readJson(INDEX(), []));
-ipcMain.handle('library:article', (_e, id) => readJson(path.join(LIB(), String(id).replace(/\W/g, '') + '.json'), null));
+ipcMain.handle('library:article', async (_e, id) => {
+  const file = path.join(LIB(), String(id).replace(/\W/g, '') + '.json');
+  const index = await readJson(INDEX(), []);
+  const m = index.find((a) => a.id === id);
+  if (!m || !m.op) return readJson(file, null);
+  // a Guardian article: its text is a day old at most, else it comes again (guardian.js)
+  const have = await readJson(file, null);
+  if (have && !guardian.stale(have.fetchedAt)) return have;
+  return refetchGuardian(m, index).catch((e) => ({ err: e.message }));
+});
+
+/* ---------------- The Guardian (guardian.js, renderer/guardian.js) ---------------- */
+
+const guardianKey = async () => ((await readJson(NOTES(), {})).settings || {}).guardianKey || '';
+// the text as a fingerprint, to know if it changed between two fetches (the text itself is not kept)
+const textPrint = (blocks) => crypto.createHash('sha1').update(blocks.map((b) => b.type + b.text).join('\n')).digest('hex').slice(0, 16);
+let guardianChain = Promise.resolve();
+const oneAtATime = (fn) => {
+  const run = guardianChain.then(fn);
+  guardianChain = run.catch(() => {});
+  return run;
+};
+
+async function refetchGuardian(m, index) {
+  const a = await guardian.article(await guardianKey(), m.url);
+  const data = { title: a.title, blocks: a.blocks, numPages: 0, words: a.words, fetchedAt: a.fetchedAt };
+  await writeJson(path.join(LIB(), m.id + '.json'), data);
+  const print = textPrint(a.blocks);
+  // the article was edited since: the reader moves highlights and notes onto the new text
+  const moved = m.print && m.print !== print ? m.count || 0 : null;
+  await oneAtATime(async () => {
+    const now = await readJson(INDEX(), index);
+    const e = now.find((x) => x.id === m.id);
+    if (e) Object.assign(e, { print, count: a.blocks.length, fetchedAt: a.fetchedAt, words: a.words, img: a.img || e.img || null });
+    await writeJson(INDEX(), now);
+  });
+  return moved === null ? data : { ...data, moved };
+}
+
+// texts older than a day are deleted (on start, and every hour while the app runs)
+async function dropOldGuardian() {
+  const index = await readJson(INDEX(), []);
+  for (const m of index.filter((a) => a.op && guardian.stale(a.fetchedAt))) await fsp.rm(path.join(LIB(), m.id + '.json'), { force: true });
+}
+
+ipcMain.handle('guardian:test', (_e, k) => guardian.test(k));
+ipcMain.handle('guardian:feed', async (_e, section) => {
+  try {
+    const [items, index] = await Promise.all([guardian.feed(await guardianKey(), section), readJson(INDEX(), [])]);
+    const have = new Map(index.filter((a) => a.url).map((a) => [a.url, a.id]));
+    return { ok: true, items: items.map((it) => ({ ...it, id: have.get(it.url) || null })) };
+  } catch (e) {
+    return { ok: false, err: e.message };
+  }
+});
+ipcMain.handle('guardian:add', (_e, url) =>
+  oneAtATime(async () => {
+    url = String(url).split(/[?#]/)[0];
+    const id = crypto.createHash('sha1').update(url).digest('hex').slice(0, 16);
+    const index = await readJson(INDEX(), []);
+    const had = index.find((a) => a.id === id);
+    if (had) return { ok: true, id, meta: had };
+    const a = await guardian.article(await guardianKey(), url);
+    await fsp.mkdir(LIB(), { recursive: true });
+    await writeJson(path.join(LIB(), id + '.json'), { title: a.title, blocks: a.blocks, numPages: 0, words: a.words, fetchedAt: a.fetchedAt });
+    const meta = { id, kind: 'guardian', op: true, title: a.title, file: 'The Guardian', url: a.url, by: a.by, date: a.date, section: a.section, excerpt: a.excerpt, words: a.words, pages: 0, img: a.img, caption: a.caption, print: textPrint(a.blocks), count: a.blocks.length, fetchedAt: a.fetchedAt, addedAt: Date.now() };
+    index.push(meta);
+    await writeJson(INDEX(), index);
+    return { ok: true, id, meta };
+  }).catch((e) => ({ ok: false, err: e.message })),
+);
 ipcMain.handle('library:openPdf', async (_e, id) => {
   // an article saved from the web has no PDF: its own page opens instead
   const m = (await readJson(INDEX(), [])).find((a) => a.id === id);
@@ -402,8 +473,10 @@ ipcMain.handle('read:stop', () => stopListening());
 app.on('before-quit', stopListening);
 
 app.whenReady().then(async () => {
+  dropOldGuardian().catch((e) => console.error('guardian', e.message));
   if (!primary) return;
   backupNotes();
+  setInterval(() => dropOldGuardian().catch(() => {}), 3600 * 1000);
   app.on('activate', async () => {
     if (app.dock) app.dock.show();
     if (BrowserWindow.getAllWindows().length === 0) return createWindow(); // asks for the target itself

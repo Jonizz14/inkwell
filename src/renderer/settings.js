@@ -393,7 +393,7 @@ const Settings = (() => {
   const caps = (ks) => ks.map((k) => `<kbd>${esc(CAP[k] || k)}</kbd>`).join('');
   // the app itself, small, above the list, playing the shortcuts one after another for real
   const PV_W = 1180;
-  const keysLive = () => (typeof PREVIEW !== 'undefined' && PREVIEW ? '' : `<div class="kv-live"><iframe src="index.html?preview&os=${encodeURIComponent(api.platform)}" tabindex="-1" title="Demo"></iframe><div class="kv-press"><span class="kv-pk"></span><span class="kv-pl"></span></div></div>`);
+  const keysLive = () => (typeof PREVIEW !== 'undefined' && PREVIEW ? '' : `<div class="kv-live"><iframe data-src="index.html?preview&os=${encodeURIComponent(api.platform)}" tabindex="-1" title="Demo"></iframe><div class="kv-press"><span class="kv-pk"></span><span class="kv-pl"></span></div></div>`);
   const keysRows = () => [keysLive()].concat(KEYS.map(([g, rows]) => `<div class="kv-group">${esc(t(g))}</div><div class="kv-grid">`
     + rows.map(([ks, id]) => `<div class="kv-tile" data-d="${id}"><div class="kv-txt"><b>${esc(t('set.k.' + id))}</b><small>${esc(t('set.kd.' + id))}</small></div><div class="kv-caps">${caps(ks)}</div></div>`).join('')
     + '</div>'));
@@ -569,6 +569,14 @@ const Settings = (() => {
     looping = false;
     loopI = -1;
     new IntersectionObserver(([en]) => (seen = en.isIntersecting)).observe(f.parentElement);
+    // the demo is a whole second copy of the app: it starts once the page is scrolled near it,
+    // not while Settings is sliding in at the top
+    const near = new IntersectionObserver(([en]) => {
+      if (!en.isIntersecting) return;
+      near.disconnect();
+      f.src = f.dataset.src;
+    }, { root: f.closest('.scroller'), rootMargin: '900px 0px' });
+    near.observe(f.parentElement);
     const fit = () => f.style.setProperty('--s', (f.parentElement.clientWidth / PV_W).toFixed(4));
     fit();
     new ResizeObserver(fit).observe(f.parentElement);

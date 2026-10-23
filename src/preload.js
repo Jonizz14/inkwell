@@ -37,6 +37,8 @@ contextBridge.exposeInMainWorld('api', {
   updateBusy: (on) => ipcRenderer.send('update:busy', on),
   listenFeed: (kind, id) => ipcRenderer.invoke('listen:feed', kind, id),
   listenResolve: (url) => ipcRenderer.invoke('listen:resolve', url),
+  // The Guardian shelf (guardian.js): 'test' | 'feed' | 'add'
+  guardian: (what, ...a) => (['test', 'feed', 'add'].includes(what) ? ipcRenderer.invoke('guardian:' + what, ...a) : Promise.reject(new Error('no such call'))),
   addons: () => ipcRenderer.invoke('addons:list'),
   // add-ons call their own channels (src/private/<name>-main.js)
   invoke: (ch, ...a) => (/^addon:/.test(ch) ? ipcRenderer.invoke(ch, ...a) : Promise.reject(new Error('not an add-on channel'))),

@@ -28,6 +28,7 @@
   const req = (r) => new Promise((ok, fail) => ((r.onsuccess = () => ok(r.result)), (r.onerror = () => fail(r.error))));
   const get = async (store, key) => req((await db()).transaction(store).objectStore(store).get(key));
   const put = async (store, obj) => req((await db()).transaction(store, 'readwrite').objectStore(store).put(obj));
+  const del = async (store, key) => req((await db()).transaction(store, 'readwrite').objectStore(store).delete(key));
   const val = async (key, fallback) => {
     const r = await get('notes', key).catch(() => null);
     return r && r.value !== undefined ? r.value : fallback;
@@ -174,6 +175,73 @@
     return r;
   }
 
+  /* ---------------- The Guardian (renderer/guardian.js, through /api/guardian) ---------------- */
+
+  // As the Guardian asks, an article's text is kept a day at most: its place in the library and
+  // the reader's marks stay, the text is fetched again when it is opened after that, and texts
+  // older than a day are deleted whenever the site is opened.
+  const DAY = 24 * 3600 * 1000;
+  const stale = (at) => !at || Date.now() - at > DAY - 60000;
+  const gKey = () => ((notes && notes.settings) || {}).guardianKey || '';
+  async function gAsk(params, key = gKey()) {
+    try {
+      const r = await fetch('/api/guardian?' + new URLSearchParams(params), { headers: { 'x-guardian-key': key }, cache: 'no-store' });
+      return await r.json();
+    } catch (e) {
+      return { ok: false, err: 'network' };
+    }
+  }
+  const sha1text = (t) => sha1(new TextEncoder().encode(t));
+  const textPrint = (blocks) => sha1text(blocks.map((b) => b.type + b.text).join('\n'));
+  const keepText = (id, a) => put('articles', { id, rev: 1, blocks: a.blocks, title: a.title, numPages: 0, words: a.words, fetchedAt: a.fetchedAt });
+
+  async function gRefetch(m) {
+    const r = await gAsk({ url: m.url });
+    if (!r.ok) return { err: r.err };
+    const a = r.article;
+    await keepText(m.id, a);
+    const print = await textPrint(a.blocks);
+    const moved = m.print && m.print !== print ? m.count || 0 : null;
+    const lib = await added();
+    const e = lib.find((x) => x.id === m.id);
+    if (e) (Object.assign(e, { print, count: a.blocks.length, fetchedAt: a.fetchedAt, words: a.words, img: a.img || e.img || null }), await put('notes', { key: 'lib', value: lib }));
+    const data = { title: a.title, blocks: a.blocks, numPages: 0, words: a.words };
+    return moved === null ? data : { ...data, moved };
+  }
+
+  const guardian = {
+    test: (k) => gAsk({ test: 1 }, k),
+    async feed(section) {
+      const r = await gAsk({ feed: section });
+      if (!r.ok) return r;
+      const have = new Map((await added()).filter((a) => a.url).map((a) => [a.url, a.id]));
+      return { ok: true, items: r.items.map((it) => ({ ...it, id: have.get(it.url) || null })) };
+    },
+    add: (url) => {
+      const run = chain.then(async () => {
+        url = String(url).split(/[?#]/)[0];
+        const id = await sha1text(url);
+        const lib = await added();
+        const had = lib.find((a) => a.id === id);
+        if (had) return { ok: true, id, meta: had };
+        const r = await gAsk({ url });
+        if (!r.ok) return r;
+        const a = r.article;
+        await keepText(id, a);
+        const meta = { id, kind: 'guardian', op: true, title: a.title, file: 'The Guardian', url: a.url, by: a.by, date: a.date, section: a.section, excerpt: a.excerpt, words: a.words, pages: 0, img: a.img, caption: a.caption, print: await textPrint(a.blocks), count: a.blocks.length, fetchedAt: a.fetchedAt, addedAt: Date.now() };
+        lib.push(meta);
+        await put('notes', { key: 'lib', value: lib });
+        return { ok: true, id, meta };
+      });
+      chain = run.catch(() => {});
+      return run.catch((e) => ({ ok: false, err: e.message }));
+    },
+  };
+  // a day-old texts go (in the background, a moment after the page is up)
+  setTimeout(async () => {
+    for (const m of (await added().catch(() => [])).filter((a) => a.op && stale(a.fetchedAt))) await del('articles', m.id).catch(() => {});
+  }, 1500);
+
   /* ---------------- the bridge ---------------- */
 
   const none = async () => null;
@@ -192,10 +260,17 @@
     },
     async article(id) {
       if (LIB && LIB.some((m) => m.id === id)) await sync();
+      const g = (await added()).find((m) => m.id === id && m.op);
+      if (g) {
+        const have = await get('articles', String(id)).catch(() => null);
+        if (!have || stale(have.fetchedAt)) return gRefetch(g);
+      }
       const r = await get('articles', String(id)).catch(() => null);
       return r ? { title: r.title, blocks: r.blocks, numPages: r.numPages || 0, words: r.words } : null;
     },
     async openPdf(id) {
+      const g = (await added()).find((m) => m.id === id && m.url);
+      if (g) return void window.open(g.url, '_blank');
       const r = await get('articles', String(id)).catch(() => null);
       if (r && r.pdf) window.open(URL.createObjectURL(r.pdf), '_blank');
     },
@@ -248,6 +323,7 @@
     onRemindOpen() {},
     onLibraryChanged() {},
     addons: async () => [],
+    guardian: (what, ...a) => (guardian[what] ? guardian[what](...a) : Promise.reject(new Error('no such call'))),
     listenFeed: async (kind, id) => {
       try {
         const r = await fetch(`/api/listen?kind=${encodeURIComponent(kind)}&id=${encodeURIComponent(id)}`);

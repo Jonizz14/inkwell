@@ -21,8 +21,6 @@ fs.mkdirSync(path.join(OUT, 'api'), { recursive: true });
 // the window's files, without the add-ons kept beside the desktop app
 for (const f of fs.readdirSync(R)) if (/\.(js|css|png)$/.test(f)) fs.copyFileSync(path.join(R, f), path.join(OUT, f));
 for (const f of ['api.js', 'web.css', 'manifest.json']) fs.copyFileSync(path.join(W, f), path.join(OUT, f));
-// highlights follow an article whose text was rebuilt (api.js): src/migrate.mjs as a plain script
-fs.writeFileSync(path.join(OUT, 'migrate.js'), fs.readFileSync(path.join(ROOT, 'src', 'migrate.mjs'), 'utf8').replace(/^export /gm, ''));
 
 // icons for the home screen, from the app's own
 const icon = path.join(ROOT, 'build', 'icon.png');
@@ -47,6 +45,9 @@ fs.copyFileSync(path.join(ROOT, 'node_modules', 'pdfjs-dist', 'legacy', 'build',
 // Listening's YouTube feeds
 fs.copyFileSync(path.join(W, 'api', 'listen.js'), path.join(OUT, 'api', 'listen.js'));
 fs.copyFileSync(path.join(ROOT, 'src', 'listen.js'), path.join(OUT, 'api', '_listen.js'));
+// the Guardian shelf's Content API calls
+fs.copyFileSync(path.join(W, 'api', 'guardian.js'), path.join(OUT, 'api', 'guardian.js'));
+fs.copyFileSync(path.join(ROOT, 'src', 'guardian.js'), path.join(OUT, 'api', '_guardian.js'));
 
 // the articles
 const data = path.join(W, 'content', 'data.json');
@@ -59,7 +60,7 @@ const csp = "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 's
 html = html
   .replace(/<meta http-equiv="Content-Security-Policy" content="[^"]*" \/>/, `<meta http-equiv="Content-Security-Policy" content="${csp}" />\n  <meta name="viewport" content="width=device-width, initial-scale=1" />\n  <meta name="theme-color" content="#0d0d0d" />\n  <link rel="manifest" href="manifest.json" />\n  <link rel="icon" href="icon-192.png" />\n  <link rel="apple-touch-icon" href="icon-192.png" />`)
   .replace('</head>', '  <link rel="stylesheet" href="web.css" />\n</head>')
-  .replace('<script src="preview-api.js"></script>', '<script src="api.js"></script>\n  <script src="migrate.js"></script>\n  <script src="preview-api.js"></script>');
+  .replace('<script src="preview-api.js"></script>', '<script src="api.js"></script>\n  <script src="preview-api.js"></script>');
 if (!html.includes('src="api.js"')) throw new Error('index.html changed: api.js was not placed');
 
 // One file to fetch: every stylesheet and script goes into the page itself, minified (each request

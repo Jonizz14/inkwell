@@ -100,12 +100,22 @@ const Shelves = (() => {
       ghost.appendChild(c);
     }
     draw();
+    // the new rows in sight blur in; those out of sight don't animate at all
+    const lim = lib.getBoundingClientRect();
+    const seen = [];
+    for (const li of list.children) {
+      const r = li.getBoundingClientRect();
+      if (r.bottom < lim.top) continue;
+      if (r.top > lim.bottom) break;
+      seen.push(li);
+    }
+    for (const li of seen) li.classList.add('xf');
     list.prepend(ghost);
     list.classList.add('fresh');
     void list.offsetWidth;
     list.classList.remove('fresh');
     ghost.classList.add('out');
-    setTimeout(() => ghost.remove(), FADE + 60);
+    setTimeout(() => (ghost.remove(), seen.forEach((li) => li.classList.remove('xf'))), FADE + 60);
   }
   const swapList = (after) => crossfade(() => (after && after(), renderLibrary(true)));
 
@@ -224,5 +234,5 @@ const Shelves = (() => {
   // the counts line under the titles, for a shelf that has its own
   const stats = (...a) => (ls() ? Listen.header() : ext() && ext().stats ? ext().stats(...a) : null);
 
-  return { render, prepare, restore, register, stats, feedShown: () => feedClass() || ls(), swapList, crossfade, chips };
+  return { render, prepare, restore, register, has: (id) => extra.some((d) => d.id === id), stats, feedShown: () => feedClass() || ls(), swapList, crossfade, chips };
 })();

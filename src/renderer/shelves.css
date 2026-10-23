@@ -63,8 +63,10 @@
 #list { position: relative; }
 .list-ghost { position: absolute; inset: 0 0 auto 0; z-index: 2; pointer-events: none; transition: opacity 240ms ease, filter 300ms ease; }
 .list-ghost.out { opacity: 0; filter: blur(6px); }
-#list > li { transition: background var(--t-fast) var(--ease), opacity 320ms ease 40ms, filter 360ms ease 40ms; }
-#list.fresh > li { opacity: 0; filter: blur(6px); transition: none; }
+#list > li { transition: background var(--t-fast) var(--ease); }
+/* only the rows in sight come out of the blur (crossfade marks them .xf); the rest just appear */
+#list > li.xf { transition: background var(--t-fast) var(--ease), opacity 320ms ease 40ms, filter 360ms ease 40ms; }
+#list.fresh > li.xf { opacity: 0; filter: blur(6px); transition: none; }
 
 /* article pictures: a thumbnail between the text and the meta column; they come out of a blur
    once loaded (app.js adds .ok), and a broken one is simply left out */
