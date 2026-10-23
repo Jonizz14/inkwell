@@ -304,6 +304,7 @@ const Listen = (() => {
     </div>`;
   const note = $('#wt-note');
 
+  let mountT = 0;
   async function open(it, showKey) {
     const e = L().eps[it.v] || {};
     const start = e.t && !e.done && (!e.d || e.t < e.d - 15) ? e.t : 0;
@@ -317,11 +318,19 @@ const Listen = (() => {
     $('#wt-m').textContent = [it.by, fmtDay(it.date)].filter(Boolean).join(' · ');
     note.value = e.note || '';
     page.querySelector('.scroller').scrollTop = 0;
-    mount(start);
+    // the player is made once the page has slid in: building YouTube's frame mid-slide stalled
+    // the slide (~70 ms). Until then the episode's picture stands where the video will be.
+    if (iframe) iframe.remove(), (iframe = null), (ready = false), (ps = -1);
+    $('#ls-frame').style.backgroundImage = `url("https://i.ytimg.com/vi/${encodeURIComponent(it.v)}/hqdefault.jpg")`;
+    pos = start;
+    dur = e.d || 0;
     paint();
     await settled();
     fit();
     showView('watch');
+    clearTimeout(mountT);
+    const v = it.v;
+    mountT = setTimeout(() => cur && cur.v === v && state.view === 'watch' && mount(start), 560);
   }
 
   /* ---------------- the writing ---------------- */

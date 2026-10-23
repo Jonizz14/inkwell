@@ -303,6 +303,8 @@ const Plan = (() => {
     const n = doneCount(d);
     const ks = Array.from({ length: AHEAD }, (_, i) => key(dayAt(i + 1)));
     body.classList.toggle('enter', !!enter);
+    // the pictures already shown are kept (a new <img> would load and decode again, and blink)
+    const keep = new Map($$('img', body).map((i) => [i.src, i]));
     body.innerHTML = `
       <header class="pl-head">
         <span class="pl-date">${esc(cap(fmt(today(), { weekday: 'long', day: 'numeric', month: 'long' })))}</span>
@@ -315,6 +317,10 @@ const Plan = (() => {
         <ol class="pl-days">${ks.map(weekRow).join('')}</ol>
       </section>
       ${history()}`;
+    $$('img', body).forEach((n) => {
+      const o = keep.get(n.src);
+      if (o) keep.delete(n.src), n.replaceWith(o);
+    });
     // the bars grow from where they were last drawn to where they are now
     const bars = $$('.pl-bar i', body);
     bars.forEach((b) => (b.style.transform = `scaleX(${enter ? 0 : shown[b.dataset.k] || 0})`));
