@@ -3,7 +3,7 @@
 // bundled for the browser, and Listening's feed proxy as a Vercel function.
 // The site's own articles come from web/content/data.json (kept out of the repository; made by
 // `npm run web:content` from the desktop library). Deploy: `npm run web:deploy`.
-import { build } from 'esbuild';
+import { build, transform } from 'esbuild';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -61,19 +61,47 @@ html = html
   .replace('</head>', '  <link rel="stylesheet" href="web.css" />\n</head>')
   .replace('<script src="preview-api.js"></script>', '<script src="api.js"></script>\n  <script src="migrate.js"></script>\n  <script src="preview-api.js"></script>');
 if (!html.includes('src="api.js"')) throw new Error('index.html changed: api.js was not placed');
-fs.writeFileSync(path.join(OUT, 'index.html'), html);
 
-// the offline copy: every file, under a name that changes with them
+// One file to fetch: every stylesheet and script goes into the page itself, minified (each request
+// to the server costs a round trip, about half a second from Tashkent). Scripts keep their order
+// and share one scope, as separate classic scripts do; the page policy lets in exactly these
+// scripts by their hashes. The shipped articles' titles ride along, so the list shows at once.
+const sha = (t) => `'sha256-${createHash('sha256').update(t).digest('base64')}'`;
+const css = [...html.matchAll(/<link rel="stylesheet" href="([^"]+)" \/>/g)].map((m) => fs.readFileSync(path.join(OUT, m[1]), 'utf8')).join('\n');
+const srcs = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
+const read = (f) => fs.readFileSync(path.join(OUT, f), 'utf8');
+const lib = fs.existsSync(data) ? JSON.parse(fs.readFileSync(data, 'utf8')).map(({ blocks, ...m }) => ({ ...m, rev: m.rev || 1 })) : null;
+const head = srcs[0]; // splash.js: the launch card, drawn before the rest of the page is read
+const rest = srcs.slice(1).map((f) => `/* ${f} */\n${read(f)}`).join('\n;\n');
+const mini = async (code, loader) => (await transform(code, { loader, minifyWhitespace: true, minifySyntax: loader === 'css', legalComments: 'none' })).code.replace(/<\/(script|style)/gi, '<\\/$1');
+const splashJs = await mini(read(head), 'js');
+const styles = await mini(css, 'css');
+const appJs = await mini(`window.__INKWELL_LIB = ${JSON.stringify(lib)};\n${rest}`, 'js');
+html = html
+  .replace(/\s*<link rel="stylesheet" href="[^"]+" \/>/g, '')
+  .replace('</head>', () => `  <style>${styles}</style>\n</head>`)
+  .replace(`<script src="${head}"></script>`, () => `<script>${splashJs}</script>`)
+  .replace(/\s*<script src="[^"]+"><\/script>/g, '')
+  .replace('</body>', () => `<script>${appJs}</script>\n</body>`)
+  .replace("script-src 'self'", () => `script-src 'self' ${sha(splashJs)} ${sha(appJs)}`);
+fs.writeFileSync(path.join(OUT, 'index.html'), html);
+for (const f of [...srcs, ...fs.readdirSync(OUT).filter((f) => f.endsWith('.css'))]) fs.rmSync(path.join(OUT, f), { force: true });
+
+// the offline copy: the page and what it loads, under a name that changes with them. pdf.js and
+// the PDF reader are only cached once someone adds a PDF; the texts once api.js asks for them.
+const lazy = new Set(['extract.js', 'pdf.worker.min.mjs', 'data.json']);
 const files = fs.readdirSync(OUT).filter((f) => fs.statSync(path.join(OUT, f)).isFile());
 const hash = createHash('sha1');
 for (const f of files.sort()) hash.update(f).update(fs.readFileSync(path.join(OUT, f)));
 const sw = fs.readFileSync(path.join(W, 'sw.js'), 'utf8')
   .replace('__VERSION__', 'inkwell-' + hash.digest('hex').slice(0, 10))
-  .replace('__ASSETS__', JSON.stringify(['/', ...files.map((f) => '/' + f)]));
+  .replace('__ASSETS__', JSON.stringify(['/', ...files.filter((f) => !lazy.has(f) && f !== 'index.html').map((f) => '/' + f)]));
 fs.writeFileSync(path.join(OUT, 'sw.js'), sw);
+// the service worker itself is always asked for fresh, so a new deploy is found on the next visit
+fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({ headers: [{ source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }] }] }));
 
 // the Vercel project this deploys to (kept out of the repository)
 const link = path.join(W, '.vercel');
 if (fs.existsSync(link)) fs.cpSync(link, path.join(OUT, '.vercel'), { recursive: true });
 
-console.log(`web/dist: ${files.length + 1} files`);
+console.log(`web/dist: index.html ${Math.round(fs.statSync(path.join(OUT, 'index.html')).size / 1024)} KB, ${files.length + 1} files`);

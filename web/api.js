@@ -36,30 +36,41 @@
   /* ---------------- the library ---------------- */
 
   let notes = null; // the object the app holds: articles re-read in a new edition move their marks on it
-  let bundle = null;
+  // the shipped articles' titles and lengths come inside the page (the build puts them there), so
+  // the library shows at once; their texts (data.json) are only fetched when one is missing or was
+  // rebuilt (its rev changed), and then highlights, words and notes move onto the new text
+  const LIB = window.__INKWELL_LIB || null;
+  let all = null;
+  let synced = null;
   const metaOf = (a) => ({ id: a.id, title: a.title, file: a.file, excerpt: a.excerpt, words: a.words, pages: a.pages, addedAt: a.addedAt, rev: a.rev || 1 });
 
-  // the site's own articles: their texts go into IndexedDB once, and again when one was rebuilt
-  // (its rev changed), with highlights, words and notes moved onto the new text
-  async function shipped() {
-    if (bundle) return bundle;
-    let all = [];
-    try {
-      const r = await fetch('data.json');
-      if (r.ok) all = await r.json();
-    } catch {}
-    let moved = false;
-    await Promise.all(all.map(async (a) => {
-      const rev = a.rev || 1;
-      const had = await get('articles', a.id).catch(() => null);
-      if (had && (had.rev || 1) === rev) return;
-      const rec = notes && notes.articles && notes.articles[a.id];
-      if (had && rec && typeof migrateRecord === 'function') (migrateRecord(rec, had.blocks, a.blocks), (moved = true));
-      await put('articles', { id: a.id, rev, blocks: a.blocks, title: a.title, numPages: a.pages, words: a.words });
-    }));
-    if (moved) await put('notes', { key: 'notes', value: notes });
-    return (bundle = all.map(metaOf));
-  }
+  const sync = () =>
+    (synced ||= (async () => {
+      const revs = await val('revs', null);
+      if (LIB && revs && LIB.every((m) => revs[m.id] === m.rev)) return LIB;
+      let data = [];
+      try {
+        const r = await fetch('data.json');
+        if (r.ok) data = await r.json();
+      } catch {}
+      let moved = false;
+      const now = {};
+      await Promise.all(data.map(async (a) => {
+        const rev = a.rev || 1;
+        now[a.id] = rev;
+        if (revs && revs[a.id] === rev) return;
+        const had = await get('articles', a.id).catch(() => null);
+        if (had && (had.rev || 1) === rev) return;
+        const rec = notes && notes.articles && notes.articles[a.id];
+        if (had && rec && typeof migrateRecord === 'function') (migrateRecord(rec, had.blocks, a.blocks), (moved = true));
+        await put('articles', { id: a.id, rev, blocks: a.blocks, title: a.title, numPages: a.pages, words: a.words });
+      }));
+      if (moved) await put('notes', { key: 'notes', value: notes });
+      if (data.length) await put('notes', { key: 'revs', value: now });
+      else synced = null; // offline on a first visit: try again next time
+      return LIB || data.map(metaOf);
+    })());
+  const shipped = async () => LIB || (all ||= await sync());
   const added = () => val('lib', []);
 
   /* ---------------- adding PDFs ---------------- */
@@ -175,10 +186,12 @@
     },
     saveNotes: (data) => put('notes', { key: 'notes', value: data }),
     async list() {
+      if (LIB) sync(); // texts come in behind the list
       const [a, b] = await Promise.all([shipped(), added()]);
       return a.concat(b);
     },
     async article(id) {
+      if (LIB && LIB.some((m) => m.id === id)) await sync();
       const r = await get('articles', String(id)).catch(() => null);
       return r ? { title: r.title, blocks: r.blocks, numPages: r.numPages || 0, words: r.words } : null;
     },
