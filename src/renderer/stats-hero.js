@@ -124,8 +124,8 @@
   const key = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const escH = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const num = (n) => new Intl.NumberFormat(lang).format(Math.round(n));
-  const fmtDay = (d, o = { day: 'numeric', month: 'short', year: 'numeric' }) => new Intl.DateTimeFormat(lang, o).format(d);
+  const num = (n) => numFmt().format(Math.round(n));
+  const fmtDay = (d, o = { day: 'numeric', month: 'short', year: 'numeric' }) => dateFmt(o).format(d);
   const dur = (sec) => {
     const m = Math.round(sec / 60);
     return m < 60 ? t('st.min', m) : t('st.hm', Math.floor(m / 60), m % 60);
@@ -304,6 +304,7 @@
       </section>`;
   }
 
+  let away = null;
   function render(host) {
     if (!host) return;
     const d = data();
@@ -311,8 +312,10 @@
     if (h && !host.querySelector('.hx-hero')) {
       h.insertAdjacentHTML('afterend', hero(d));
       // scrolled out of sight, the flame rests (and carries on when it comes back)
-      const card = host.querySelector('.hx-streak');
-      new IntersectionObserver(([e]) => card.classList.toggle('away', !e.isIntersecting)).observe(card);
+      // one observer for whichever card is on the page now (the last one would keep its old page)
+      away ||= new IntersectionObserver(([e]) => e.target.classList.toggle('away', !e.isIntersecting));
+      away.disconnect();
+      away.observe(host.querySelector('.hx-streak'));
     }
     const sx = host.querySelector('.sx');
     if (sx && !host.querySelector('.hx-more')) sx.insertAdjacentHTML('beforebegin', `<div class="hx-more">${facts(d)}${records(d)}</div>`);

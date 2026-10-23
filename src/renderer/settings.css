@@ -104,7 +104,7 @@
 
 /* ---------- music: where the player sits, and how loud it is ---------- */
 .pv-music { display: flex; align-items: center; gap: 22px; padding: 18px 16px; }
-.pv-screen { position: relative; flex: 0 0 auto; width: 240px; aspect-ratio: 16 / 10; border-radius: 8px; background: var(--bg); box-shadow: 0 0 0 1px var(--line-2); overflow: hidden; }
+.pv-screen { position: relative; flex: 0 0 auto; width: 240px; /* PV_SCREEN in settings.js */ aspect-ratio: 16 / 10; border-radius: 8px; background: var(--bg); box-shadow: 0 0 0 1px var(--line-2); overflow: hidden; }
 /* the article behind it, as a few lines of text */
 .pv-screen::before { content: ''; position: absolute; left: 30%; right: 30%; top: 18%; bottom: 14%; background: repeating-linear-gradient(var(--line-2) 0 2px, transparent 2px 9px); opacity: 0.8; }
 .pv-pill { position: absolute; left: 0; bottom: 0; display: flex; align-items: center; gap: 4px; padding: 0 4px; border-radius: 6px; background: var(--surface); box-shadow: 0 0 0 1px var(--line-2), 0 2px 6px rgba(0, 0, 0, 0.15); transition: transform 560ms cubic-bezier(0.32, 0.72, 0, 1); }

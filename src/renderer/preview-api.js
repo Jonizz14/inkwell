@@ -32,6 +32,7 @@ if (PREVIEW && !window.api) {
     open: (id) => openArticle(id),
     setPct: (n) => setFontPct(n),
     toast: (m) => toast(m),
+    hideMusic: () => Player.hide(),
     dropNote: () => Focus.isOn() && deleteNote(+Focus.paras()[Focus.at()].dataset.p),
   };
   window.api = {

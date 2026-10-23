@@ -321,6 +321,7 @@ const Settings = (() => {
         <div class="pv-meter"><span>${esc(t('set.pv.focus'))}</span><div class="pv-track"><i data-m="duck"></i></div></div>
       </div>
     </div>`;
+  const PV_SCREEN = 240; // .pv-screen width in settings.css
   function paintPreviews() {
     const vol = music().vol ?? 70;
     const m = (k) => $(`.pv-track [data-m="${k}"]`, root);
@@ -328,7 +329,7 @@ const Settings = (() => {
     if (m('duck')) m('duck').style.transform = `scaleX(${(vol / 100) * (get('duck') / 100)})`;
     const scr = $('.pv-screen', root);
     if (!scr) return;
-    const k = scr.clientWidth / innerWidth;
+    const k = PV_SCREEN / innerWidth; // its width, as settings.css sets it (reading it forced a layout)
     const p = music().pos || { x: 0, y: 0 };
     const pill = $('.pv-pill', scr);
     pill.style.width = Math.max(44, 264 * k) + 'px';
@@ -405,7 +406,7 @@ const Settings = (() => {
     session: [['S'], ['Escape']],
     vocab: [['V'], ['V']],
     note: [['F', 700, 'N', 500, (w) => typeIn(w)], [(w) => w.pv.dropNote(), 500, 'Escape']],
-    music: [['M'], ['M']],
+    music: [['M'], ['M', 300, (w) => w.pv.hideMusic()]], // paused, then put away: it must not linger in the next demos
     ra: [['R'], ['R', 300, 'Escape']],
     menu: [['⌘K'], ['Escape']],
     size: [['⌘=', 380, '⌘=', 380, '⌘-'], [(w) => w.pv.setPct(pct0)]],
@@ -561,25 +562,33 @@ const Settings = (() => {
     }[m.method] || (() => null))(...m.args);
     f.contentWindow.postMessage({ pv: 'res', id: m.id, value }, '*');
   });
-  // once it's up, open the article read last and fit it to the card
+  // once it's up, open the article read last and fit it to the card. Settings is drawn afresh on
+  // every visit, so the observers are made once and pointed at the new card (an observer left
+  // watching the old one would keep the old page, and its copy of the app, alive)
+  let seenIO, nearIO, fitRO;
   function bootPreview() {
     const f = $('.kv-live iframe', root);
     if (!f) return;
     shown = null;
     looping = false;
     loopI = -1;
-    new IntersectionObserver(([en]) => (seen = en.isIntersecting)).observe(f.parentElement);
+    seenIO ||= new IntersectionObserver(([en]) => (seen = en.isIntersecting));
+    seenIO.disconnect();
+    seenIO.observe(f.parentElement);
     // the demo is a whole second copy of the app: it starts once the page is scrolled near it,
     // not while Settings is sliding in at the top
-    const near = new IntersectionObserver(([en]) => {
+    nearIO?.disconnect();
+    nearIO = new IntersectionObserver(([en]) => {
       if (!en.isIntersecting) return;
-      near.disconnect();
+      nearIO.disconnect();
       f.src = f.dataset.src;
     }, { root: f.closest('.scroller'), rootMargin: '900px 0px' });
-    near.observe(f.parentElement);
-    const fit = () => f.style.setProperty('--s', (f.parentElement.clientWidth / PV_W).toFixed(4));
-    fit();
-    new ResizeObserver(fit).observe(f.parentElement);
+    nearIO.observe(f.parentElement);
+    // the card's width comes from the observer, after layout: reading clientWidth here forced a
+    // layout of the half-built page, and setting --s right after made the next frame lay it out again
+    fitRO?.disconnect();
+    fitRO = new ResizeObserver(([en]) => f.style.setProperty('--s', (en.contentRect.width / PV_W).toFixed(4)));
+    fitRO.observe(f.parentElement);
     f.addEventListener('load', () => {
       const w = f.contentWindow;
       const ready = setInterval(() => {
@@ -748,7 +757,6 @@ const Settings = (() => {
     render();
     $$('input[type="range"]', root).forEach(fill);
     paintPreviews();
-    $('#settings .scroller').scrollTop = 0;
     await settled();
     showView('settings');
   }
@@ -767,6 +775,9 @@ const Settings = (() => {
       clearTimeout(resumeT);
       const f = $('.kv-live iframe', root);
       if (f) f.remove();
+      // the next visit starts at the top; done here, out of sight, since on the way in it forced a
+      // layout of the half-built page before the one it gets anyway as it slides in
+      $('#settings .scroller').scrollTop = 0;
     }, 700);
   }).observe($('#settings'), { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('keydown', (e) => {

@@ -298,6 +298,18 @@ const I18N = {
 
 let lang = 'uz';
 
+// Intl formatters are slow to make (a Statistics page asked for a new one hundreds of times):
+// one per language and options, made on first use
+const intlFmts = new Map();
+function intlFmt(Kind, opts) {
+  const k = Kind.name + lang + JSON.stringify(opts || {});
+  let f = intlFmts.get(k);
+  if (!f) intlFmts.set(k, (f = new Kind(lang, opts)));
+  return f;
+}
+const dateFmt = (opts) => intlFmt(Intl.DateTimeFormat, opts);
+const numFmt = (opts) => intlFmt(Intl.NumberFormat, opts);
+
 // shortcuts are written the Mac way (⌘K, ⇧⌘O); elsewhere they read Ctrl+K, Ctrl+Shift+O
 const IS_MAC = !window.api || window.api.platform === 'darwin';
 const keyText = (s) => (IS_MAC || typeof s !== 'string' ? s : s.replace(/⇧⌘/g, 'Ctrl+Shift+').replace(/⌘/g, 'Ctrl+').replace(/⇧/g, 'Shift+').replace(/⌥/g, 'Alt+'));

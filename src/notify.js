@@ -421,21 +421,14 @@ const hasHelper = () => process.platform === 'darwin' && fs.existsSync(HELPER())
 // -> { ok, err?, code? }; code 1 = notifications are turned off for the app
 async function show(title, body, img, open, onOpen) {
   const png = image(img);
-  if (open) await fsp.writeFile(OPEN(), JSON.stringify({ open, at: Date.now() })).catch(() => {});
+  // only the helper's banners need the note: an Electron banner calls onOpen itself
+  const id = `remind-${Date.now()}`;
+  if (open && hasHelper()) await fsp.writeFile(OPEN(), JSON.stringify({ open, at: Date.now(), id })).catch(() => {});
   else await fsp.rm(OPEN(), { force: true });
   if (hasHelper()) {
     const file = png && path.join(os.tmpdir(), `365-remind-${process.pid}-${Date.now()}.png`);
     if (file) await fsp.writeFile(file, png);
-    const args = ['--title', title, '--body', body, ...(file ? ['--image', file] : [])];
-    const r = await new Promise((res) =>
-      execFile(HELPER(), args, { timeout: 130000 }, (err, out) => {
-        try {
-          res(JSON.parse(String(out).trim().split('\n').pop()));
-        } catch {
-          res({ ok: false, err: String((err && err.message) || out) });
-        }
-      }),
-    );
+    const r = await helper(['--title', title, '--body', body, '--id', id, ...(file ? ['--image', file] : [])], 130000);
     if (file) fsp.rm(file, { force: true }).catch(() => {});
     if (!r.ok) console.error('remind: helper', r);
     return r;
@@ -450,12 +443,32 @@ async function show(title, body, img, open, onOpen) {
   return { ok: true };
 }
 
-// the place the last banner talked about, once, if it went out a short while ago
+// the helper's last line of output, as JSON
+const helper = (args, timeout) =>
+  new Promise((res) =>
+    execFile(HELPER(), args, { timeout }, (err, out) => {
+      try {
+        res(JSON.parse(String(out).trim().split('\n').pop()));
+      } catch {
+        res({ ok: false, err: String((err && err.message) || out) });
+      }
+    }),
+  );
+
+// the place the last banner talked about, but only when that banner was clicked: a click takes it
+// out of Notification Center, while an ordinary start (Dock, ⌘Tab) leaves it there. Without this
+// check every start within half an hour of a banner jumped to where the banner pointed.
 async function takeOpen() {
   const o = await readJson(OPEN(), null);
   if (!o) return null;
+  if (Date.now() - o.at >= OPEN_FOR || !o.id || !hasHelper()) {
+    await fsp.rm(OPEN(), { force: true });
+    return null;
+  }
+  const r = await helper(['--delivered', o.id], 8000);
+  if (!r.ok || r.there) return null; // still waiting to be clicked (or unknown): an ordinary start
   await fsp.rm(OPEN(), { force: true });
-  return Date.now() - o.at < OPEN_FOR ? o.open : null;
+  return o.open;
 }
 
 // called by the --remind run (or handed to the open app); onOpen(target) opens the window

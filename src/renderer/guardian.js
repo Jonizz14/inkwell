@@ -169,7 +169,7 @@ const Guardian = (() => {
   const S = () => state.notes.settings;
   const saved = () => state.list.filter((m) => m.kind === 'guardian');
   const sec = () => (SECS.includes(S().gdSec) ? S().gdSec : saved().length ? 'saved' : 'longread');
-  const fmtDay = (ms) => (ms ? new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(new Date(ms)) : '');
+  const fmtDay = (ms) => (ms ? dateFmt({ day: 'numeric', month: 'short' }).format(new Date(ms)) : '');
 
   /* ---------------- a section's list ---------------- */
 

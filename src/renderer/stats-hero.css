@@ -23,8 +23,10 @@
 .hx-fi { transform-origin: 46px 86.4px; }
 .lit .hx-fo { animation: hx-breathe 3.2s ease-in-out infinite; }
 .lit .hx-fi { animation: hx-breathe2 2.6s ease-in-out infinite; }
-/* off screen it rests, and carries on where it was when Statistics comes back */
-#stats:not(.is-active) .hx-fo, #stats:not(.is-active) .hx-fi, .hx-streak.away .hx-fo, .hx-streak.away .hx-fi { animation-play-state: paused; }
+/* off screen it rests, and carries on where it was when Statistics comes back (.away comes from
+   an IntersectionObserver, which also sees the page slide away; a #stats:not(.is-active) rule
+   here made every page switch restyle the whole of both pages) */
+.hx-streak.away .hx-fo, .hx-streak.away .hx-fi { animation-play-state: paused; }
 @keyframes hx-breathe { 50% { transform: scale(0.985, 1.03); } }
 @keyframes hx-breathe2 { 50% { transform: scale(0.96, 1.06); } }
 

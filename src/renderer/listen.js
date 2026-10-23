@@ -174,9 +174,9 @@ const Listen = (() => {
 
   const fmtDay = (d) => {
     const x = new Date(d);
-    return isNaN(x) ? '' : new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'short' }).format(x);
+    return isNaN(x) ? '' : dateFmt({ day: 'numeric', month: 'short' }).format(x);
   };
-  const fmtNum = (n) => new Intl.NumberFormat(lang, { notation: 'compact' }).format(n);
+  const fmtNum = (n) => numFmt({ notation: 'compact' }).format(n);
   const statusOfEp = (v) => {
     const e = L().eps[v] || {};
     return e.done ? 'done' : e.t > 5 ? 'reading' : 'new';

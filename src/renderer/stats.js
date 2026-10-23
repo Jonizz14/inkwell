@@ -16,7 +16,7 @@ const Stats = (() => {
   const key = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const escH = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const num = (n) => new Intl.NumberFormat(lang).format(Math.round(n));
+  const num = (n) => numFmt().format(Math.round(n));
 
   function store() {
     const n = cfg.notes();
@@ -122,7 +122,7 @@ const Stats = (() => {
     const m = Math.round(sec / 60);
     return m < 60 ? t('st.min', m) : t('st.hm', Math.floor(m / 60), m % 60);
   }
-  const fmtDay = (d, opts = { day: 'numeric', month: 'short' }) => new Intl.DateTimeFormat(lang, opts).format(d);
+  const fmtDay = (d, opts = { day: 'numeric', month: 'short' }) => dateFmt(opts).format(d);
 
   function niceMax(v) {
     const p = 10 ** Math.floor(Math.log10(v));

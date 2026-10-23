@@ -138,13 +138,8 @@
   const key = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const escH = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const num = (n) => new Intl.NumberFormat(lang).format(Math.round(n));
-  const fmts = new Map();
-  const fmtDay = (d, opts = { weekday: 'short', day: 'numeric', month: 'short' }) => {
-    const k = lang + JSON.stringify(opts);
-    if (!fmts.has(k)) fmts.set(k, new Intl.DateTimeFormat(lang, opts));
-    return fmts.get(k).format(d);
-  };
+  const num = (n) => numFmt().format(Math.round(n));
+  const fmtDay = (d, opts = { weekday: 'short', day: 'numeric', month: 'short' }) => dateFmt(opts).format(d);
   const dur = (sec) => {
     const m = Math.round(sec / 60);
     return m < 60 ? t('st.min', m) : t('st.hm', Math.floor(m / 60), m % 60);
@@ -503,13 +498,18 @@
   // one block of text, a digit per line (a span per digit made ~11 elements for every digit)
   const COL = '<span class="od-s">0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n0</span>';
   let io = null;
+  // values waiting to come into view; the observer holds on to each one (and with it the whole
+  // page it sat in), so the ones a redraw threw away unseen are let go on the next call
+  const waiting = new Set();
   function odometer(host, sel = '.st-v, .sx-split-l b') {
     if (reduce.matches) return;
     io ||= new IntersectionObserver((es) => es.forEach((e) => {
       if (!e.isIntersecting) return;
       io.unobserve(e.target);
+      waiting.delete(e.target);
       roll(e.target);
     }), { threshold: 0.2 });
+    for (const el of waiting) if (!el.isConnected) io.unobserve(el), waiting.delete(el);
     host.querySelectorAll(sel).forEach((el, n) => {
       const text = el.textContent;
       if (!/\d/.test(text) || el.querySelector('.od')) return;
@@ -523,6 +523,7 @@
         return `<span class="od" aria-hidden="true" data-to="${+c || 10}" data-k="${k}" data-n="${Math.min(n, 8)}"><span class="od-z">${c}</span>${COL}</span>`;
       }).join('');
       io.observe(el);
+      waiting.add(el);
     });
   }
 

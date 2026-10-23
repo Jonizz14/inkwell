@@ -302,7 +302,7 @@ async function openArticle(id) {
 
 // an article saved from the web: minutes · words · author · date · where it is from
 function docMetaWeb(meta, mins) {
-  const date = meta.date ? new Intl.DateTimeFormat(lang, { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(meta.date)) : '';
+  const date = meta.date ? dateFmt({ day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(meta.date)) : '';
   return [t('doc.metaWeb', mins, meta.words), meta.by, date, meta.file].filter(Boolean).map(esc).join(' · ');
 }
 

@@ -736,8 +736,9 @@ const Player = (() => {
   }, true);
   window.addEventListener('resize', () => clampPos(undefined, false));
 
-  // boot: the player comes back folded and silent, ready to press play
-  if (cfg().shown && curItem()) show(false);
+  // boot: the player comes back folded and silent, ready to press play (not in the Settings
+  // demo: there only the shortcut being shown is on screen, and M brings the player up itself)
+  if (cfg().shown && curItem() && !(typeof PREVIEW !== 'undefined' && PREVIEW)) show(false);
   labels();
 
   // from settings

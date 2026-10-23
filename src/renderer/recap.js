@@ -151,8 +151,8 @@ const Recap = (() => {
   const key = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
   const escH = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-  const num = (n) => new Intl.NumberFormat(lang).format(Math.round(n));
-  const fmtDay = (d, o) => new Intl.DateTimeFormat(lang, o).format(d);
+  const num = (n) => numFmt().format(Math.round(n));
+  const fmtDay = (d, o) => dateFmt(o).format(d);
   const wdOf = (d) => (d.getDay() + 6) % 7; // Monday = 0
   const reduce = matchMedia('(prefers-reduced-motion: reduce)');
 

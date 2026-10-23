@@ -116,8 +116,9 @@
 .wn-item p { margin: 4px 0 0; font: 14px/1.55 var(--ui); color: var(--ink-2, var(--muted)); max-width: 60ch; }
 .wn-files div { display: flex; justify-content: space-between; gap: 16px; padding: 9px 0; border-top: 1px solid var(--line); font: 12.5px var(--ui); color: var(--ink-2, var(--muted)); }
 .wn-files span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
-/* the parts come in one after another through a blur when the page opens */
-#whatsnew.is-active .wn > * { animation: wn-in 640ms var(--ease) both; animation-delay: calc(180ms + var(--k, 0) * 70ms); }
+/* the parts come in one after another through a blur when the page opens. They are named, not
+   .wn > *: a rule that ends in * after .is-active made every page switch restyle both pages whole */
+#whatsnew.is-active :is(.wn-ver, .wn-meta, .wn-stage, .wn-sec) { animation: wn-in 640ms var(--ease) both; animation-delay: calc(180ms + var(--k, 0) * 70ms); }
 @keyframes wn-in { from { opacity: 0; filter: blur(8px); } }
 
 @media (prefers-reduced-motion: reduce) { .up-card, .up-card *, #whatsnew * { animation-duration: 1ms !important; transition-duration: 1ms !important; } }
