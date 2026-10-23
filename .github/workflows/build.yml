@@ -30,8 +30,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # what the app is made of besides src/ (scripts/deps-hash.mjs), worked out before the
+      # version is written into package-lock.json
+      - id: deps
+        shell: bash
+        run: echo "hash=$(node scripts/deps-hash.mjs)" >> "$GITHUB_OUTPUT"
       # the installers carry this build's version in their names and "About"
       - run: npm version ${{ env.VERSION }} --no-git-tag-version --allow-same-version
+      - run: npm pkg set inkwellDeps=${{ steps.deps.outputs.hash }}
       # macOS: the native helpers (Vision OCR, read-along); Windows uses tesseract.js instead
       - if: matrix.os == 'macos-latest'
         run: npm run build:mac-tools
@@ -44,15 +50,21 @@ jobs:
           bash scripts/build-remind.sh "$APP"
           bash scripts/build-widget.sh "$APP"
           ditto -c -k --keepParent "$APP" "dist/Inkwell-${{ env.VERSION }}-mac.zip"
+          # the small update: src/ and package.json alone, for apps built on the same parts
+          (cd "$APP/Contents/Resources/app" && zip -qr -X "$GITHUB_WORKSPACE/dist/Inkwell-${{ env.VERSION }}-mac-app-${{ steps.deps.outputs.hash }}.zip" src package.json)
           npx electron-builder --mac dmg --prepackaged "$APP" --publish never
       - if: matrix.os == 'windows-latest'
         run: npx electron-builder --win --publish never
+      - if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: Compress-Archive -Path dist/win-unpacked/resources/app/src, dist/win-unpacked/resources/app/package.json -DestinationPath "dist/Inkwell-${{ env.VERSION }}-win-app-${{ steps.deps.outputs.hash }}.zip"
       - uses: actions/upload-artifact@v4
         with:
           name: inkwell-${{ matrix.os }}
           path: |
             dist/*.dmg
             dist/*-mac.zip
+            dist/*-app-*.zip
             dist/*.exe
 
   release:

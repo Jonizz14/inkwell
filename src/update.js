@@ -5,10 +5,16 @@
 // new" page from the release notes). Only when the reader presses Update is the new build
 // downloaded, with its progress sent along; once it is in place the app reopens as the new
 // version, which greets once with what it brought (update-done.json).
+// Most releases change only the app's own code (src/): those come as a small file,
+// Inkwell-<v>-<mac|win>-app-<deps>.zip (about a megabyte instead of 150), taken when <deps> is
+// what this app is built on (package.json "inkwellDeps", scripts/deps-hash.mjs). When Electron,
+// the node modules or the native helpers changed, the whole app comes instead:
 //   macOS:   Inkwell-<v>-mac.zip (the app with its helpers), unpacked with ditto and swapped in
 //            by a small script that waits for this process to end. electron-updater (Squirrel)
 //            needs a Developer ID signature, which this app does not have.
 //   Windows: the NSIS installer, run silently (/S) once the app has quit.
+// The download survives a slow or broken connection: it shows every byte as it comes, starts
+// again where it stopped when the line goes quiet, and gives up only after several tries.
 // --update-demo plays the same with a sample update, and nothing is downloaded.
 const { app, ipcMain, net } = require('electron');
 const { spawn, execFile } = require('node:child_process');
@@ -23,10 +29,22 @@ const DONE = () => path.join(app.getPath('userData'), 'update-done.json');
 // the .app bundle around Contents/MacOS/Inkwell
 const BUNDLE = () => path.resolve(process.execPath, '..', '..', '..');
 const DEMO = process.argv.includes('--update-demo');
+const PLAT = process.platform === 'darwin' ? 'mac' : 'win';
+// what this build is made of besides src/ (CI writes it; a build from source has none)
+const DEPS = (() => {
+  try {
+    return require('../package.json').inkwellDeps || '';
+  } catch {
+    return '';
+  }
+})();
+// the app's own folder inside the bundle (asar is off): src/ and package.json live here
+const APPDIR = () => path.join(process.resourcesPath, 'app');
 
 let found = null; // { version, date, changes, files, asset } of a newer release
 let staged = null; // { version, mac: path to the new Inkwell.app } | { version, exe }
 let busy = false; // the window is showing an update being written: it doesn't close
+let downloading = false;
 let send = () => {};
 
 const parts = (v) => String(v).replace(/^v/, '').split(/[.-]/).slice(0, 3).map((n) => parseInt(n, 10) || 0);
@@ -85,8 +103,10 @@ async function check(manual) {
     const version = String(rel.tag_name || '').replace(/^v/, '');
     if (!newer(version, app.getVersion())) return { state: 'latest' };
     const want = process.platform === 'darwin' ? /-mac\.zip$/ : /^Inkwell-Setup-.*\.exe$/;
-    const asset = (rel.assets || []).find((a) => want.test(a.name));
+    const small = DEPS && (rel.assets || []).find((a) => a.name === `Inkwell-${version}-${PLAT}-app-${DEPS}.zip`);
+    const asset = small || (rel.assets || []).find((a) => want.test(a.name));
     if (!asset) return { state: 'latest' }; // an older release without the update file
+    asset.small = !!small;
     const date = rel.published_at ? new Date(rel.published_at).toLocaleDateString('en-GB').replace(/\//g, '.') : '';
     found = { version, date, changes: notesOf(rel.body), files: [[asset.name, Math.round(asset.size / 1024)]], asset };
     const info = { version, date, changes: found.changes, files: found.files };
@@ -98,27 +118,70 @@ async function check(manual) {
   }
 }
 
+// One file, fetched so that a slow line still gets there: the progress goes out every quarter
+// second from the first byte; when nothing arrives for a while the request is dropped and asked
+// again from the byte it stopped at (a Range request); only several failures in a row end it.
+const QUIET = 30e3; // no answer, or no new bytes, for this long: try again
+const TRIES = 8;
+async function fetchTo(url, file, size, onBytes) {
+  let got = 0;
+  let fails = 0;
+  await fsp.rm(file, { force: true });
+  while (got < size) {
+    const ctl = new AbortController();
+    let quiet = setTimeout(() => ctl.abort(), QUIET + 30e3); // the first answer may take a while
+    const wake = () => (clearTimeout(quiet), (quiet = setTimeout(() => ctl.abort(), QUIET)));
+    try {
+      const r = await net.fetch(url, { headers: { 'User-Agent': 'Inkwell', ...(got ? { Range: `bytes=${got}-` } : {}) }, signal: ctl.signal });
+      if (!r.ok) throw new Error(`download ${r.status}`);
+      // asked for the rest but got the whole file: start over
+      if (got && r.status !== 206) got = 0;
+      wake();
+      const out = fs.createWriteStream(file, { flags: got ? 'a' : 'w' });
+      try {
+        for await (const chunk of r.body) {
+          wake();
+          got += chunk.length;
+          if (!out.write(chunk)) await new Promise((ok) => out.once('drain', ok));
+          onBytes(got);
+          fails = 0;
+        }
+      } finally {
+        await new Promise((ok) => out.end(ok));
+      }
+      got = (await fsp.stat(file)).size;
+      if (got < size) throw new Error('cut short');
+    } catch (e) {
+      got = await fsp.stat(file).then((st) => st.size, () => 0);
+      if (++fails >= TRIES) throw new Error(`download failed: ${e.message}`);
+      console.error('update download, trying again', e.message);
+      await new Promise((ok) => setTimeout(ok, Math.min(8000, 1000 * fails)));
+    } finally {
+      clearTimeout(quiet);
+    }
+  }
+  if ((await fsp.stat(file)).size !== size) throw new Error('download incomplete');
+}
+
 // downloads the release found, telling the window how far it got
 async function download() {
-  if (!found || staged) return;
+  if (!found || staged || downloading) return;
+  downloading = true;
   const { asset, version } = found;
   try {
     await fsp.rm(DIR(), { recursive: true, force: true });
     await fsp.mkdir(DIR(), { recursive: true });
     const file = path.join(DIR(), asset.name);
-    const r = await net.fetch(asset.browser_download_url, { headers: { 'User-Agent': 'Inkwell' } });
-    if (!r.ok) throw new Error(`download ${r.status}`);
-    const out = fs.createWriteStream(file);
-    let got = 0, last = 0;
-    for await (const chunk of r.body) {
-      got += chunk.length;
-      if (!out.write(chunk)) await new Promise((ok) => out.once('drain', ok));
-      const f = Math.min(0.99, got / asset.size);
-      if (f - last >= 0.01) send('update:progress', { f: (last = f) });
-    }
-    await new Promise((ok, no) => out.end((e) => (e ? no(e) : ok())));
-    if ((await fsp.stat(file)).size !== asset.size) throw new Error('download incomplete');
-    if (process.platform === 'darwin') {
+    let last = 0;
+    send('update:progress', { f: 0 });
+    await fetchTo(asset.browser_download_url, file, asset.size, (got) => {
+      const now = Date.now();
+      if (now - last < 250) return;
+      last = now;
+      send('update:progress', { f: Math.min(0.99, got / asset.size) });
+    });
+    if (asset.small) staged = await stageSmall(file, version);
+    else if (process.platform === 'darwin') {
       const dir = path.join(DIR(), 'new');
       await run('/usr/bin/ditto', ['-x', '-k', file, dir]);
       const mac = path.join(dir, 'Inkwell.app');
@@ -135,7 +198,37 @@ async function download() {
     console.error('update', e.message);
     busy = false;
     send('update:failed', e.message);
+  } finally {
+    downloading = false;
   }
+}
+
+// The small update: the new src/ and package.json, unpacked beside the app. On macOS they go into
+// a copy of this app, signed again, and that copy is swapped in like a whole download; on Windows
+// a script puts them into the installed app's folder once it has quit.
+async function stageSmall(file, version) {
+  const dir = path.join(DIR(), 'app');
+  if (process.platform === 'darwin') {
+    await run('/usr/bin/ditto', ['-x', '-k', file, dir]);
+    await fsp.access(path.join(dir, 'src', 'main.js'));
+    const mac = path.join(DIR(), 'new', 'Inkwell.app');
+    await fsp.mkdir(path.dirname(mac), { recursive: true });
+    await run('/usr/bin/ditto', [BUNDLE(), mac]);
+    const res = path.join(mac, 'Contents', 'Resources', 'app');
+    await fsp.rm(path.join(res, 'src'), { recursive: true, force: true });
+    await run('/usr/bin/ditto', [path.join(dir, 'src'), path.join(res, 'src')]);
+    await fsp.copyFile(path.join(dir, 'package.json'), path.join(res, 'package.json'));
+    await run('/usr/bin/xattr', ['-cr', mac]).catch(() => {});
+    // the files inside changed: the app is signed again (the reminder's banners need the seal)
+    await run('/usr/bin/codesign', ['--force', '--sign', '-', '--identifier', 'uz.javohir.articles365', mac]);
+    await fsp.rm(file, { force: true });
+    await fsp.rm(dir, { recursive: true, force: true });
+    return { version, mac };
+  }
+  await run('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', `Expand-Archive -LiteralPath '${file.replace(/'/g, "''")}' -DestinationPath '${dir.replace(/'/g, "''")}' -Force`]);
+  await fsp.access(path.join(dir, 'src', 'main.js'));
+  await fsp.rm(file, { force: true });
+  return { version, src: dir };
 }
 
 // started detached when the app quits; waits for it to be gone, then puts the new build in place
@@ -158,6 +251,26 @@ pluginkit -a "$dest/Contents/PlugIns/ReaderWidget.appex" 2>/dev/null
 [ "$open" = 1 ] && open "$dest"
 exit 0`;
 
+// Windows, the small update: once the app is gone, its src/ and package.json are replaced (the old
+// src/ is kept aside until the new one is in, and put back if that fails), then it opens again
+const SWAP_WIN = `param($procId, $new, $app, $exe, $open)
+  while (Get-Process -Id $procId -ErrorAction SilentlyContinue) { Start-Sleep -Milliseconds 200 }
+  $old = Join-Path $app 'src.old'
+  Remove-Item -LiteralPath $old -Recurse -Force -ErrorAction SilentlyContinue
+  try {
+    Rename-Item -LiteralPath (Join-Path $app 'src') -NewName 'src.old' -ErrorAction Stop
+    Copy-Item -LiteralPath (Join-Path $new 'src') -Destination (Join-Path $app 'src') -Recurse -Force -ErrorAction Stop
+    Copy-Item -LiteralPath (Join-Path $new 'package.json') -Destination (Join-Path $app 'package.json') -Force -ErrorAction Stop
+    Remove-Item -LiteralPath $old -Recurse -Force -ErrorAction SilentlyContinue
+  } catch {
+    if (Test-Path -LiteralPath $old) {
+      Remove-Item -LiteralPath (Join-Path $app 'src') -Recurse -Force -ErrorAction SilentlyContinue
+      Rename-Item -LiteralPath $old -NewName 'src'
+    }
+  }
+  if ($open -eq '1') { Start-Process -FilePath $exe }
+`;
+
 let applying = false;
 function apply(reopen) {
   if (!staged || applying) return;
@@ -166,6 +279,11 @@ function apply(reopen) {
   fs.writeFileSync(DONE(), JSON.stringify({ v: staged.version, date: found && found.date, changes: found && found.changes }));
   const opts = { detached: true, stdio: 'ignore' };
   if (staged.mac) spawn('/bin/sh', ['-c', SWAP, 'swap', String(process.pid), staged.mac, BUNDLE(), reopen ? '1' : '0'], opts).unref();
+  else if (staged.src) {
+    const ps1 = path.join(DIR(), 'swap.ps1');
+    fs.writeFileSync(ps1, SWAP_WIN);
+    spawn('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-WindowStyle', 'Hidden', '-File', ps1, String(process.pid), staged.src, APPDIR(), process.execPath, reopen ? '1' : '0'], { ...opts, windowsHide: true }).unref();
+  }
   else spawn(staged.exe, ['/S', ...(reopen ? ['--force-run'] : [])], opts).unref();
 }
 
@@ -214,4 +332,4 @@ function start(win) {
   setInterval(check, EVERY).unref();
 }
 
-module.exports = { start, hold, pending: () => staged && staged.version, newer, notesOf };
+module.exports = { start, hold, pending: () => staged && staged.version, newer, notesOf, _test: { fetchTo, stageSmall } };
