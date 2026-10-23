@@ -8,6 +8,8 @@ their context, write what you understood under each paragraph, read in focus mod
 
 Runs on **macOS** and **Windows**. Works with no internet connection or account, and has no tracking.
 
+**▶ [Watch the 1-minute presentation](https://github.com/Jonizz14/inkwell/releases/download/v1.1.26/Inkwell-presentation.mp4)** (MP4, 1080p, with music)
+
 > Unofficial. This project is not affiliated with any publisher or channel. It ships **no articles**:
 > you read your own PDFs.
 
