@@ -229,7 +229,7 @@ const Plan = (() => {
     const left = x.d && !done ? t('pl.left', Math.max(1, Math.round((x.d - (x.t || 0)) / 60))) : x.d ? t('pl.mins', Math.max(1, Math.round(x.d / 60))) : '';
     const act = done ? t('pl.watched') : (x.t || 0) > 5 ? t('pl.resume') : t('pl.watch');
     return `<div class="pl-card pl-pod${done ? ' done' : ''}" data-k="e">
-      <button class="pl-open" data-open="e"><span class="pl-thumb"><img src="https://i.ytimg.com/vi/${esc(e.v)}/mqdefault.jpg" alt="" decoding="async" /><i class="pl-glyph">${done ? CHECK : PLAY}</i></span></button>
+      <button class="pl-open" data-open="e"><span class="pl-thumb"><img src="https://i.ytimg.com/vi/${esc(e.v)}/hqdefault.jpg" alt="" decoding="async" /><i class="pl-glyph">${done ? CHECK : PLAY}</i></span></button>
       <div class="pl-info">
         <span class="pl-k">${esc(t('pl.pod'))}${e.by ? ` · ${esc(e.by)}` : ''}</span>
         <h3 class="pl-t">${esc(e.title)}</h3>
@@ -408,6 +408,7 @@ const Plan = (() => {
 
   function choose(kind, k) {
     const d = day(k);
+    clearTimeout(dropT);
     pick = { kind, day: k, show: (d.e && d.e.show) || Listen.showNow(), q: '' };
     $('h2', sheet).textContent = t(kind === 'e' ? 'pl.pickPod' : 'pl.pickArt') + ' · ' + cap(dayName(k));
     $('.pl-rm', sheet).textContent = t('pl.remove');
@@ -419,9 +420,14 @@ const Plan = (() => {
     const s = $('.pl-q', sheet);
     if (s) setTimeout(() => s.focus({ preventScroll: true }), 60);
   }
+  // once faded, the rows go: hidden, they were still laid out with every redraw of the page
+  let dropT = 0;
   function closeSheet() {
+    if (!pick) return;
     sheet.classList.remove('show');
     pick = null;
+    clearTimeout(dropT);
+    dropT = setTimeout(() => !pick && ((list.innerHTML = ''), (list._items = null)), 320);
   }
 
   function tools() {
@@ -440,19 +446,20 @@ const Plan = (() => {
     return k && k !== pick.day ? t('pl.plannedFor', cap(dayName(k))) : '';
   };
 
-  async function fill() {
+  const RISE = 10; // rows that come in through a blur; the rest are simply there
+  async function fill(quiet) {
     const p = pick;
     const taken = plannedElsewhere(p.day);
     if (p.kind === 'a') {
       const q = p.q.trim().toLowerCase();
       const all = state.list.filter((m) => !m.op && (!artDone(m.id) || m.id === day(p.day).a));
-      const rows = (q ? all.filter((m) => (titleOf(m) + ' ' + (m.excerpt || '')).toLowerCase().includes(q)) : nextArticles(new Set()).concat(all.filter((m) => artDone(m.id)))).slice(0, 80);
+      const rows = (q ? all.filter((m) => (titleOf(m) + ' ' + (m.excerpt || '')).toLowerCase().includes(q)) : nextArticles(new Set()).concat(all.filter((m) => artDone(m.id)))).slice(0, 60);
       list.innerHTML = rows.length
         ? rows
             .map((m, i) => {
               const pr = artP(m.id);
               const note = elsewhere(taken.arts, m.id);
-              return `<li><button class="pl-row${m.id === day(p.day).a ? ' cur' : ''}${note ? ' taken' : ''}" data-id="${esc(m.id)}" style="--i:${Math.min(i, 12)}"><span class="pl-rn">${ring(pr)}</span><span class="pl-rt"><b>${esc(titleOf(m))}</b><span>${esc(note || [t('pl.mins', Math.max(1, Math.round(m.words / 220))), pr > 0.02 ? Math.round(pr * 100) + '%' : ''].filter(Boolean).join(' · '))}</span></span></button></li>`;
+              return `<li><button class="pl-row${i >= RISE || quiet ? ' still' : ''}${m.id === day(p.day).a ? ' cur' : ''}${note ? ' taken' : ''}" data-id="${esc(m.id)}" style="--i:${Math.min(i, 12)}"><span class="pl-rn">${ring(pr)}</span><span class="pl-rt"><b>${esc(titleOf(m))}</b><span>${esc(note || [t('pl.mins', Math.max(1, Math.round(m.words / 220))), pr > 0.02 ? Math.round(pr * 100) + '%' : ''].filter(Boolean).join(' · '))}</span></span></button></li>`;
             })
             .join('')
         : `<li class="pl-msg">${esc(t('pl.noArts'))}</li>`;
@@ -470,7 +477,7 @@ const Plan = (() => {
             const note = elsewhere(taken.eps, it.v);
             const x = Listen.ep(it.v);
             const dur = x.d ? t('pl.mins', Math.max(1, Math.round(x.d / 60))) : '';
-            return `<li><button class="pl-row pl-erow${cur && cur.v === it.v ? ' cur' : ''}${note ? ' taken' : ''}${epDone(it.v) ? ' done' : ''}" data-v="${esc(it.v)}" style="--i:${Math.min(i, 12)}"><img class="pl-rimg" src="https://i.ytimg.com/vi/${esc(it.v)}/mqdefault.jpg" alt="" loading="lazy" decoding="async" /><span class="pl-rt"><b>${esc(it.title)}</b><span>${esc(note || [fmtDate(it.date), dur, epDone(it.v) ? t('ls.done') : ''].filter(Boolean).join(' · '))}</span></span></button></li>`;
+            return `<li><button class="pl-row pl-erow${i >= RISE ? ' still' : ''}${cur && cur.v === it.v ? ' cur' : ''}${note ? ' taken' : ''}${epDone(it.v) ? ' done' : ''}" data-v="${esc(it.v)}" style="--i:${Math.min(i, 12)}"><img class="pl-rimg" src="https://i.ytimg.com/vi/${esc(it.v)}/mqdefault.jpg" alt="" loading="lazy" decoding="async" /><span class="pl-rt"><b>${esc(it.title)}</b><span>${esc(note || [fmtDate(it.date), dur, epDone(it.v) ? t('ls.done') : ''].filter(Boolean).join(' · '))}</span></span></button></li>`;
           })
           .join('')
       : `<li class="pl-msg">${esc(t('pl.noEps'))}</li>`;
@@ -526,10 +533,12 @@ const Plan = (() => {
     const it = (list._items || []).find((x) => x.v === r.dataset.v);
     if (it) put(epRec(it, pick.show));
   });
+  let typeF = 0;
   sheet.addEventListener('input', (e) => {
     if (!pick || !e.target.matches('.pl-q')) return;
     pick.q = e.target.value;
-    fill();
+    cancelAnimationFrame(typeF);
+    typeF = requestAnimationFrame(() => pick && fill(true));
   });
   document.addEventListener('keydown', (e) => {
     if (pick && e.key === 'Escape') (e.stopImmediatePropagation(), e.preventDefault(), closeSheet());
@@ -562,8 +571,11 @@ const Plan = (() => {
     c.classList.toggle('full', n === 2);
   }
   // the counts are looked at again whenever the library comes back (an article was just finished)
+  let libOn = true;
   new MutationObserver(() => {
-    if ($('#library').classList.contains('is-active')) stamp(), badge();
+    const on = $('#library').classList.contains('is-active');
+    if (on && !libOn) stamp(), badge();
+    libOn = on;
   }).observe($('#library'), { attributes: true, attributeFilter: ['class'] });
 
   return { open, back, render, badge, stamp, isOpen: () => state.view === 'plan' };

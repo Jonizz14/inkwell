@@ -31,14 +31,14 @@
 /* today: two cards side by side, the podcast and the article */
 .pl-today { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 860px) { .pl-today { grid-template-columns: 1fr; } }
-.pl-card { border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0; text-align: left; transition: border-color var(--t) var(--ease); }
+.pl-card { contain: layout paint; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); padding: 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0; text-align: left; transition: border-color var(--t) var(--ease); }
 .pl-card.done { border-color: var(--line-2); }
 .pl-open { border: 0; padding: 0; background: none; display: block; width: 100%; border-radius: 12px; }
 .pl-open:active { transform: scale(0.99); }
 .pl-thumb { position: relative; display: block; aspect-ratio: 16 / 9; border-radius: 12px; overflow: hidden; background: var(--soft); }
 .pl-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pl-page b { position: absolute; inset: 0; display: grid; place-items: center; font: 600 64px/1 var(--serif); color: var(--line-2); }
-.pl-glyph { position: absolute; left: 12px; bottom: 12px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--glass); backdrop-filter: blur(8px); box-shadow: 0 0 0 1px var(--ring); }
+.pl-glyph { position: absolute; left: 12px; bottom: 12px; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); box-shadow: 0 0 0 1px var(--ring), 0 2px 8px rgba(0, 0, 0, 0.18); }
 .pl-glyph svg { width: 15px; height: 15px; fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .pl-pod:not(.done) .pl-glyph svg { fill: var(--ink); stroke: none; }
 .done .pl-thumb img { filter: grayscale(1) opacity(0.55); }
@@ -68,7 +68,7 @@
 .pl-hh h2 { font: 600 11px var(--ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin: 0; }
 .pl-auto.busy { opacity: 0.5; pointer-events: none; }
 .pl-days { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
-.pl-day { display: grid; grid-template-columns: 130px 1fr 1fr; gap: 10px; align-items: stretch; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pl-day { contain: layout; display: grid; grid-template-columns: 130px 1fr 1fr; gap: 10px; align-items: stretch; padding: 10px 0; border-bottom: 1px solid var(--line); }
 .plan.enter .pl-day { animation: pl-in 0.45s var(--ease) both; animation-delay: calc(200ms + var(--i) * 35ms); }
 .pl-dn { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
 .pl-dn b { font: 600 14px var(--ui); }
@@ -97,7 +97,7 @@
 .pl-dot.now { outline: 1.5px solid var(--ink); outline-offset: 3px; }
 .pl-dot.future { box-shadow: inset 0 0 0 1.5px var(--line); }
 .plan.enter .pl-grid .pl-dot { animation: pl-dot 0.4s var(--ease) both; animation-delay: calc(280ms + var(--i) * 12ms); }
-@keyframes pl-dot { from { opacity: 0; filter: blur(3px); } }
+@keyframes pl-dot { from { opacity: 0; } }
 .pl-legend { display: flex; gap: 16px; margin-top: 10px; font: 12px var(--ui); color: var(--muted); }
 .pl-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .pl-legend .pl-dot { width: 10px; height: 10px; }
@@ -106,7 +106,8 @@
 /* the chooser: a sheet over the page; it fades through a blur in place, nothing slides */
 .pl-sheet { position: absolute; inset: 0; z-index: 20; display: grid; place-items: center; pointer-events: none; visibility: hidden; transition: visibility 0s linear 280ms; }
 .pl-sheet.show { pointer-events: auto; visibility: visible; transition: visibility 0s; }
-.pl-sheet:not(.show) * { pointer-events: none !important; }
+/* closed, nothing in it takes a click (pointer-events is inherited; no `*` rule, which made
+   every open and close restyle the whole sheet) */
 .pl-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.18); opacity: 0; transition: opacity 280ms var(--ease); }
 [data-theme="dark"] .pl-scrim { background: rgba(0, 0, 0, 0.45); }
 .pl-sheet.show .pl-scrim { opacity: 1; }
@@ -123,7 +124,8 @@
 .pl-shows button { flex: none; border: 1px solid var(--line-2); background: transparent; border-radius: 999px; height: 28px; padding: 0 12px; font: 12.5px var(--ui); color: var(--ink-2); transition: background var(--t), color var(--t), border-color var(--t); }
 .pl-shows button.on { background: var(--ink); border-color: var(--ink); color: var(--on-ink); }
 .pl-list { list-style: none; margin: 0; padding: 4px 8px 10px; overflow-y: auto; border-top: 1px solid var(--line); }
-.pl-row { width: 100%; border: 0; background: transparent; border-radius: 10px; padding: 9px 10px; display: flex; align-items: center; gap: 12px; text-align: left; animation: pl-in 0.35s var(--ease) both; animation-delay: calc(var(--i) * 18ms); transition: background var(--t-fast); }
+.pl-row { width: 100%; border: 0; background: transparent; border-radius: 10px; padding: 9px 10px; display: flex; align-items: center; gap: 12px; text-align: left; animation: pl-in 0.35s var(--ease) both; animation-delay: calc(var(--i) * 18ms); transition: background var(--t-fast); content-visibility: auto; contain-intrinsic-size: auto 58px; }
+.pl-row.still { animation: none; }
 .pl-row:hover { background: var(--soft); }
 .pl-row.cur { background: var(--hl); }
 .pl-row.taken .pl-rt > span, .pl-row.done .pl-rt > span { color: var(--faint); }
