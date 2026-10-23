@@ -556,13 +556,16 @@ function setCompact(lib, on) {
     const gaps = (parseFloat(cs.columnGap) || 0) * (btns.length - 1);
     const text = btns.reduce((n, b) => n + b.getBoundingClientRect().width, 0);
     const tight = head.classList.contains('tight');
-    const actsW = acts.getBoundingClientRect().width;
+    // a phone (web.css): the buttons have a row of their own under the titles, which take it all
+    const own = getComputedStyle(head).flexWrap === 'wrap';
+    if (own && tight) return head.classList.remove('tight');
+    const actsW = own ? 0 : acts.getBoundingClientRect().width;
     if (!tight) actsFull = actsW;
-    const room = head.clientWidth - actsW - (parseFloat(getComputedStyle(head).columnGap) || 0) - gaps - 2;
+    const room = head.clientWidth - actsW - (own ? 0 : parseFloat(getComputedStyle(head).columnGap) || 0) - gaps - 2;
     const size = (r) => Math.floor(((cur * r) / text) * 4) / 4;
     // with its words back, would the names still be at least TIGHT + 1?
     const full = tight ? size(room - (actsFull - actsW)) : size(room);
-    if (add) {
+    if (add && !own) {
       if (!tight && full < TIGHT) return (add.title = add.textContent), head.classList.add('tight');
       if (tight && full >= TIGHT + 1) return head.classList.remove('tight');
     }
