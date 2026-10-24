@@ -413,6 +413,13 @@ function noteHtml(p, text) {
 // Splits paragraph text at highlight boundaries; overlapping marks nest as classes.
 // Every other occurrence of a vocabulary word in the article gets marked too ("echo"):
 // it carries the original's id, so hover/click behave the same as on the original mark.
+// a quote or a dash next to a word only continues it when a letter follows (don’t, data-driven);
+// "sensitive data’ to China" ends at the closing quote
+const LETTER = /[\p{L}\p{N}]/u;
+const JOIN = /['’-]/;
+const joinsBefore = (text, i) => i > 0 && (LETTER.test(text[i - 1]) || (JOIN.test(text[i - 1]) && i > 1 && LETTER.test(text[i - 2])));
+const joinsAfter = (text, e) => e < text.length && (LETTER.test(text[e]) || (JOIN.test(text[e]) && e + 1 < text.length && LETTER.test(text[e + 1])));
+
 function echoMarks(text, hls, p) {
   const words = hls.filter((h) => h.t === 'word' && h.e > h.s);
   if (!words.length) return [];
@@ -426,7 +433,7 @@ function echoMarks(text, hls, p) {
     seen.add(w);
     for (let i = low.indexOf(w); i !== -1; i = low.indexOf(w, i + 1)) {
       const e = i + w.length;
-      if ((i > 0 && WORD.test(text[i - 1])) || (e < text.length && WORD.test(text[e]))) continue;
+      if (joinsBefore(text, i) || joinsAfter(text, e)) continue;
       if (own.some((x) => x.s < e && x.e > i) || out.some((x) => x.s < e && x.e > i)) continue;
       out.push({ id: h.id, p, s: i, e, t: 'word', echo: true });
     }
