@@ -18,12 +18,16 @@ Runs on **macOS** and **Windows**. Works with no internet connection or account,
 
 ## Updates
 
-Every update comes with a short video (about 18 s, 1080p, with music). Click a preview to watch it.
+Every update comes with a short video (about 18 s, 1080p, with music), next to the original one-minute presentation. Click a preview to watch it.
 
 <table>
   <tr>
     <td width="50%"><a href="https://github.com/Jonizz14/inkwell/releases/download/v1.1.28/Inkwell-update-plan-listening.mp4"><img src="docs/updates/plan-listening.webp" alt="Update 1.1.28"></a><br><sub><b><a href="https://github.com/Jonizz14/inkwell/releases/tag/v1.1.28">1.1.28</a></b>: Listening works again, the plan counts what you finished, phones can select text</sub></td>
     <td width="50%"><a href="https://github.com/Jonizz14/inkwell/releases/download/v1.1.27/Inkwell-update-video.mp4"><img src="docs/updates/one-row.webp" alt="Update 1.1.27"></a><br><sub><b><a href="https://github.com/Jonizz14/inkwell/releases/tag/v1.1.27">1.1.27</a></b>: titles and buttons in one row, at any window width</sub></td>
+  </tr>
+  <tr>
+    <td><a href="https://github.com/Jonizz14/inkwell/releases/download/v1.1.26/Inkwell-presentation.mp4"><img src="docs/presentation.webp" alt="The original presentation"></a><br><sub><b><a href="https://github.com/Jonizz14/inkwell/releases/tag/v1.1.26">The original</a></b>: the one-minute presentation of the whole app</sub></td>
+    <td></td>
   </tr>
 </table>
 
