@@ -344,6 +344,8 @@ function renderDoc() {
       ${noteHtml(p, note)}
     </div>`;
   });
+  // Inky waits at the end of every article
+  if (typeof Inky !== 'undefined') html += `<div class="doc-end">${Inky.html('happy', 4)}<span>${esc(t('inky.end'))}</span></div>`;
   $('#doc').innerHTML = html;
   $$('#doc .para[data-p] .ptext').forEach((el) => (el._h = marked[el.parentNode.dataset.p]));
   $$('#doc .note textarea').forEach(autosize);

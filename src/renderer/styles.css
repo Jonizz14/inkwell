@@ -1165,3 +1165,10 @@ body.ra-on .fh-heard:not(:empty) { display: block; }
 
 /* ⋯ menu: the installed version beside "Check for updates" */
 .mn-ver { font: 12px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Inky, the pixel mascot (inky.js): steps like a sprite — the hop is a class switched twice a second, never a transition */
+.inky { display: inline-block; line-height: 0; color: var(--ink); }
+.inky svg { display: block; }
+.inky.up { transform: translateY(calc(var(--px) * -1)); }
+.empty-mark .inky { margin-bottom: 6px; }
+.doc-end { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 72px 0 24px; color: var(--ink-2); font: 14px var(--ui); letter-spacing: 0.04em; }
