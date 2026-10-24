@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('api', {
   loadNotes: () => ipcRenderer.invoke('notes:load'),
   saveNotes: (data) => ipcRenderer.invoke('notes:save', data),
   copy: (text) => ipcRenderer.invoke('clipboard:write', text),
+  vocabPdf: (html, name) => ipcRenderer.invoke('vocab:pdf', { html, name }),
   readClipboard: () => ipcRenderer.invoke('clipboard:read'),
   onImportProgress: (fn) => ipcRenderer.on('import:progress', (_e, p) => fn(p)),
   readStart: (opts) => ipcRenderer.invoke('read:start', opts),

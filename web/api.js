@@ -291,6 +291,16 @@
         ta.remove();
       }
     },
+    // the vocabulary page goes to the browser's print sheet, where "Save as PDF" makes the file
+    vocabPdf: async (html) => {
+      const f = Object.assign(document.createElement('iframe'), { srcdoc: html });
+      f.style.cssText = 'position:fixed;width:0;height:0;border:0;visibility:hidden';
+      document.body.append(f);
+      await new Promise((ok) => (f.onload = ok));
+      f.contentWindow.print();
+      setTimeout(() => f.remove(), 60000);
+      return { ok: true, sheet: true };
+    },
     readClipboard: async () => {
       try {
         return await navigator.clipboard.readText();

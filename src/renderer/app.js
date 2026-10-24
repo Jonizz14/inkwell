@@ -51,10 +51,11 @@ function toast(msg, ms = 1800) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms);
 }
 
+// restarted through Web Animations: no forced layout of the page (offsetWidth) just to replay it
 function bump(el) {
   el.classList.remove('bump');
-  void el.offsetWidth;
-  el.classList.add('bump');
+  if (el._bump) el._bump.cancel();
+  el._bump = el.animate([{ transform: 'none' }, { transform: 'scale(1.35)', offset: 0.3 }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
 }
 
 function autosize(ta) {
@@ -282,6 +283,9 @@ async function openArticle(id) {
   if (data && data.err) return toast(typeof Guardian !== 'undefined' ? Guardian.why(data.err) : t('reader.openFail'));
   if (!meta || !data) return toast(t('reader.openFail'));
   state.current = { id, meta, data };
+  // styled and laid out while the page still waits off screen (.warm, as Statistics does), so
+  // the slide's first frame only has to paint it
+  $('#reader').classList.add('warm');
   const r = rec(id);
   // its text was edited since it was last fetched: highlights and notes find their places again
   if (data.moved != null && typeof migrateRecord === 'function') {
@@ -304,6 +308,7 @@ async function openArticle(id) {
   if (hero && !(hero.complete && hero.naturalWidth)) await Promise.race([hero.decode().catch(() => {}), new Promise((ok) => setTimeout(ok, 200))]);
   await settled();
   showView('reader');
+  $('#reader').classList.remove('warm');
 }
 
 // an article saved from the web: minutes · words · author · date · where it is from
@@ -324,21 +329,23 @@ function renderDoc() {
   $('#pdf-label').textContent = meta.url ? `${meta.file} ↗` : 'PDF';
   const hero = libImg(meta);
   if (hero) html += `<figure class="doc-hero"><img src="${esc(hero)}" alt="" decoding="async" />${meta.caption ? `<figcaption>${esc(meta.caption)}</figcaption>` : ''}</figure>`;
+  const marked = [];
   data.blocks.forEach((b, p) => {
     if (b.type === 'h' && b.text === meta.title && p < 6) return; // already shown as the title
     if (b.type === 'h') {
-      html += `<h2 class="para" data-p="${p}"><span class="ptext">${paraHtml(b.text, r.hl, p)}</span></h2>`;
+      html += `<h2 class="para" data-p="${p}"><span class="ptext">${(marked[p] = paraHtml(b.text, r.hl, p))}</span></h2>`;
       return;
     }
     const note = r.notes[p];
     html += `<div class="para${note != null ? ' has-note' : ''}" data-p="${p}">
       <button class="ptool" title="${esc(t('note.tool'))}">✎</button>
       <span class="pnum">${p + 1}</span>
-      <p class="ptext">${paraHtml(b.text, r.hl, p)}</p>
+      <p class="ptext">${(marked[p] = paraHtml(b.text, r.hl, p))}</p>
       ${noteHtml(p, note)}
     </div>`;
   });
   $('#doc').innerHTML = html;
+  $$('#doc .para[data-p] .ptext').forEach((el) => (el._h = marked[el.parentNode.dataset.p]));
   $$('#doc .note textarea').forEach(autosize);
   renderRail();
 }
@@ -466,14 +473,19 @@ function paraHtml(text, hls, p) {
   return out;
 }
 
-function rerenderPara(p) {
+// each paragraph remembers the markup it was given (_h), so a rerender that changes nothing
+// leaves it alone: its text keeps its layout and the next measurement doesn't relayout the article
+function rerenderPara(p, onlyIfChanged) {
   const el = $(`#doc .para[data-p="${p}"] .ptext`);
   if (!el) return;
-  el.innerHTML = paraHtml(state.current.data.blocks[p].text, rec(state.current.id).hl, p);
+  const html = paraHtml(state.current.data.blocks[p].text, rec(state.current.id).hl, p);
+  if (onlyIfChanged && el._h === html) return;
+  el.innerHTML = el._h = html;
 }
-// vocabulary changes ripple through the whole article (echo marks)
+// vocabulary changes ripple through the whole article (echo marks), but only the paragraphs
+// where the word actually occurs change
 function rerenderAllParas() {
-  $$('#doc .para').forEach((el) => rerenderPara(+el.dataset.p));
+  $$('#doc .para').forEach((el) => rerenderPara(+el.dataset.p, true));
 }
 
 /* scroll progress */
@@ -1061,8 +1073,9 @@ function addMarks(parts, type, fromSel) {
   if (type === 'word') {
     updateVocabCount(true);
     // drawer already open: the new word just slides in on top, the rest of the list stays put
-    if (drawerOpen()) prependVocab(created[0].id);
-    else (setScope('article'), openDrawer(created[0].id));
+    // the drawer follows a frame later: the marks redraw in one frame, the list fills in the next
+    if (drawerOpen()) requestAnimationFrame(() => prependVocab(created[0].id));
+    else requestAnimationFrame(() => (setScope('article'), openDrawer(created[0].id)));
   }
 }
 
@@ -1168,6 +1181,7 @@ function startEdit(p, x, y) {
   const block = state.current.data.blocks[p];
   // marks step aside while the plain text is edited, they come back where they belong
   pt.textContent = block.text;
+  pt._h = null;
   para.classList.add('editing');
   // 'true' (not plaintext-only) so every shortcut handler already treats it as typing; pastes go in as plain text
   pt.contentEditable = 'true';

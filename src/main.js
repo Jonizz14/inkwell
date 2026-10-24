@@ -457,6 +457,27 @@ ipcMain.on('haptic', (_e, k) => {
   if (haptic) haptic.tap(k | 0);
 });
 ipcMain.handle('clipboard:write', (_e, text) => clipboard.writeText(String(text)));
+// The vocabulary as a PDF (renderer/vocab-pdf.js makes the page): printed in a hidden window,
+// saved to Downloads under a name that doesn't overwrite an earlier one, and opened.
+ipcMain.handle('vocab:pdf', async (_e, { html, name } = {}) => {
+  const w = new BrowserWindow({ show: false, width: 900, height: 1200, webPreferences: { javascript: false, offscreen: true } });
+  try {
+    await w.loadURL('data:text/html;charset=utf-8;base64,' + Buffer.from(String(html)).toString('base64'));
+    const foot = '<div style="width:100%;font:8px -apple-system,Helvetica,sans-serif;color:#9a9a96;padding:0 18mm;display:flex;justify-content:space-between"><span>Inkwell</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>';
+    const pdf = await w.webContents.printToPDF({ pageSize: 'A4', printBackground: true, margins: { top: 0.7, bottom: 0.7, left: 0, right: 0 }, displayHeaderFooter: true, headerTemplate: '<span></span>', footerTemplate: foot });
+    const base = String(name || 'Inkwell Vocabulary').replace(/[\\/:*?"<>|]+/g, ' ').trim().slice(0, 120);
+    const dir = app.getPath('downloads');
+    let file = path.join(dir, base + '.pdf');
+    for (let i = 2; fs.existsSync(file); i++) file = path.join(dir, `${base} (${i}).pdf`);
+    await fs.promises.writeFile(file, pdf);
+    shell.openPath(file);
+    return { ok: true, file };
+  } catch (e) {
+    return { ok: false, err: e.message };
+  } finally {
+    w.destroy();
+  }
+});
 ipcMain.handle('clipboard:read', () => clipboard.readText());
 
 // Read-along: bin/read-along (tools/read-along.swift) listens to the microphone and streams
