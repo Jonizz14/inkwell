@@ -62,6 +62,42 @@ const Inky = (() => {
   }
   if (window !== window.top) return { html, setMood() {}, cheer() {} }; // the Settings demo has none
 
+  /* ---------- on the launch card: once the name is drawn, Inky walks up beside it, looks at
+     it and cheers; the card then melts with it, and the corner one walks in from the edge ---------- */
+  const word = document.querySelector('#splash:not(.still) .sp-word');
+  if (word && typeof Splash !== 'undefined' && Splash.t0 != null) {
+    const SP = 3;
+    const slot = document.createElement('span');
+    slot.className = 'sp-pal';
+    slot.innerHTML = html('idle', SP);
+    const ink = slot.firstChild;
+    const pic = ink.firstChild;
+    word.append(slot);
+    let sx = 54; // starts a little to the right, invisible, and steps in
+    let n = 0;
+    const put = (f, y = 0) => {
+      pic.innerHTML = paths(f);
+      ink.style.transform = `translate(${sx}px, ${y * SP}px)`;
+    };
+    const at = (ms, fn) => setTimeout(fn, Math.max(0, Splash.t0 + ms - performance.now()));
+    put('idle');
+    at(900, () => {
+      const go = () => {
+        if (sx <= 0) return put('idle');
+        sx -= 2 * SP;
+        ink.style.opacity = sx > 42 ? 0.5 : 1;
+        put(n++ % 2 ? 'idle' : 'step', n % 2 ? 0 : -1);
+        setTimeout(go, 85);
+      };
+      go();
+    });
+    at(1720, () => put('lookL'));
+    at(2000, () => put('blink'));
+    at(2110, () => put('lookL'));
+    const hop = [['happy', 0], ['happy', -2], ['happy', 0], ['happy', -2], ['happy', 0]];
+    hop.forEach(([f, y], i) => at(2280 + i * 120, () => put(f, y)));
+  }
+
   /* ---------- the companion ---------- */
   const PX = 3;
   const pal = document.createElement('div');

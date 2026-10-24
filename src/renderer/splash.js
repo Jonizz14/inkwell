@@ -78,5 +78,5 @@ const Splash = (() => {
   else document.addEventListener('DOMContentLoaded', mount, { once: true });
   // never in the way for long, whatever happens to the boot
   setTimeout(ready, 8000);
-  return { ready };
+  return { ready, t0 };
 })();
