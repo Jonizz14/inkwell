@@ -20,8 +20,7 @@
 .plan.enter > :nth-child(4) { animation-delay: 210ms; }
 .plan .fresh { animation: pl-in 0.45s var(--ease) both; }
 
-.pl-head { margin-bottom: 26px; display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
-.pl-head .inky { flex-shrink: 0; margin-bottom: 6px; }
+.pl-head { margin-bottom: 26px; }
 .pl-date { font: 600 11px var(--ui); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .pl-head h1 { font: 700 34px/1.15 var(--serif); letter-spacing: -0.015em; margin: 6px 0 10px; }
 .pl-prog { display: flex; align-items: center; gap: 10px; font: 13px var(--ui); color: var(--ink-2); }

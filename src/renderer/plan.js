@@ -349,12 +349,9 @@ const Plan = (() => {
     const keep = new Map($$('img', body).map((i) => [i.src, i]));
     body.innerHTML = `
       <header class="pl-head">
-        <div class="pl-ht">
         <span class="pl-date">${esc(cap(fmt(today(), { weekday: 'long', day: 'numeric', month: 'long' })))}</span>
         <h1>${esc(t('pl.head'))}</h1>
         <div class="pl-prog"><span class="pl-pips"><i class="${d.ed ? 'on' : ''}"></i><i class="${d.ad ? 'on' : ''}"></i></span>${esc(t('pl.sub', n))}</div>
-        </div>
-        ${typeof Inky !== 'undefined' ? Inky.html(n === 2 ? 'happy' : n === 1 ? 'read' : new Date().getHours() >= 21 ? 'sleep' : 'idle', 5) : ''}
       </header>
       <div class="pl-today">${podCard(d)}${artCard(d)}</div>
       <section class="pl-week">
@@ -378,6 +375,8 @@ const Plan = (() => {
       )
     );
     badge();
+    // Inky keeps the day's mood here: reading while half done, cheering when both are
+    if (typeof Inky !== 'undefined') Inky.setMood('plan', n === 2 ? 'happy' : n === 1 ? 'read' : 'idle');
   }
 
   async function open() {

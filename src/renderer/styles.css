@@ -1166,9 +1166,11 @@ body.ra-on .fh-heard:not(:empty) { display: block; }
 /* ⋯ menu: the installed version beside "Check for updates" */
 .mn-ver { font: 12px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* Inky, the pixel mascot (inky.js): steps like a sprite — the hop is a class switched twice a second, never a transition */
+/* Inky, the pixel mascot (inky.js): steps like a sprite — every move is a class or a transform set
+   a few times a second, never a transition; #inky-pal is the one that goes with you to every page */
 .inky { display: inline-block; line-height: 0; color: var(--ink); }
 .inky svg { display: block; }
 .inky.up { transform: translateY(calc(var(--px) * -1)); }
-.empty-mark .inky { margin-bottom: 6px; }
-.doc-end { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 72px 0 24px; color: var(--ink-2); font: 14px var(--ui); letter-spacing: 0.04em; }
+#inky-pal { position: fixed; right: 22px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 25; pointer-events: none; }
+#inky-pal .inky { pointer-events: auto; cursor: pointer; -webkit-app-region: no-drag; }
+@media (max-width: 700px) { #inky-pal { display: none; } }

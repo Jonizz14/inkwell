@@ -344,8 +344,6 @@ function renderDoc() {
       ${noteHtml(p, note)}
     </div>`;
   });
-  // Inky waits at the end of every article
-  if (typeof Inky !== 'undefined') html += `<div class="doc-end">${Inky.html('happy', 4)}<span>${esc(t('inky.end'))}</span></div>`;
   $('#doc').innerHTML = html;
   $$('#doc .para[data-p] .ptext').forEach((el) => (el._h = marked[el.parentNode.dataset.p]));
   $$('#doc .note textarea').forEach(autosize);
@@ -503,6 +501,7 @@ function onScroll() {
     const ratio = max > 0 ? Math.min(1, sc.scrollTop / max) : 1;
     $('#progress').style.transform = `scaleX(${ratio})`;
     $('#bar-title').classList.toggle('show', sc.scrollTop > 140);
+    if (typeof Inky !== 'undefined') Inky.setMood('reader', ratio >= 0.95 ? 'happy' : 'read'); // cheers at the end
     updateRail();
     if (state.pop) hidePop();
     hideTip();
@@ -1074,6 +1073,7 @@ function addMarks(parts, type, fromSel) {
     });
   if (type === 'word') {
     updateVocabCount(true);
+    if (typeof Inky !== 'undefined') Inky.cheer(); // a new word: Inky is pleased
     // drawer already open: the new word just slides in on top, the rest of the list stays put
     // the drawer follows a frame later: the marks redraw in one frame, the list fills in the next
     if (drawerOpen()) requestAnimationFrame(() => prependVocab(created[0].id));
