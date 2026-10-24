@@ -492,6 +492,7 @@ function onScroll() {
       r.pos = ratio;
       Stats.progress(state.current.meta.words, r.progress || 0, ratio);
       r.progress = Math.max(r.progress || 0, ratio);
+      if (r.progress >= 0.95 && !r.doneAt) r.doneAt = Date.now(); // the plan counts the day it was finished
       save();
     }, 400);
   });
@@ -820,7 +821,8 @@ function placePop(rect) {
   let x = rect.left + rect.width / 2 - w / 2;
   x = Math.max(12, Math.min(window.innerWidth - w - 12, x));
   let y = rect.top - h - 12;
-  const below = y < 64;
+  // on a touch screen the phone's own Copy/Look Up menu sits above the selection: go under it
+  const below = y < 64 || (touchy && state.pop && rect.bottom + h + 24 < window.innerHeight);
   if (below) y = rect.bottom + 12;
   pop.dataset.side = below ? 'below' : 'above';
   pop.style.setProperty('--ax', Math.max(16, Math.min(w - 16, rect.left + rect.width / 2 - x)) + 'px');
@@ -890,6 +892,23 @@ function drawSelection() {
 }
 const queueSelection = () => selfxRaf || (selfxRaf = requestAnimationFrame(drawSelection));
 document.addEventListener('selectionchange', queueSelection);
+
+/* Touch: a selection is made by a long press and its handles, with no mouseup at the end, so
+   the menu follows the selection itself, once it has stopped changing for a moment. */
+let touchy = false;
+addEventListener('pointerdown', (e) => (touchy = e.pointerType !== 'mouse'), true);
+let touchSelT = 0;
+document.addEventListener('selectionchange', () => {
+  if (!touchy || state.view !== 'reader' || editMode()) return;
+  clearTimeout(touchSelT);
+  touchSelT = setTimeout(() => {
+    const sel = document.getSelection();
+    const anc = sel && sel.rangeCount && sel.getRangeAt(0).commonAncestorContainer;
+    const el = anc && (anc.nodeType === 1 ? anc : anc.parentElement);
+    if (sel && !sel.isCollapsed && el && $('#doc').contains(el) && !el.closest('.note, .ptool, .para.editing')) showPopForSelection();
+    else if (state.pop && state.pop.mode === 'select') hidePop();
+  }, 250);
+});
 window.addEventListener('resize', queueSelection);
 
 /* hovering a vocabulary word shows the translation I wrote for it */
@@ -948,8 +967,10 @@ $('#doc').addEventListener('mouseup', (e) => {
     const sel = document.getSelection();
     if (sel && !sel.isCollapsed) return showPopForSelection();
     const mark = e.target.closest('mark');
-    if (mark) showPopForMark(mark, e.clientY);
-    else hidePop();
+    if (!mark) return hidePop();
+    showPopForMark(mark, e.clientY);
+    // no hover on a touch screen: a tapped word shows its translation above, the menu below
+    if (touchy && mark.classList.contains('word')) showTip(mark, e.clientY);
   }, 0);
 });
 document.addEventListener('mousedown', (e) => {
@@ -959,6 +980,20 @@ document.addEventListener('mousedown', (e) => {
 });
 
 $('#pop').addEventListener('mousedown', (e) => e.preventDefault());
+// a tap would clear the selection before the click arrives: the button acts on the touch itself
+$('#pop').addEventListener('touchstart', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  e.preventDefault();
+  b.classList.add('press');
+}, { passive: false });
+$('#pop').addEventListener('touchend', (e) => {
+  const b = e.target.closest('button');
+  $$('#pop button.press').forEach((x) => x.classList.remove('press'));
+  if (!b) return;
+  e.preventDefault();
+  popAction(b.dataset.act);
+}, { passive: false });
 $('#pop').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (b) popAction(b.dataset.act);

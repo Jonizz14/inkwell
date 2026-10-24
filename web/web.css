@@ -32,4 +32,13 @@ html.web:not(.speech) #ra-btn { display: none; }
   .rail { display: none !important; }
   .doc { width: calc(100% - 40px) !important; }
   .ptool { display: none; }
+  /* the vocabulary drawer is 420px wide: on a phone it takes the screen instead of hanging off its left edge */
+  :root { --drawer-w: 100vw; }
+}
+
+/* Touch screens: the selection menu's buttons are finger-sized and lose their keyboard hints */
+@media (pointer: coarse) {
+  .pop button { height: 40px; padding: 0 12px; }
+  .pop button.press { background: var(--hover); }
+  .pop kbd { display: none; }
 }

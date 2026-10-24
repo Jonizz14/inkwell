@@ -167,16 +167,58 @@ const Plan = (() => {
     return e.done ? 1 : e.d ? Math.min(1, (e.t || 0) / e.d) : 0;
   };
 
+  // whatever is finished today counts for today, planned or not: the planned one if it's done,
+  // otherwise the last article / episode finished today takes its place in the day.
+  // (app.js writes articles[id].doneAt, listen.js eps[v].doneAt; things finished before those
+  // stamps existed get one once, from the moment they were last opened, if that was today)
+  const midnight = () => new Date().setHours(0, 0, 0, 0);
+  const EPS = () => (state.notes.listen && state.notes.listen.eps) || {};
+  function backfill() {
+    const p = P();
+    if (p.since) return;
+    const m0 = midnight();
+    for (const r of Object.values(state.notes.articles)) if (!r.doneAt && (r.progress || 0) >= 0.95 && (r.opened || 0) >= m0) r.doneAt = r.opened;
+    for (const e of Object.values(EPS())) if (e.done && !e.doneAt && (e.at || 0) >= m0) e.doneAt = e.at;
+    p.since = Date.now();
+    save();
+  }
+  const lastToday = (entries) => {
+    const m0 = midnight();
+    let best = null;
+    for (const [id, at] of entries) if (at >= m0 && (!best || at > best[1])) best = [id, at];
+    return best;
+  };
+  const artToday = () => lastToday(Object.entries(state.notes.articles).filter(([id, r]) => r.doneAt && artDone(id) && meta(id)).map(([id, r]) => [id, r.doneAt]));
+  const epToday = () => lastToday(Object.entries(EPS()).filter(([, e]) => e.done && e.doneAt).map(([v, e]) => [v, e.doneAt]));
+
   // what is done today is written down the moment it's seen done (a past day stays as it was)
   let wasFull = null;
   function stamp() {
+    backfill();
     const k = today();
+    let changed = false;
+    const d0 = P().days[k] || {};
+    if (!d0.ad) {
+      if (d0.a && artDone(d0.a)) (dayRec(k).ad = Date.now()), (changed = true);
+      else {
+        const f = artToday();
+        if (f) Object.assign(dayRec(k), { a: f[0], ad: f[1] }), (changed = true);
+      }
+    }
+    if (!d0.ed) {
+      if (d0.e && epDone(d0.e.v)) (dayRec(k).ed = Date.now()), (changed = true);
+      else {
+        const f = epToday();
+        if (f) {
+          const x = EPS()[f[0]];
+          Object.assign(dayRec(k), { e: { v: f[0], title: x.title, by: x.by, show: x.show }, ed: f[1] });
+          changed = true;
+        }
+      }
+    }
+    if (changed) save();
     const d = P().days[k];
     if (!d) return (wasFull = false);
-    let changed = false;
-    if (d.a && !d.ad && artDone(d.a)) (d.ad = Date.now()), (changed = true);
-    if (d.e && !d.ed && epDone(d.e.v)) (d.ed = Date.now()), (changed = true);
-    if (changed) save();
     const full = !!(d.ad && d.ed);
     if (full && wasFull === false) {
       toast(t('pl.allDone'), 2600);

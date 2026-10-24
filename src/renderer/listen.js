@@ -310,6 +310,7 @@ const Listen = (() => {
     const start = e.t && !e.done && (!e.d || e.t < e.d - 15) ? e.t : 0;
     cur = { v: it.v, title: it.title, by: it.by, date: it.date, show: showKey };
     Object.assign(e, { title: it.title, by: it.by, at: Date.now() });
+    if (showKey) e.show = showKey;
     L().eps[it.v] = e;
     save();
     if (typeof Player !== 'undefined') Player.pause(); // one sound at a time
@@ -459,6 +460,7 @@ const Listen = (() => {
     const e = L().eps[cur.v];
     if (e.done) return;
     e.done = true;
+    e.doneAt = Date.now();
     save();
     paint();
   }
@@ -544,6 +546,7 @@ const Listen = (() => {
     if (a.dataset.a === 'done') {
       const ep = L().eps[cur.v];
       ep.done = !ep.done;
+      if (ep.done) ep.doneAt = Date.now();
       save();
       paint();
     }
