@@ -410,8 +410,8 @@ const Plan = (() => {
   /* ---------------- filling the days ---------------- */
 
   // the next articles to read: started ones first, then the library's order
-  function nextArticles(taken) {
-    const left = state.list.filter((m) => !artDone(m.id) && !taken.has(m.id) && !m.op);
+  function nextArticles(taken, web) {
+    const left = state.list.filter((m) => !artDone(m.id) && !taken.has(m.id) && (web || !m.op));
     const started = left.filter((m) => artP(m.id) > 0.02).sort((x, y) => artP(y.id) - artP(x.id));
     return started.concat(left.filter((m) => artP(m.id) <= 0.02));
   }
@@ -457,7 +457,8 @@ const Plan = (() => {
   function choose(kind, k) {
     const d = day(k);
     clearTimeout(dropT);
-    pick = { kind, day: k, show: (d.e && d.e.show) || Listen.showNow(), q: '' };
+    const cm = d.a && meta(d.a);
+    pick = { kind, day: k, show: (d.e && d.e.show) || Listen.showNow(), src: (cm && cm.kind) || '365', q: '' };
     $('h2', sheet).textContent = t(kind === 'e' ? 'pl.pickPod' : 'pl.pickArt') + ' · ' + cap(dayName(k));
     $('.pl-rm', sheet).textContent = t('pl.remove');
     $('.pl-rm', sheet).hidden = !(kind === 'e' ? d.e : d.a);
@@ -481,13 +482,25 @@ const Plan = (() => {
   function tools() {
     const box = $('.pl-tools', sheet);
     if (pick.kind === 'a') {
-      box.innerHTML = `<input class="pl-q" type="search" placeholder="${esc(t('pl.search'))}" autocomplete="off" spellcheck="false" />`;
+      // the library's own shelves, apart: Articles and the saved Guardian pieces
+      const srcs = [['365', shelfName('365')]];
+      if (state.list.some((m) => m.kind === 'guardian')) srcs.push(['guardian', shelfName('guardian')]);
+      if (!srcs.some(([s]) => s === pick.src)) pick.src = '365';
+      box.innerHTML = (srcs.length > 1 ? `<div class="pl-shows pl-src">${srcs.map(([s, n]) => `<button data-src="${s}" class="${s === pick.src ? 'on' : ''}">${esc(n)}</button>`).join('')}</div>` : '') +
+        `<input class="pl-q" type="search" placeholder="${esc(t('pl.search'))}" autocomplete="off" spellcheck="false" />`;
       return;
     }
     box.innerHTML = `<div class="pl-shows">${Listen.showList().map((s) => `<button data-show="${esc(s.key)}" class="${s.key === pick.show ? 'on' : ''}">${esc(s.name)}</button>`).join('')}</div>`;
     const on = $('.pl-shows .on', box);
     if (on) requestAnimationFrame(() => on.scrollIntoView({ inline: 'center', block: 'nearest' }));
   }
+
+  const shelfName = (s) => {
+    const b = $(`#shelf button[data-s="${s}"]`);
+    return (b && b.textContent.trim()) || (s === 'guardian' ? 'The Guardian' : 'Articles');
+  };
+  // saved Guardian pages (op: their text is fetched again on opening) only in their own tab
+  const onSrc = (m) => (m.kind || '365') === pick.src;
 
   const elsewhere = (map, id) => {
     const k = map.get(id);
@@ -500,8 +513,9 @@ const Plan = (() => {
     const taken = plannedElsewhere(p.day);
     if (p.kind === 'a') {
       const q = p.q.trim().toLowerCase();
-      const all = state.list.filter((m) => !m.op && (!artDone(m.id) || m.id === day(p.day).a));
-      const rows = (q ? all.filter((m) => (titleOf(m) + ' ' + (m.excerpt || '')).toLowerCase().includes(q)) : nextArticles(new Set()).concat(all.filter((m) => artDone(m.id)))).slice(0, 60);
+      const web = p.src === 'guardian';
+      const all = state.list.filter((m) => (web || !m.op) && onSrc(m) && (!artDone(m.id) || m.id === day(p.day).a));
+      const rows = (q ? all.filter((m) => (titleOf(m) + ' ' + (m.excerpt || '')).toLowerCase().includes(q)) : nextArticles(new Set(), web).filter(onSrc).concat(all.filter((m) => artDone(m.id)))).slice(0, 60);
       list.innerHTML = rows.length
         ? rows
             .map((m, i) => {
@@ -568,6 +582,12 @@ const Plan = (() => {
     if (e.target.closest('.pl-scrim, .pl-x')) return closeSheet();
     if (!pick) return;
     if (e.target.closest('.pl-rm')) return put(null);
+    const src = e.target.closest('[data-src]');
+    if (src) {
+      pick.src = src.dataset.src;
+      $$('.pl-src button', sheet).forEach((b) => b.classList.toggle('on', b === src));
+      return fill();
+    }
     const s = e.target.closest('[data-show]');
     if (s) {
       pick.show = s.dataset.show;

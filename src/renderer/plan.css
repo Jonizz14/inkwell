@@ -140,3 +140,4 @@
 @media (prefers-reduced-motion: reduce) {
   .plan.enter > *, .plan .fresh, .plan.enter .pl-day, .plan.enter .pl-grid .pl-dot, .pl-row { animation: none; }
 }
+.pl-src { margin-bottom: 8px; }
