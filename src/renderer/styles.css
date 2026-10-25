@@ -1171,6 +1171,10 @@ body.ra-on .fh-heard:not(:empty) { display: block; }
 .inky { display: inline-block; line-height: 0; color: var(--ink); }
 .inky svg { display: block; }
 .inky.up { transform: translateY(calc(var(--px) * -1)); }
-#inky-pal { position: fixed; right: 22px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 25; pointer-events: none; }
+#inky-pal { position: fixed; right: 10px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 25; pointer-events: none; }
+/* what it says: a small bubble above it, out of a blur and back into one */
+.inky-say { position: absolute; right: 14px; bottom: calc(100% + 8px); width: max-content; max-width: 240px; padding: 7px 11px; border-radius: 10px; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink); font: 12.5px/1.35 var(--ui); letter-spacing: 0; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14); opacity: 0; filter: blur(6px); transition: opacity 320ms var(--ease), filter 320ms var(--ease); pointer-events: none; white-space: normal; }
+.inky-say::after { content: ''; position: absolute; right: 22px; bottom: -5px; width: 8px; height: 8px; background: var(--bg); border-right: 1px solid var(--line-2); border-bottom: 1px solid var(--line-2); transform: rotate(45deg); }
+.inky-say.on { opacity: 1; filter: none; }
 #inky-pal .inky { pointer-events: auto; cursor: pointer; -webkit-app-region: no-drag; }
 @media (max-width: 700px) { #inky-pal { display: none; } }

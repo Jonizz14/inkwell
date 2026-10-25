@@ -375,8 +375,8 @@ const Plan = (() => {
       )
     );
     badge();
-    // Inky keeps the day's mood here: reading while half done, cheering when both are
-    if (typeof Inky !== 'undefined') Inky.setMood('plan', n === 2 ? 'happy' : n === 1 ? 'read' : 'idle');
+    // Inky ticks off the plan here, and is starry-eyed when both are done
+    if (typeof Inky !== 'undefined') Inky.plan(n);
   }
 
   async function open() {

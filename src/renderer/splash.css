@@ -33,7 +33,9 @@
 
 /* Inky (inky.js) walks up beside the word: a slot of no width, so the name stays centred */
 .sp-pal { display: block; width: 0; align-self: baseline; }
-.sp-pal .inky { display: inline-block; margin-left: 16px; opacity: 0; color: var(--ink); line-height: 0; }
+.sp-pal { position: relative; }
+.sp-pal .inky { display: inline-block; margin-left: 4px; opacity: 0; color: var(--ink); line-height: 0; }
+.sp-pal .inky-say { right: auto; left: 14px; bottom: calc(100% + 4px); }
 
 #splash.out { opacity: 0; pointer-events: none; }
 #splash.out .sp-mark { opacity: 0; filter: blur(12px); }

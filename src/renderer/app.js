@@ -501,7 +501,7 @@ function onScroll() {
     const ratio = max > 0 ? Math.min(1, sc.scrollTop / max) : 1;
     $('#progress').style.transform = `scaleX(${ratio})`;
     $('#bar-title').classList.toggle('show', sc.scrollTop > 140);
-    if (typeof Inky !== 'undefined') Inky.setMood('reader', ratio >= 0.95 ? 'happy' : 'read'); // cheers at the end
+    if (typeof Inky !== 'undefined' && state.current) Inky.read(ratio, state.current.id); // starry-eyed at the end
     updateRail();
     if (state.pop) hidePop();
     hideTip();
@@ -1073,7 +1073,7 @@ function addMarks(parts, type, fromSel) {
     });
   if (type === 'word') {
     updateVocabCount(true);
-    if (typeof Inky !== 'undefined') Inky.cheer(); // a new word: Inky is pleased
+    if (typeof Inky !== 'undefined') Inky.cheer(created[0].text.trim()); // a new word: Inky is pleased and says it
     // drawer already open: the new word just slides in on top, the rest of the list stays put
     // the drawer follows a frame later: the marks redraw in one frame, the list fills in the next
     if (drawerOpen()) requestAnimationFrame(() => prependVocab(created[0].id));
@@ -1093,6 +1093,7 @@ function removeMark(hlId) {
       return;
     }
     r.vocab = r.vocab.filter((x) => x.hlId !== hlId);
+    if (typeof Inky !== 'undefined') Inky.unword(h.text.trim(), !!(v && v.tr.trim())); // a word let go
     updateVocabCount();
     if (v) removeVocabRow(v.id);
   }
