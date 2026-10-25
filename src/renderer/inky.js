@@ -11,7 +11,6 @@
 const Inky = (() => {
   const SAY = {
     uz: {
-      hi: 'Salom!',
       lib: ["Bugun nima o'qiymiz?", "Bitta maqola o'qib olamizmi?", 'Qaysi birini tanlaymiz?'],
       reader: ["Qani, o'qidik!", "Men ham o'qiyman", "Notanish so'zni belgilang — eslab qolaman"],
       end: 'Barakalla! Maqola tugadi',
@@ -33,7 +32,6 @@ const Inky = (() => {
       tips: ["Bir maqola o'qib olamizmi?", "Lug'atni takrorlab olaylik", "Bugungi rejaga qarab ko'raylik", 'Suv ichib oling!'],
     },
     en: {
-      hi: 'Hi!',
       lib: ['What shall we read today?', 'One article?', 'Which one shall we pick?'],
       reader: ["Let's read!", "I'm reading too", "Mark a new word — I'll remember it"],
       end: 'Well done! The end',
@@ -55,7 +53,6 @@ const Inky = (() => {
       tips: ['Shall we read one article?', "Let's review the vocabulary", "Let's look at today's plan", 'Have some water!'],
     },
     ru: {
-      hi: 'Привет!',
       lib: ['Что почитаем сегодня?', 'Одну статью?', 'Какую выберем?'],
       reader: ['Читаем!', 'Я тоже читаю', 'Отметь новое слово — я запомню'],
       end: 'Молодец! Статья прочитана',
@@ -272,9 +269,9 @@ const Inky = (() => {
     };
   }
 
-  /* ---------- on the launch card: as the name is drawn Inky walks up beside it, looks at it,
-     blinks, waves hello in a bubble and jumps; the card then melts with it, and the corner one
-     walks in from the edge ---------- */
+  /* ---------- on the launch card: as the name is drawn Inky drops in from above, lands beside it
+     with a little bounce, looks at the word, blinks and goes starry-eyed — no words, it is just
+     there; the card then melts with it, and the corner one walks in from the edge ---------- */
   const word = document.querySelector('#splash:not(.still) .sp-word');
   let splashOn = false;
   if (word && typeof Splash !== 'undefined' && Splash.t0 != null) {
@@ -285,32 +282,20 @@ const Inky = (() => {
     slot.innerHTML = html('idle', SP);
     const ink = slot.firstChild;
     const pic = ink.firstChild;
-    const hello = bubble(slot);
     word.append(slot);
-    let sx = 60;
-    let n = 0;
     const put = (f, y = 0) => {
       pic.innerHTML = paths(f);
-      ink.style.transform = `translate(${sx}px, ${y * SP}px)`;
+      ink.style.transform = `translateY(${y * SP}px)`;
     };
     const at = (ms, fn) => setTimeout(fn, Math.max(0, Splash.t0 + ms - performance.now()));
-    put('idle');
-    at(900, () => {
-      const go = () => {
-        if (sx <= 0) return put('idle');
-        sx -= 2 * SP;
-        ink.style.opacity = sx > 48 ? 0.5 : 1;
-        put(n++ % 2 ? 'idle' : 'step', n % 2 ? 0 : -1);
-        setTimeout(go, 85);
-      };
-      go();
-    });
+    put('scared', -40);
+    // falling faster each step (whole pixels), a bounce, then still
+    const fall = [[-40, 'scared'], [-36, 'scared'], [-30, 'scared'], [-22, 'scared'], [-12, 'scared'], [0, 'surprised'], [-3, 'surprised'], [-4, 'surprised'], [-3, 'surprised'], [0, 'idle']];
+    fall.forEach(([y, f], i) => at(1000 + i * 55, () => ((ink.style.opacity = 1), put(f, y))));
     at(1700, () => put('lookL'));
     at(1950, () => put('blink'));
-    at(2050, () => put('lookL'));
-    at(2250, () => hello(words().hi, 1300));
-    [0, 1, 2, 3, 4].forEach((i) => at(2250 + i * 130, () => put(i % 2 ? 'wave2' : 'wave')));
-    [['happy2', -2], ['happy', 0], ['happy2', -2], ['starry', 0]].forEach(([f, y], i) => at(2950 + i * 120, () => put(f, y)));
+    at(2060, () => put('lookL'));
+    [['happy2', -2], ['happy', 0], ['happy2', -2], ['starry', 0]].forEach(([f, y], i) => at(2350 + i * 120, () => put(f, y)));
   }
 
   /* ---------- the companion ---------- */
