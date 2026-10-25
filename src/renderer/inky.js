@@ -221,6 +221,7 @@ const Inky = (() => {
       chart: make(e('open', 1), m('smile'), a('board'), a('bars', 0)),
       chart2: make(e('open', 1), m('smile'), a('board'), a('bars', 1)),
       chart3: make(e('happy'), m('grin'), a('board'), a('bars', 2)),
+      plan0: make(e('open', 1), m('dot'), a('board'), a('checks', 0)),
       plan: make(e('open', 1), m('smile'), a('board'), a('checks', 1)),
       plan2: make(e('open', 1), m('smile'), a('board'), a('checks', 2)),
       plan3: make(e('happy'), m('grin'), a('board'), a('checks', 3)),
@@ -270,8 +271,10 @@ const Inky = (() => {
   }
 
   /* ---------- on the launch card: as the name is drawn Inky drops in from above, lands beside it
-     with a little bounce, looks at the word, blinks and goes starry-eyed — no words, it is just
-     there; the card then melts with it, and the corner one walks in from the edge ---------- */
+     with a little bounce, looks at the word, blinks and hops; then, while the app gets ready
+     underneath (app.js warm), it takes out its board and ticks off three boxes, one by one, and
+     goes starry-eyed — no words, it is just there; the card then melts with it, and the corner
+     one walks in from the edge ---------- */
   const word = document.querySelector('#splash:not(.still) .sp-word');
   let splashOn = false;
   if (word && typeof Splash !== 'undefined' && Splash.t0 != null) {
@@ -295,7 +298,9 @@ const Inky = (() => {
     at(1700, () => put('lookL'));
     at(1950, () => put('blink'));
     at(2060, () => put('lookL'));
-    [['happy2', -2], ['happy', 0], ['happy2', -2], ['starry', 0]].forEach(([f, y], i) => at(2350 + i * 120, () => put(f, y)));
+    [['happy2', -2], ['happy', 0], ['happy2', -2], ['happy', 0]].forEach(([f, y], i) => at(2350 + i * 120, () => put(f, y)));
+    // the board: three ticks, a hop, starry eyes (splash.js MIN waits for this)
+    [['plan0', 2850], ['plan', 3080], ['plan2', 3280], ['plan3', 3480], ['happy2', 3640, -2], ['starry', 3760]].forEach(([f, ms, y = 0]) => at(ms, () => put(f, y)));
   }
 
   /* ---------- the companion ---------- */

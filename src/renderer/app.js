@@ -1741,7 +1741,43 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   } catch {}
   // the bell of the notification centre (inbox.js)
   if (typeof Inbox !== 'undefined') Inbox.setup();
+  warm();
 })();
+
+// While the launch card is still up, what the first minutes will ask the network for: the
+// Listening show's episodes and their pictures, today's planned episode, the last article's
+// picture, the Guardian section. All of it is network and decoding off the main thread (IPC, an
+// <img> decoding asynchronously), started when the card's drawing leaves the main thread idle, so
+// the card and Inky never miss a frame. The pictures are held a minute, then the cache has them.
+function warm() {
+  if (window !== window.top) return; // not in the Settings demo
+  const held = [];
+  const pic = (src) => {
+    if (!src) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.src = src;
+    img.decode().catch(() => {});
+    held.push(img);
+  };
+  const idle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1200 }) : setTimeout(fn, 300));
+  idle(() => {
+    const n = state.notes;
+    // the article opened last: its picture (a Guardian one comes from their servers)
+    const last = Object.entries(n.articles).filter(([id, a]) => a.opened && state.list.some((m) => m.id === id)).sort((x, y) => y[1].opened - x[1].opened)[0];
+    if (last) pic(libImg(state.list.find((m) => m.id === last[0])));
+    // today's planned episode: the plan card's picture (and the player's, before the video loads)
+    const today = n.plan && n.plan.days && n.plan.days[new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)];
+    if (today && today.e && today.e.v) pic(`https://i.ytimg.com/vi/${encodeURIComponent(today.e.v)}/hqdefault.jpg`);
+    // the show on the Listening shelf: its episodes, and the pictures of the first rows
+    if (typeof Listen !== 'undefined' && api.listenFeed)
+      Listen.episodes(Listen.showNow())
+        .then((f) => f.items.slice(0, 8).forEach((it) => pic(`https://i.ytimg.com/vi/${encodeURIComponent(it.v)}/mqdefault.jpg`)))
+        .catch(() => {});
+    if (typeof Guardian !== 'undefined' && Guardian.prefetch) Guardian.prefetch();
+  });
+  setTimeout(() => (held.length = 0), 60000);
+}
 
 // Add-ons kept beside the app and out of the repository (src/renderer/private/<name>.js and .css,
 // listed by main.js): each one loads before the library is drawn, so it can add a shelf.

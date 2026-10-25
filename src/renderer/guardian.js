@@ -348,5 +348,8 @@ const Guardian = (() => {
     });
   }
 
-  return { setup, why };
+  // the section's list, fetched while the launch card is still up (app.js warm)
+  const prefetch = () => on && hasKey() && sec() !== 'saved' && load(sec());
+
+  return { setup, why, prefetch };
 })();

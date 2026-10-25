@@ -21,7 +21,7 @@ const Splash = (() => {
   const name = (read('a365.name') || '').trim();
   const inFrame = window !== window.top;
   const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const MIN = still ? 300 : name ? 3100 : 3000; // the name comes in fully, even when the app is ready sooner
+  const MIN = still ? 300 : 3900; // the name comes in fully, and Inky ticks off its board (inky.js), even when the app is ready sooner
   const t0 = performance.now();
   const GREET = {
     uz: ['Xayrli tun', 'Xayrli tong', 'Xayrli kun', 'Xayrli kech'],
