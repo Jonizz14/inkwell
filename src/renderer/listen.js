@@ -13,7 +13,8 @@
 const Listen = (() => {
   Object.assign(I18N.uz, {
     'ls.speed': 'Tezlik',
-    'ls.keys': 'Probel — pauza · ← → — 10 soniya',
+    'ls.keys': 'Probel — pauza · ← → — 10 soniya · F — katta ekran',
+    'ls.full': 'Katta ekran (F)',
     'ls.back10': '10 soniya orqaga',
     'ls.fwd10': '10 soniya oldinga',
     'ls.write': 'Yozish',
@@ -40,7 +41,8 @@ const Listen = (() => {
   });
   Object.assign(I18N.en, {
     'ls.speed': 'Speed',
-    'ls.keys': 'Space — pause · ← → — 10 seconds',
+    'ls.keys': 'Space — pause · ← → — 10 seconds · F — full screen',
+    'ls.full': 'Full screen (F)',
     'ls.back10': 'Back 10 seconds',
     'ls.fwd10': 'Forward 10 seconds',
     'ls.write': 'Writing',
@@ -67,7 +69,8 @@ const Listen = (() => {
   });
   Object.assign(I18N.ru, {
     'ls.speed': 'Скорость',
-    'ls.keys': 'Пробел — пауза · ← → — 10 секунд',
+    'ls.keys': 'Пробел — пауза · ← → — 10 секунд · F — во весь экран',
+    'ls.full': 'Во весь экран (F)',
     'ls.back10': 'Назад на 10 секунд',
     'ls.fwd10': 'Вперёд на 10 секунд',
     'ls.write': 'Письмо',
@@ -277,7 +280,7 @@ const Listen = (() => {
   const SKIP = (dir) => `<svg viewBox="0 0 20 20"><path d="${dir < 0 ? 'M4 9a6 6 0 1 1 1.8 5M4 4v5h5' : 'M16 9a6 6 0 1 0-1.8 5M16 4v5h-5'}"/></svg><span>${dir < 0 ? '−' : '+'}10</span>`;
   body.innerHTML = `
     <div class="wt-left">
-      <div class="wt-video"><div class="wt-frame" id="ls-frame"></div></div>
+      <div class="wt-video"><div class="wt-frame" id="ls-frame"></div><div class="wt-shield" id="ls-shield"></div></div>
       <div class="wt-bar"><span class="ls-time" id="ls-time">0:00</span><div class="ls-track" id="ls-track"><i></i><b></b></div><span class="ls-time" id="ls-dur">0:00</span></div>
       <div class="wt-ctl">
         <button class="wt-skip" data-a="back" data-tt="ls.back10">${SKIP(-1)}</button>
@@ -286,6 +289,7 @@ const Listen = (() => {
         <span class="wt-sp"></span>
         <span class="wt-lab" id="wt-speed"></span>
         <div class="seg ls-rate" id="ls-rate">${RATES.map((r) => `<button data-r="${r}">${r}×</button>`).join('')}</div>
+        <button class="wt-skip wt-full" data-a="full" data-tt="ls.full"><svg class="i-grow" viewBox="0 0 20 20"><path d="M3.5 8V3.5H8M12 3.5h4.5V8M16.5 12v4.5H12M8 16.5H3.5V12"/></svg><svg class="i-shrink" viewBox="0 0 20 20"><path d="M8 3.5V8H3.5M16.5 8H12V3.5M12 16.5V12h4.5M3.5 12H8v4.5"/></svg></button>
       </div>
       <div class="wt-opts">
         <button class="wt-tog ls-cc" data-a="cc"><span class="wt-cc">CC</span><span id="wt-ccl"></span><i class="wt-sw"></i></button>
@@ -323,6 +327,8 @@ const Listen = (() => {
     // the slide (~70 ms). Until then the episode's picture stands where the video will be.
     if (iframe) iframe.remove(), (iframe = null), (ready = false), (ps = -1);
     $('#ls-frame').style.backgroundImage = `url("https://i.ytimg.com/vi/${encodeURIComponent(it.v)}/hqdefault.jpg")`;
+    $('#ls-shield').style.backgroundImage = $('#ls-frame').style.backgroundImage;
+    page.classList.remove('ended');
     pos = start;
     dur = e.d || 0;
     paint();
@@ -369,7 +375,8 @@ const Listen = (() => {
   const rate = () => L().rate || 1;
 
   function embed(v, start) {
-    const q = new URLSearchParams({ enablejsapi: '1', playsinline: '1', rel: '0', autoplay: '1', iv_load_policy: '3', modestbranding: '1', start: String(Math.floor(start || 0)) });
+    // YouTube's own controls, keys and full-screen button stay off: our bar, buttons and keys run it
+    const q = new URLSearchParams({ enablejsapi: '1', playsinline: '1', rel: '0', autoplay: '1', controls: '0', disablekb: '1', fs: '0', iv_load_policy: '3', modestbranding: '1', start: String(Math.floor(start || 0)) });
     if (L().cc) q.set('cc_load_policy', '1'), q.set('cc_lang_pref', 'en');
     return `https://www.youtube-nocookie.com/embed/${encodeURIComponent(v)}?${q}`;
   }
@@ -430,6 +437,7 @@ const Listen = (() => {
     if (s === ps) return;
     ps = s;
     page.classList.toggle('playing', ps === 1 || ps === 3);
+    page.classList.toggle('ended', ps === 0); // its picture covers YouTube's end screen
     if (ps === 1 && typeof Player !== 'undefined') Player.pause();
     if (ps === 0) finish();
     lastTick = performance.now();
@@ -541,6 +549,7 @@ const Listen = (() => {
     const a = e.target.closest('[data-a]');
     if (!a || !cur) return;
     if (a.dataset.a === 'play') toggle();
+    if (a.dataset.a === 'full') full();
     if (a.dataset.a === 'back') seek(pos - 10);
     if (a.dataset.a === 'fwd') seek(pos + 10);
     if (a.dataset.a === 'done') {
@@ -574,10 +583,41 @@ const Listen = (() => {
   };
   const toggle = () => (ps === 1 ? send('pauseVideo') : send('playVideo'));
 
+  // A clear layer lies over the video: the pointer never reaches YouTube, so none of its own
+  // things (title, buttons, "more videos") come up on hover. A click on it plays or pauses,
+  // a double click (or F, or the button) makes it full screen with our controls along the bottom.
+  const left = $('.wt-left', body);
+  const shield = $('#ls-shield');
+  let clickT = 0;
+  shield.addEventListener('click', () => {
+    clearTimeout(clickT);
+    clickT = setTimeout(toggle, 220); // wait: it may be the first half of a double click
+  });
+  shield.addEventListener('dblclick', () => (clearTimeout(clickT), full()));
+  function full() {
+    if (document.fullscreenElement) return document.exitFullscreen().catch(() => {});
+    left.requestFullscreen().catch(() => {});
+  }
+  // full screen: the controls show while the pointer moves, and go (with the cursor) when it rests
+  let awakeT = 0;
+  const wake = () => {
+    left.classList.add('awake');
+    clearTimeout(awakeT);
+    awakeT = setTimeout(() => left.classList.remove('awake'), 2400);
+  };
+  left.addEventListener('pointermove', () => document.fullscreenElement === left && wake());
+  document.addEventListener('fullscreenchange', () => {
+    const on = document.fullscreenElement === left;
+    page.classList.toggle('full', on);
+    if (on) wake();
+    paintTime(); // the track is wider now
+  });
+
   window.addEventListener('keydown', (e) => {
     if (state.view !== 'watch' || !cur || e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.target.closest && e.target.closest('input, textarea, [contenteditable="true"]')) return;
     if (e.key === ' ') return (e.preventDefault(), toggle());
+    if (e.code === 'KeyF') return (e.preventDefault(), full());
     if (e.key === 'ArrowLeft') return (e.preventDefault(), seek(pos - 10));
     if (e.key === 'ArrowRight') return (e.preventDefault(), seek(pos + 10));
   });
@@ -604,6 +644,7 @@ const Listen = (() => {
   new MutationObserver(() => {
     clearTimeout(dropT);
     if (page.classList.contains('is-active')) return;
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     if (ps === 1 || ps === 3) send('pauseVideo');
     save();
     dropT = setTimeout(() => {

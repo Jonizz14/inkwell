@@ -17,6 +17,27 @@
 .wt-video { position: relative; border-radius: 16px; overflow: hidden; background: var(--hover-2); box-shadow: 0 0 0 1px var(--line); }
 .wt-frame { position: relative; aspect-ratio: 16 / 9; background: #000 center / cover no-repeat; }
 .wt-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* a clear layer over the video: YouTube never sees the pointer (no hover title or buttons); at the
+   end the episode's picture comes back over YouTube's end screen, out of a blur */
+.wt-shield { position: absolute; inset: 0; z-index: 1; cursor: pointer; background: #000 center / cover no-repeat; opacity: 0; filter: blur(8px); transition: opacity 420ms var(--ease), filter 420ms var(--ease); }
+#watch.ended .wt-shield { opacity: 1; filter: none; }
+.wt-full svg { width: 18px; height: 18px; }
+.wt-full .i-shrink, #watch.full .wt-full .i-grow { display: none; }
+#watch.full .wt-full .i-shrink { display: block; }
+
+/* full screen: the video fills it, our time line and buttons lie along the bottom over a shade
+   and leave with the cursor when the pointer rests */
+.wt-left:fullscreen { --ink: #f2f2f2; --ink-2: rgba(255, 255, 255, 0.72); --line-2: rgba(255, 255, 255, 0.28); --hover: rgba(255, 255, 255, 0.14); --bg: #000; position: relative; top: 0; display: block; padding: 0; background: #000; cursor: none; }
+.wt-left:fullscreen.awake { cursor: default; }
+.wt-left:fullscreen .wt-video { position: absolute; inset: 0; border-radius: 0; box-shadow: none; background: #000; }
+.wt-left:fullscreen .wt-frame { aspect-ratio: auto; height: 100%; }
+.wt-left:fullscreen .wt-shield { cursor: inherit; }
+.wt-left:fullscreen .wt-bar, .wt-left:fullscreen .wt-ctl { position: absolute; left: 40px; right: 40px; z-index: 2; margin: 0; opacity: 0; filter: blur(6px); transition: opacity 320ms var(--ease), filter 320ms var(--ease); }
+.wt-left:fullscreen .wt-bar { bottom: 74px; }
+.wt-left:fullscreen .wt-ctl { bottom: 24px; }
+.wt-left:fullscreen::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 200px; z-index: 1; pointer-events: none; background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent); opacity: 0; transition: opacity 320ms var(--ease); }
+.wt-left:fullscreen.awake .wt-bar, .wt-left:fullscreen.awake .wt-ctl, .wt-left:fullscreen.awake::after { opacity: 1; filter: none; }
+.wt-left:fullscreen .wt-opts { display: none; }
 
 .wt-title { margin: 0 0 6px; font: 600 26px/1.22 var(--serif); letter-spacing: -0.01em; color: var(--ink); }
 .wt-meta { margin: 0; font: 13px var(--ui); color: var(--muted); }
