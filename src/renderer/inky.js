@@ -301,6 +301,15 @@ const Inky = (() => {
     [['happy2', -2], ['happy', 0], ['happy2', -2], ['happy', 0]].forEach(([f, y], i) => at(2350 + i * 120, () => put(f, y)));
     // the board: three ticks, a hop, starry eyes (splash.js MIN waits for this)
     [['plan0', 2850], ['plan', 3080], ['plan2', 3280], ['plan3', 3480], ['happy2', 3640, -2], ['starry', 3760]].forEach(([f, ms, y = 0]) => at(ms, () => put(f, y)));
+    // still loading (splash.js waits for app.js warm): a fresh board, ticked again, until the card goes
+    const up = () => { const sp = document.getElementById('splash'); return sp && !sp.classList.contains('out'); };
+    const again = (t) => at(t, () => {
+      if (!up()) return;
+      [['blink', 0], ['plan0', 160], ['plan', 390], ['plan2', 590], ['plan3', 790], ['happy2', 950, -2], ['starry', 1070]]
+        .forEach(([f, ms, y = 0]) => at(t + ms, () => up() && put(f, y)));
+      again(t + 1400);
+    });
+    again(4300);
   }
 
   /* ---------- the companion ---------- */

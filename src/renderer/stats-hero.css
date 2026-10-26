@@ -4,7 +4,7 @@
 .hx-p { padding: 16px 16px 14px; min-width: 0; display: flex; flex-direction: column; }
 .hx-p + .hx-p { border-left: 1px solid var(--line); }
 .hx-p .st-s { margin-top: auto; }
-.hx-p .st-s.tip { color: var(--ink); }
+.hx-p .st-s.hx-tip { color: var(--ink); }
 /* the week: seven bars, by minutes read */
 .hx-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 40px; margin: 2px 0 8px; }
 .hx-bars i { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }

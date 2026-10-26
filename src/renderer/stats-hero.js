@@ -258,7 +258,7 @@
       felt = el;
       const sub = el.closest('.hx-p').querySelector('.st-s');
       sub.textContent = el.dataset.tip;
-      sub.classList.add('tip');
+      sub.classList.add('hx-tip');
       el.classList.add('hot');
       if (typeof Haptic !== 'undefined') Haptic.align();
     });
@@ -269,7 +269,7 @@
       el.classList.remove('hot');
       const sub = el.closest('.hx-p').querySelector('.st-s');
       sub.textContent = sub.dataset.s;
-      sub.classList.remove('tip');
+      sub.classList.remove('hx-tip');
     });
   }
 

@@ -1808,12 +1808,16 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   api.onRemindOpen(openTarget);
   openTarget(await api.remindTarget());
   // the launch card goes once the app is up; a broken card must never keep the app from starting
+  // the launch card stays while the background loads come in (warm), within its own limit
+  let loads = null;
   try {
-    Splash.ready();
+    loads = warm();
+  } catch {}
+  try {
+    Splash.ready(loads);
   } catch {}
   // the bell of the notification centre (inbox.js)
   if (typeof Inbox !== 'undefined') Inbox.setup();
-  warm();
 })();
 
 // While the launch card is still up, what the first minutes will ask the network for: the
@@ -1822,18 +1826,20 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
 // <img> decoding asynchronously), started when the card's drawing leaves the main thread idle, so
 // the card and Inky never miss a frame. The pictures are held a minute, then the cache has them.
 function warm() {
-  if (window !== window.top) return; // not in the Settings demo
+  if (window !== window.top) return null; // not in the Settings demo
   const held = [];
+  const jobs = [];
   const pic = (src) => {
     if (!src) return;
     const img = new Image();
     img.decoding = 'async';
     img.src = src;
-    img.decode().catch(() => {});
     held.push(img);
+    jobs.push(img.decode().catch(() => {}));
   };
-  const idle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1200 }) : setTimeout(fn, 300));
-  idle(() => {
+  const idle = () => new Promise((ok) => (window.requestIdleCallback ? requestIdleCallback(ok, { timeout: 1200 }) : setTimeout(ok, 300)));
+  setTimeout(() => (held.length = 0), 60000);
+  return idle().then(() => {
     const n = state.notes;
     // the article opened last: its picture (a Guardian one comes from their servers)
     const last = Object.entries(n.articles).filter(([id, a]) => a.opened && state.list.some((m) => m.id === id)).sort((x, y) => y[1].opened - x[1].opened)[0];
@@ -1843,12 +1849,14 @@ function warm() {
     if (today && today.e && today.e.v) pic(`https://i.ytimg.com/vi/${encodeURIComponent(today.e.v)}/hqdefault.jpg`);
     // the show on the Listening shelf: its episodes, and the pictures of the first rows
     if (typeof Listen !== 'undefined' && api.listenFeed)
-      Listen.episodes(Listen.showNow())
+      jobs.push(Listen.episodes(Listen.showNow())
         .then((f) => f.items.slice(0, 8).forEach((it) => pic(`https://i.ytimg.com/vi/${encodeURIComponent(it.v)}/mqdefault.jpg`)))
-        .catch(() => {});
-    if (typeof Guardian !== 'undefined' && Guardian.prefetch) Guardian.prefetch();
+        .catch(() => {}));
+    if (typeof Guardian !== 'undefined' && Guardian.prefetch) jobs.push(Promise.resolve(Guardian.prefetch()).catch(() => {}));
+    // pictures may be added while the episodes come in, so wait until no new job appears
+    const settle = (k) => Promise.all(jobs).then(() => (jobs.length > k ? settle(jobs.length) : null));
+    return settle(jobs.length);
   });
-  setTimeout(() => (held.length = 0), 60000);
 }
 
 // Add-ons kept beside the app and out of the repository (src/renderer/private/<name>.js and .css,

@@ -63,20 +63,22 @@ const Splash = (() => {
     for (let i = 0; i < 6; i++) at(1120 + i * 70, 0); // n k w e l l
   }
 
-  // the app has booted: leave once the drawing is done
-  function ready() {
+  // the app has booted: leave once the drawing is done and what loads in the background (app.js
+  // warm, passed in as a promise) has come in — but never later than MAX after the start
+  const MAX = still ? 1500 : 7000;
+  function ready(loads) {
     if (done || !el) return;
     done = true;
-    const wait = Math.max(0, MIN - (performance.now() - t0));
-    setTimeout(() => {
+    const left = (ms) => new Promise((ok) => setTimeout(ok, Math.max(0, t0 + ms - performance.now())));
+    Promise.all([left(MIN), Promise.race([Promise.resolve(loads).catch(() => {}), left(MAX)])]).then(() => {
       el.classList.add('out');
       setTimeout(() => el.remove(), 900);
-    }, wait);
+    });
   }
 
   if (document.body) mount();
   else document.addEventListener('DOMContentLoaded', mount, { once: true });
   // never in the way for long, whatever happens to the boot
-  setTimeout(ready, 8000);
+  setTimeout(ready, 9000);
   return { ready, t0 };
 })();
