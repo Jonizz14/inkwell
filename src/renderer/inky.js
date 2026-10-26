@@ -271,9 +271,7 @@ const Inky = (() => {
   }
 
   /* ---------- on the launch card: as the name is drawn Inky drops in from above, lands beside it
-     with a little bounce, looks at the word, blinks and hops; then, while the app gets ready
-     underneath (app.js warm), it takes out its board and ticks off three boxes, one by one, and
-     goes starry-eyed — no words, it is just there; the card then melts with it, and the corner
+     and blinks once — nothing more; the card then melts with it, and the corner
      one walks in from the edge ---------- */
   const word = document.querySelector('#splash:not(.still) .sp-word');
   let splashOn = false;
@@ -291,25 +289,11 @@ const Inky = (() => {
       ink.style.transform = `translateY(${y * SP}px)`;
     };
     const at = (ms, fn) => setTimeout(fn, Math.max(0, Splash.t0 + ms - performance.now()));
-    put('scared', -40);
-    // falling faster each step (whole pixels), a bounce, then still
-    const fall = [[-40, 'scared'], [-36, 'scared'], [-30, 'scared'], [-22, 'scared'], [-12, 'scared'], [0, 'surprised'], [-3, 'surprised'], [-4, 'surprised'], [-3, 'surprised'], [0, 'idle']];
-    fall.forEach(([y, f], i) => at(1000 + i * 55, () => ((ink.style.opacity = 1), put(f, y))));
-    at(1700, () => put('lookL'));
-    at(1950, () => put('blink'));
-    at(2060, () => put('lookL'));
-    [['happy2', -2], ['happy', 0], ['happy2', -2], ['happy', 0]].forEach(([f, y], i) => at(2350 + i * 120, () => put(f, y)));
-    // the board: three ticks, a hop, starry eyes (splash.js MIN waits for this)
-    [['plan0', 2850], ['plan', 3080], ['plan2', 3280], ['plan3', 3480], ['happy2', 3640, -2], ['starry', 3760]].forEach(([f, ms, y = 0]) => at(ms, () => put(f, y)));
-    // still loading (splash.js waits for app.js warm): a fresh board, ticked again, until the card goes
-    const up = () => { const sp = document.getElementById('splash'); return sp && !sp.classList.contains('out'); };
-    const again = (t) => at(t, () => {
-      if (!up()) return;
-      [['blink', 0], ['plan0', 160], ['plan', 390], ['plan2', 590], ['plan3', 790], ['happy2', 950, -2], ['starry', 1070]]
-        .forEach(([f, ms, y = 0]) => at(t + ms, () => up() && put(f, y)));
-      again(t + 1400);
-    });
-    again(4300);
+    put('idle', -12);
+    // it just drops in beside the name, lands and blinks once
+    [[-12, 'idle'], [-6, 'idle'], [0, 'idle']].forEach(([y, f], i) => at(1000 + i * 60, () => ((ink.style.opacity = 1), put(f, y))));
+    at(1700, () => put('blink'));
+    at(1820, () => put('idle'));
   }
 
   /* ---------- the companion ---------- */

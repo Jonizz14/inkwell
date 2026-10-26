@@ -29,19 +29,7 @@
 .sp-l { display: block; opacity: 0; filter: blur(8px); transform: translateX(-8px); animation: sp-letter 700ms var(--sp-ease) forwards; animation-delay: calc(1050ms + var(--i) * 70ms); }
 @keyframes sp-letter { to { opacity: 1; filter: none; transform: none; } }
 
-.sp-hi { margin-top: 24px; font: 15px/1.4 var(--ui); color: var(--ink-2); opacity: 0; filter: blur(6px); animation: sp-letter 800ms var(--sp-ease) forwards 1650ms; }
-
-/* what the app gets ready underneath (splash.js JOBS): three small lines come out of a blur in turn;
-   each ring turns while its job runs and closes into a tick when it has come in */
-.sp-jobs { display: flex; gap: 22px; margin-top: 30px; font: 13px/1 var(--ui); color: var(--muted); }
-.sp-j { display: flex; align-items: center; gap: 7px; opacity: 0; filter: blur(6px); transform: translateY(4px); animation: sp-letter 700ms var(--sp-ease) forwards; animation-delay: calc(2900ms + var(--i) * 140ms); transition: color 400ms var(--sp-ease); }
-.sp-j svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
-.sp-ring { stroke-dasharray: 20 28.3; transform-origin: 6px 6px; animation: sp-spin 900ms linear infinite; transition: stroke-dasharray 420ms var(--sp-ease), opacity 300ms var(--sp-ease) 200ms; }
-.sp-tick { stroke-dasharray: 8; stroke-dashoffset: 8; transition: stroke-dashoffset 380ms var(--sp-ease) 180ms; }
-.sp-j.ok { color: var(--ink); }
-.sp-j.ok .sp-ring { stroke-dasharray: 0 28.3; opacity: 0; }
-.sp-j.ok .sp-tick { stroke-dashoffset: 0; }
-@keyframes sp-spin { to { transform: rotate(360deg); } }
+.sp-hi { margin-top: 24px; font: 15px/1.4 var(--ui); color: var(--ink-2); opacity: 0; filter: blur(6px); animation: sp-letter 800ms var(--sp-ease) forwards 1150ms; }
 
 /* Inky (inky.js) walks up beside the word: a slot of no width, so the name stays centred */
 .sp-pal { display: block; width: 0; align-self: baseline; }
@@ -53,6 +41,6 @@
 
 /* reduced motion: the finished word, then a plain fade */
 #splash.still * { animation: none !important; }
-#splash.still .sp-l, #splash.still .sp-hi, #splash.still .sp-j { transform: none; opacity: 1; filter: none; }
+#splash.still .sp-l, #splash.still .sp-hi { transform: none; opacity: 1; filter: none; }
 #splash.still .sp-stem { clip-path: none; }
 #splash.still .sp-dot { transform: none; }
