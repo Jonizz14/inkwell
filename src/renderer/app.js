@@ -448,8 +448,66 @@ function echoMarks(text, hls, p) {
   return out;
 }
 
+// Words saved in other articles are marked here too ("far" echoes): a word met again in another
+// text is the one worth learning. Each carries its vocabulary entry's id, so hovering shows the
+// translation written there, and clicking offers to save it for this article as well.
+let farIdx = null;
+const TOKEN = /[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu;
+function farWords() {
+  const cur = state.current && state.current.id;
+  let n = 0;
+  for (const a of Object.values(state.notes.articles)) n += a.vocab ? a.vocab.length : 0;
+  const sig = cur + ':' + n;
+  if (farIdx && farIdx.sig === sig) return farIdx;
+  // first word → the entries starting with it, longest first (a phrase wins over its first word)
+  const byFirst = new Map();
+  const byId = new Map();
+  const byWord = new Map();
+  for (const [id, a] of Object.entries(state.notes.articles)) {
+    if (id === cur || !a.vocab) continue;
+    for (const v of a.vocab) {
+      const w = (v.word || '').trim().toLowerCase();
+      const first = w.match(TOKEN);
+      if (!first || !w.startsWith(first[0])) continue;
+      byId.set(v.hlId, v);
+      // the same word saved in several articles: the one with a translation speaks for all
+      const had = byWord.get(w);
+      if (had && (had.tr.trim() || !v.tr.trim())) continue;
+      byWord.set(w, v);
+    }
+  }
+  for (const [w, v] of byWord) {
+    const k = w.match(TOKEN)[0];
+    if (!byFirst.has(k)) byFirst.set(k, []);
+    byFirst.get(k).push({ w, v });
+  }
+  for (const list of byFirst.values()) list.sort((a, b) => b.w.length - a.w.length);
+  return (farIdx = { sig, byFirst, byId, byWord });
+}
+
+function farMarks(text, p, taken) {
+  const { byFirst } = farWords();
+  if (!byFirst.size) return [];
+  const low = text.toLowerCase();
+  const out = [];
+  for (const m of low.matchAll(TOKEN)) {
+    const list = byFirst.get(m[0].match(TOKEN)[0]);
+    if (!list) continue;
+    const i = m.index;
+    for (const { w, v } of list) {
+      const e = i + w.length;
+      if (!low.startsWith(w, i) || joinsAfter(text, e)) continue;
+      if (taken.some((x) => x.s < e && x.e > i) || out.some((x) => x.s < e && x.e > i)) continue;
+      out.push({ id: v.hlId, p, s: i, e, t: 'word', echo: true, far: true });
+      break;
+    }
+  }
+  return out;
+}
+
 function paraHtml(text, hls, p) {
-  const mine = hls.filter((h) => h.p === p && h.e > h.s).concat(echoMarks(text, hls, p));
+  const own = hls.filter((h) => h.p === p && h.e > h.s).concat(echoMarks(text, hls, p));
+  const mine = own.concat(farMarks(text, p, own.filter((h) => h.t === 'word')));
   if (!mine.length) return esc(text);
   const cuts = new Set([0, text.length]);
   for (const h of mine) cuts.add(Math.max(0, h.s)), cuts.add(Math.min(text.length, h.e));
@@ -468,7 +526,8 @@ function paraHtml(text, hls, p) {
     // topmost = the shortest (most specific) mark covering this segment
     // (on a tie the vocabulary word wins, so its popover/tooltip/animations target it)
     const top = on.reduce((x, y) => (y.e - y.s < x.e - x.s || (y.e - y.s === x.e - x.s && y.t === 'word') ? y : x));
-    out += `<mark class="${cls}${top.echo ? ' echo' : ''}" data-h="${top.id}">${seg}</mark>`;
+    const far = top.far ? ` far" data-s="${top.s}" data-e="${top.e}` : '';
+    out += `<mark class="${cls}${top.echo ? ' echo' : ''}${far}" data-h="${top.id}">${seg}</mark>`;
   }
   return out;
 }
@@ -860,6 +919,15 @@ function showPopForSelection() {
 }
 
 function showPopForMark(mark, y) {
+  // a word saved in another article: offered like a selection, to save it here too
+  if (mark.classList.contains('far')) {
+    const p = +mark.closest('.para').dataset.p;
+    const s = +mark.dataset.s;
+    const e = +mark.dataset.e;
+    state.pop = { mode: 'select', sel: { parts: [{ p, s, e, text: state.current.data.blocks[p].text.slice(s, e) }] } };
+    $('#pop').dataset.mode = 'select';
+    return placePop(lineRect(mark, y));
+  }
   const h = rec(state.current.id).hl.find((x) => x.id === mark.dataset.h);
   if (!h) return;
   state.pop = { mode: 'mark', hlId: h.id };
@@ -948,8 +1016,9 @@ function lineRect(mark, y) {
 let tipAt = null; // the line the tip points at
 function showTip(mark, y) {
   const r = rec(state.current.id);
-  const v = r.vocab.find((x) => x.hlId === mark.dataset.h && x.tr.trim());
-  if (!v) return hideTip();
+  let v = r.vocab.find((x) => x.hlId === mark.dataset.h);
+  if (!v && mark.classList.contains('far')) v = farWords().byId.get(mark.dataset.h);
+  if (!v || !v.tr.trim()) return hideTip();
   const tip = $('#tip');
   tip.innerHTML = `<span class="tip-w">${esc(v.word)}</span><span class="tip-tr">${esc(v.tr.trim())}</span>`;
   const m = (tipAt = lineRect(mark, y));
@@ -1056,7 +1125,9 @@ function addMarks(parts, type, fromSel) {
     created.push(h);
     if (type === 'word') {
       const text = state.current.data.blocks[part.p].text;
-      r.vocab.push({ id: uid(), hlId: h.id, word: part.text, ctx: sentenceAround(text, part.s, part.e), tr: '', p: part.p, at: Date.now() });
+      // met before in another article: its translation comes along
+      const far = farWords().byWord.get(part.text.trim().toLowerCase());
+      r.vocab.push({ id: uid(), hlId: h.id, word: part.text, ctx: sentenceAround(text, part.s, part.e), tr: far ? far.tr : '', p: part.p, at: Date.now() });
     }
   }
   if (!created.length) return;
@@ -1543,7 +1614,8 @@ $('#vocab-body').addEventListener('click', async (e) => {
     a.hl = a.hl.filter((x) => x.id !== v.hlId);
     save();
     updateVocabCount();
-    if (state.current && state.current.id === row.dataset.id) fadeOutMarks({ id: v.hlId, t: 'word' }, rerenderAllParas);
+    // a word from another article may be marked here too
+    if (state.current) fadeOutMarks({ id: v.hlId, t: 'word' }, rerenderAllParas);
     removeVocabRow(v.id);
     renderLibraryIfVisible();
     return;
