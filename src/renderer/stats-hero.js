@@ -1,8 +1,7 @@
 'use strict';
 // The top of Statistics and two more sections (Mac only):
-//  - a hero card: the streak with a living flame (grey and still when the streak is broken),
-//    this week's days as small flames, and three rings for today — the daily goal
-//    (Settings → Focus → Daily goal), active days this week, new words today
+//  - a top row of four tiles, ink only, each with something to hover or click: the streak (last
+//    14 days), the daily goal (Settings → Focus → Daily goal), this week, new words today
 //  - "Facts": reading speed, pages and books, active days, the hour and weekday you read most,
 //    this month against the last, translated words, the longest focus session
 //  - "Records": the best day by time and by words, the longest streak, the best week
@@ -16,6 +15,13 @@
     'hx.best': (n) => `rekord — ${n} kun`,
     'hx.today': 'Bugun',
     'hx.goal': 'Kunlik maqsad',
+    'hx.of': (m) => `maqsad — ${m}`,
+    'hx.daysOn': 'faol kun',
+    'hx.left': (m) => `${m} qoldi`,
+    'hx.past': (m) => `maqsaddan ${m} ortiq`,
+    'hx.see': "bugungi so'zlar",
+    'hx.hide': "yopish",
+    'hx.aim': (n) => `maqsad — ${n}`,
     'hx.week': 'Hafta',
     'hx.newW': "Yangi so'z",
     'hx.facts': 'Qiziqarli faktlar',
@@ -53,6 +59,13 @@
     'hx.best': (n) => `record — ${n} days`,
     'hx.today': 'Today',
     'hx.goal': 'Daily goal',
+    'hx.of': (m) => `goal — ${m}`,
+    'hx.daysOn': 'active days',
+    'hx.left': (m) => `${m} to go`,
+    'hx.past': (m) => `${m} past the goal`,
+    'hx.see': "today's words",
+    'hx.hide': "close",
+    'hx.aim': (n) => `goal — ${n}`,
     'hx.week': 'Week',
     'hx.newW': 'New words',
     'hx.facts': 'Facts',
@@ -90,6 +103,13 @@
     'hx.best': (n) => `рекорд — ${n} дн.`,
     'hx.today': 'Сегодня',
     'hx.goal': 'Цель дня',
+    'hx.of': (m) => `цель — ${m}`,
+    'hx.daysOn': 'активных дней',
+    'hx.left': (m) => `осталось ${m}`,
+    'hx.past': (m) => `на ${m} больше цели`,
+    'hx.see': 'слова за сегодня',
+    'hx.hide': 'скрыть',
+    'hx.aim': (n) => `цель — ${n}`,
     'hx.week': 'Неделя',
     'hx.newW': 'Новые слова',
     'hx.facts': 'Интересные факты',
@@ -132,23 +152,6 @@
   };
   const wdOf = (d) => (d.getDay() + 6) % 7;
   const dateOf = (k) => new Date(k + 'T00:00');
-
-  // a flame: an outer tongue and an inner one, each flickering on its own beat
-  // a flame: an outer tongue and an inner one, each breathing on its own beat. Each tongue is
-  // its own HTML layer holding its own SVG, so the motion runs on the compositor (a transform on
-  // an SVG <g> would repaint every frame on the main thread).
-  const FLAME = `<div class="hx-flame" aria-hidden="true">
-    <span class="hx-fo"><svg viewBox="0 0 24 30">
-      <defs><linearGradient id="hx-fo" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ff3b00"/><stop offset=".55" stop-color="#ff7a00"/><stop offset="1" stop-color="#ffb300"/></linearGradient></defs>
-      <path class="hx-glow" d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z"/>
-      <path d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z" fill="url(#hx-fo)"/>
-    </svg></span>
-    <span class="hx-fi"><svg viewBox="0 0 24 30">
-      <defs><linearGradient id="hx-fi" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffd23f"/><stop offset="1" stop-color="#fff4c2"/></linearGradient></defs>
-      <path d="M12 13.2c1.9 1.9 3.3 3.6 3.3 5.9a3.3 3.3 0 0 1-6.6 0c0-1.8 1-3 2-4 .1 1.3.6 2 1.3 2.2-.1-1.5-.2-2.7 0-4.1z" fill="url(#hx-fi)"/>
-    </svg></span>
-  </div>`;
-  const mini = (on) => `<svg class="hx-mini${on ? ' on' : ''}" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z"/></svg>`;
 
   function data() {
     const st = state.notes.stats || {};
@@ -230,42 +233,72 @@
     };
   }
 
-  // three rings for today, ink only: an arc on a faint track, drawn in when shown
-  function rings(d) {
-    const R = [['goal', d.today.sec / 60, d.goal, t('hx.goal'), `${Math.round(d.today.sec / 60)}/${d.goal} ${t('st.min', '').trim()}`],
-      ['week', d.week.filter((x) => x.on).length, 7, t('hx.week'), `${d.week.filter((x) => x.on).length}/7`],
-      ['vocab', d.newToday, 10, t('hx.newW'), `${d.newToday}/10`]];
-    const C = 64;
-    const radii = [56, 42, 28];
-    const svg = `<svg class="hx-rings" viewBox="0 0 ${C * 2} ${C * 2}" aria-hidden="true">${R.map(([, v, max], i) => {
-      const r = radii[i];
-      const len = 2 * Math.PI * r;
-      const k = Math.min(1, max ? v / max : 0);
-      return `<circle class="hx-track" cx="${C}" cy="${C}" r="${r}"/><circle class="hx-arc r${i}" cx="${C}" cy="${C}" r="${r}" style="--len:${len.toFixed(1)};--off:${(len * (1 - k)).toFixed(1)};--i:${i}" transform="rotate(-90 ${C} ${C})"/>`;
-    }).join('')}</svg>`;
-    const legend = R.map(([, , , l, v], i) => `<div class="hx-lg"><i class="r${i}"></i><span>${escH(l)}</span><b>${escH(v)}</b></div>`).join('');
-    return `<div class="hx-today"><div class="hx-k">${escH(t('hx.today'))}</div><div class="hx-rw">${svg}<div class="hx-legend">${legend}</div></div></div>`;
-  }
-
-  function hero(d) {
-    const n = d.s.streak;
-    const wd = t('sx.wd');
-    const msg = !n ? t('hx.cold') : d.litToday ? t('hx.lit') : t('hx.keep');
-    return `<section class="hx-hero">
-      <div class="hx-streak${n ? ' lit' : ''}">
-        <div class="hx-fire">${FLAME}</div>
-        <div class="hx-sn">
-          <div class="st-v hx-big">${num(n)}</div>
-          <div class="hx-sl">${escH(t('hx.streak'))}</div>
-          <div class="hx-msg">${escH(msg)} · ${escH(t('hx.best', d.s.best))}</div>
-          <div class="hx-week">${d.week.map((x, i) => `<div class="hx-day${x.today ? ' now' : ''}${x.future ? ' future' : ''}">${mini(x.on)}<span>${escH(wd[i])}</span></div>`).join('')}</div>
-        </div>
-      </div>
-      ${rings(d)}
-    </section>`;
-  }
-
   const tile = (k, v, sub, i) => `<div class="st-tile" style="animation-delay:${i * 40}ms"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div><div class="st-s">${escH(sub)}</div></div>`;
+
+  // the top row: four tiles like the ones under it, each with something to touch, ink only —
+  //  - the streak over the last 14 days as squares (hover one: that day and its minutes)
+  //  - today's goal as a line that fills up (hover: how much is left, or how far past it)
+  //  - this week as seven small bars (hover one: that day)
+  //  - new words today (click: today's words open in the tile, click again to close)
+  function hero(d) {
+    const days = (state.notes.stats && state.notes.stats.days) || {};
+    const today = new Date();
+    const wd = t('sx.wd');
+    const sec = (x) => (days[key(x)] || {}).sec || 0;
+    const tip = (x) => `${wd[wdOf(x)]}, ${fmtDay(x, { day: 'numeric', month: 'short' })} · ${sec(x) ? dur(sec(x)) : '—'}`;
+    const n = d.s.streak;
+    const back = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13));
+    const lit = (x) => { const v = days[key(x)]; return !!v && (v.sec >= 60 || v.words >= 20); };
+    const min = Math.round(d.today.sec / 60);
+    const left = d.goal - min;
+    const max = Math.max(60, ...d.week.map((x) => sec(x.d)));
+    const on = d.week.filter((x) => x.on).length;
+    const words = Object.values(state.notes.articles || {}).flatMap((a) => (a && a.vocab) || [])
+      .filter((v) => (v.at || 0) >= new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime())
+      .sort((x, y) => y.at - x.at);
+    const box = (cls, k, v, sub, extra, i) => `<div class="st-tile hx-t ${cls}" style="animation-delay:${i * 40}ms"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div><div class="st-s" data-s="${escH(sub)}">${escH(sub)}</div>${extra}</div>`;
+    return `<div class="st-tiles hx-hero">
+      ${box('hx-streak', t('st.streak'), t('st.days', n), t('hx.best', d.s.best),
+        `<div class="hx-sq">${back.map((x, i) => `<i class="${lit(x) ? 'on' : ''}${i === 13 ? ' now' : ''}" style="--i:${i}" data-tip="${escH(tip(x))}"></i>`).join('')}</div>`, 0)}
+      ${box('hx-goal', t('hx.goal'), t('st.min', min), t('hx.of', t('st.min', d.goal)),
+        `<div class="hx-line" style="--k:${Math.min(1, min / d.goal).toFixed(3)}" data-tip="${escH(left > 0 ? t('hx.left', t('st.min', left)) : t('hx.past', t('st.min', -left)))}"><b></b></div>`, 1)}
+      ${box('hx-wk7', t('hx.week'), `${on} / 7`, t('hx.daysOn'),
+        `<div class="hx-bars">${d.week.map((x, i) => `<i class="${x.on ? 'on' : ''}${x.today ? ' now' : ''}${x.future ? ' future' : ''}" style="--h:${(sec(x.d) / max).toFixed(3)};--i:${i}" data-tip="${escH(tip(x.d))}"><b></b><span>${escH(wd[i])}</span></i>`).join('')}</div>`, 2)}
+      ${box('hx-words' + (words.length ? ' can' : ''), t('hx.newW'), num(d.newToday), words.length ? t('hx.see') : t('hx.aim', 10),
+        `<div class="hx-chips">${words.slice(0, 12).map((v, i) => `<span style="--i:${i}">${escH(v.word)}</span>`).join('')}${words.length > 12 ? `<span class="more">+${words.length - 12}</span>` : ''}</div>`, 3)}
+    </div>`;
+  }
+
+  // hovering a square, the line or a bar puts its day into the tile's small line; a click on the
+  // words tile lays today's words over it (the tile keeps its size), another click puts them away
+  function wire(row) {
+    let felt = null;
+    row.addEventListener('pointerover', (e) => {
+      const el = e.target.closest('[data-tip]');
+      if (!el || el === felt) return;
+      felt = el;
+      const sub = el.closest('.st-tile').querySelector('.st-s');
+      sub.textContent = el.dataset.tip;
+      sub.classList.add('tip');
+      el.closest('.st-tile').querySelectorAll('.hot').forEach((x) => x.classList.remove('hot'));
+      el.classList.add('hot');
+      if (typeof Haptic !== 'undefined') Haptic.align();
+    });
+    row.addEventListener('pointerout', (e) => {
+      const el = e.target.closest('[data-tip]');
+      if (!el || (e.relatedTarget && el.contains(e.relatedTarget))) return;
+      felt = null;
+      el.classList.remove('hot');
+      const sub = el.closest('.st-tile').querySelector('.st-s');
+      sub.textContent = sub.dataset.s;
+      sub.classList.remove('tip');
+    });
+    const w = row.querySelector('.hx-words.can');
+    if (w) w.addEventListener('click', () => {
+      w.classList.toggle('open');
+      if (typeof Haptic !== 'undefined') Haptic.level();
+    });
+  }
 
   function facts(d) {
     const wd = t('sx.wd');
@@ -289,7 +322,7 @@
     const I = {
       clock: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
       text: '<svg viewBox="0 0 16 16"><path d="M3 4h10M3 7h10M3 10h7M3 13h5"/></svg>',
-      fire: '<svg viewBox="0 0 24 30"><path d="M12 1.5c.8 4.6 6.8 7.4 6.8 15.2A6.8 6.8 0 0 1 5.2 16.7c0-3 1.4-5.3 3-6.7-.1 2.4.9 3.9 2.4 4.3-.4-4.9-.2-8.8 1.4-12.8z"/></svg>',
+      fire: '<svg viewBox="0 0 16 16"><path d="M3 13V9M6.3 13V7M9.7 13V5M13 13V3"/></svg>',
       week: '<svg viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="10" rx="2"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3"/></svg>',
       check: '<svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6"/><path d="m5.5 8.2 1.8 1.8 3.3-3.6"/></svg>',
     };
@@ -304,28 +337,23 @@
       </section>`;
   }
 
-  let away = null;
   function render(host) {
     if (!host) return;
     const d = data();
     const h = host.querySelector('.st-h');
     if (h && !host.querySelector('.hx-hero')) {
       h.insertAdjacentHTML('afterend', hero(d));
-      // scrolled out of sight, the flame rests (and carries on when it comes back)
-      // one observer for whichever card is on the page now (the last one would keep its old page)
-      away ||= new IntersectionObserver(([e]) => e.target.classList.toggle('away', !e.isIntersecting));
-      away.disconnect();
-      away.observe(host.querySelector('.hx-streak'));
+      wire(host.querySelector('.hx-hero'));
     }
     const sx = host.querySelector('.sx');
     if (sx && !host.querySelector('.hx-more')) sx.insertAdjacentHTML('beforebegin', `<div class="hx-more">${facts(d)}${records(d)}</div>`);
     // the streak is in the hero already: the tile row under it shows the week instead
-    const tiles = host.querySelectorAll('.st-tiles:not(.st-extra) .st-tile');
+    const tiles = host.querySelectorAll('.st-tiles:not(.st-extra):not(.hx-hero) .st-tile');
     if (tiles[2] && !tiles[2].classList.contains('hx-wk')) {
       tiles[2].outerHTML = tile(t('rc.week'), dur(d.weekSec), t('hx.weekS', d.weekP), 2).replace('class="st-tile"', 'class="st-tile hx-wk"');
       Stats.odometer(host.querySelector('.hx-wk'), '.st-v');
     }
-    Stats.odometer(host.querySelector('.hx-hero') || host, '.hx-big');
+    Stats.odometer(host.querySelector('.hx-hero') || host, '.st-v');
     Stats.odometer(host.querySelector('.hx-more') || host, '.st-v');
   }
 
