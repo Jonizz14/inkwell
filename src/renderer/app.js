@@ -1828,35 +1828,43 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
 function warm() {
   if (window !== window.top) return null; // not in the Settings demo
   const held = [];
-  const jobs = [];
   const pic = (src) => {
-    if (!src) return;
+    if (!src) return Promise.resolve();
     const img = new Image();
     img.decoding = 'async';
     img.src = src;
     held.push(img);
-    jobs.push(img.decode().catch(() => {}));
+    return img.decode().catch(() => {});
   };
   const idle = () => new Promise((ok) => (window.requestIdleCallback ? requestIdleCallback(ok, { timeout: 1200 }) : setTimeout(ok, 300)));
   setTimeout(() => (held.length = 0), 60000);
-  return idle().then(() => {
-    const n = state.notes;
-    // the article opened last: its picture (a Guardian one comes from their servers)
-    const last = Object.entries(n.articles).filter(([id, a]) => a.opened && state.list.some((m) => m.id === id)).sort((x, y) => y[1].opened - x[1].opened)[0];
-    if (last) pic(libImg(state.list.find((m) => m.id === last[0])));
-    // today's planned episode: the plan card's picture (and the player's, before the video loads)
-    const today = n.plan && n.plan.days && n.plan.days[new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)];
-    if (today && today.e && today.e.v) pic(`https://i.ytimg.com/vi/${encodeURIComponent(today.e.v)}/hqdefault.jpg`);
-    // the show on the Listening shelf: its episodes, and the pictures of the first rows
-    if (typeof Listen !== 'undefined' && api.listenFeed)
-      jobs.push(Listen.episodes(Listen.showNow())
-        .then((f) => f.items.slice(0, 8).forEach((it) => pic(`https://i.ytimg.com/vi/${encodeURIComponent(it.v)}/mqdefault.jpg`)))
-        .catch(() => {}));
-    if (typeof Guardian !== 'undefined' && Guardian.prefetch) jobs.push(Promise.resolve(Guardian.prefetch()).catch(() => {}));
-    // pictures may be added while the episodes come in, so wait until no new job appears
-    const settle = (k) => Promise.all(jobs).then(() => (jobs.length > k ? settle(jobs.length) : null));
-    return settle(jobs.length);
-  });
+  const after = idle();
+  // three jobs, each one ticked off on the launch card as it comes in (splash.js)
+  const job = (k, fn) => {
+    const p = after.then(fn).catch(() => {});
+    if (typeof Splash !== 'undefined' && Splash.job) Splash.job(k, p);
+    return p;
+  };
+  const n = state.notes;
+  return Promise.all([
+    // the article opened last and the first pictures of the library
+    job('a', () => {
+      const last = Object.entries(n.articles).filter(([id, a]) => a.opened && state.list.some((m) => m.id === id)).sort((x, y) => y[1].opened - x[1].opened)[0];
+      const first = state.list.slice(0, 4).map(rowImg);
+      return Promise.all([last && pic(libImg(state.list.find((m) => m.id === last[0]))), ...first.map(pic)]);
+    }),
+    // Listening: today's planned episode, the show's episodes and the pictures of the first rows
+    job('l', () => {
+      const today = n.plan && n.plan.days && n.plan.days[new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)];
+      const ep = today && today.e && today.e.v ? pic(`https://i.ytimg.com/vi/${encodeURIComponent(today.e.v)}/hqdefault.jpg`) : null;
+      const feed = typeof Listen !== 'undefined' && api.listenFeed
+        ? Listen.episodes(Listen.showNow()).then((f) => Promise.all(f.items.slice(0, 8).map((it) => pic(`https://i.ytimg.com/vi/${encodeURIComponent(it.v)}/mqdefault.jpg`))))
+        : null;
+      return Promise.all([ep, feed]);
+    }),
+    // The Guardian: the section's list
+    job('g', () => (typeof Guardian !== 'undefined' && Guardian.prefetch ? Guardian.prefetch() : null)),
+  ]);
 }
 
 // Add-ons kept beside the app and out of the repository (src/renderer/private/<name>.js and .css,
