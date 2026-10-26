@@ -1,7 +1,7 @@
 'use strict';
 // The top of Statistics and two more sections (Mac only):
-//  - a top row of four tiles, ink only, each with something to hover or click: the streak (last
-//    14 days), the daily goal (Settings → Focus → Daily goal), this week, new words today
+//  - a top card in ink, three parts: the streak, this week as bars, and today — the daily goal
+//    (Settings → Focus → Daily goal) as a line, and the new words
 //  - "Facts": reading speed, pages and books, active days, the hour and weekday you read most,
 //    this month against the last, translated words, the longest focus session
 //  - "Records": the best day by time and by words, the longest streak, the best week
@@ -15,13 +15,10 @@
     'hx.best': (n) => `rekord — ${n} kun`,
     'hx.today': 'Bugun',
     'hx.goal': 'Kunlik maqsad',
-    'hx.of': (m) => `maqsad — ${m}`,
     'hx.daysOn': 'faol kun',
+    'hx.words': (n) => `${n} ta yangi so'z`,
     'hx.left': (m) => `${m} qoldi`,
     'hx.past': (m) => `maqsaddan ${m} ortiq`,
-    'hx.see': "bugungi so'zlar",
-    'hx.hide': "yopish",
-    'hx.aim': (n) => `maqsad — ${n}`,
     'hx.week': 'Hafta',
     'hx.newW': "Yangi so'z",
     'hx.facts': 'Qiziqarli faktlar',
@@ -59,13 +56,10 @@
     'hx.best': (n) => `record — ${n} days`,
     'hx.today': 'Today',
     'hx.goal': 'Daily goal',
-    'hx.of': (m) => `goal — ${m}`,
     'hx.daysOn': 'active days',
+    'hx.words': (n) => `${n} new words`,
     'hx.left': (m) => `${m} to go`,
     'hx.past': (m) => `${m} past the goal`,
-    'hx.see': "today's words",
-    'hx.hide': "close",
-    'hx.aim': (n) => `goal — ${n}`,
     'hx.week': 'Week',
     'hx.newW': 'New words',
     'hx.facts': 'Facts',
@@ -103,13 +97,10 @@
     'hx.best': (n) => `рекорд — ${n} дн.`,
     'hx.today': 'Сегодня',
     'hx.goal': 'Цель дня',
-    'hx.of': (m) => `цель — ${m}`,
     'hx.daysOn': 'активных дней',
+    'hx.words': (n) => `${n} новых слов`,
     'hx.left': (m) => `осталось ${m}`,
     'hx.past': (m) => `на ${m} больше цели`,
-    'hx.see': 'слова за сегодня',
-    'hx.hide': 'скрыть',
-    'hx.aim': (n) => `цель — ${n}`,
     'hx.week': 'Неделя',
     'hx.newW': 'Новые слова',
     'hx.facts': 'Интересные факты',
@@ -235,68 +226,50 @@
 
   const tile = (k, v, sub, i) => `<div class="st-tile" style="animation-delay:${i * 40}ms"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div><div class="st-s">${escH(sub)}</div></div>`;
 
-  // the top row: four tiles like the ones under it, each with something to touch, ink only —
-  //  - the streak over the last 14 days as squares (hover one: that day and its minutes)
-  //  - today's goal as a line that fills up (hover: how much is left, or how far past it)
-  //  - this week as seven small bars (hover one: that day)
-  //  - new words today (click: today's words open in the tile, click again to close)
+  // the top card, ink only, in three parts: the streak; this week as seven bars (hover one: that
+  // day and its minutes); today — a line that fills to the daily goal (hover: how much is left, or
+  // how far past it) and the new words
   function hero(d) {
     const days = (state.notes.stats && state.notes.stats.days) || {};
-    const today = new Date();
     const wd = t('sx.wd');
     const sec = (x) => (days[key(x)] || {}).sec || 0;
     const tip = (x) => `${wd[wdOf(x)]}, ${fmtDay(x, { day: 'numeric', month: 'short' })} · ${sec(x) ? dur(sec(x)) : '—'}`;
-    const n = d.s.streak;
-    const back = Array.from({ length: 14 }, (_, i) => addDays(today, i - 13));
-    const lit = (x) => { const v = days[key(x)]; return !!v && (v.sec >= 60 || v.words >= 20); };
     const min = Math.round(d.today.sec / 60);
     const left = d.goal - min;
     const max = Math.max(60, ...d.week.map((x) => sec(x.d)));
     const on = d.week.filter((x) => x.on).length;
-    const words = Object.values(state.notes.articles || {}).flatMap((a) => (a && a.vocab) || [])
-      .filter((v) => (v.at || 0) >= new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime())
-      .sort((x, y) => y.at - x.at);
-    const box = (cls, k, v, sub, extra, i) => `<div class="st-tile hx-t ${cls}" style="animation-delay:${i * 40}ms"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div><div class="st-s" data-s="${escH(sub)}">${escH(sub)}</div>${extra}</div>`;
-    return `<div class="st-tiles hx-hero">
-      ${box('hx-streak', t('st.streak'), t('st.days', n), t('hx.best', d.s.best),
-        `<div class="hx-sq">${back.map((x, i) => `<i class="${lit(x) ? 'on' : ''}${i === 13 ? ' now' : ''}" style="--i:${i}" data-tip="${escH(tip(x))}"></i>`).join('')}</div>`, 0)}
-      ${box('hx-goal', t('hx.goal'), t('st.min', min), t('hx.of', t('st.min', d.goal)),
-        `<div class="hx-line" style="--k:${Math.min(1, min / d.goal).toFixed(3)}" data-tip="${escH(left > 0 ? t('hx.left', t('st.min', left)) : t('hx.past', t('st.min', -left)))}"><b></b></div>`, 1)}
-      ${box('hx-wk7', t('hx.week'), `${on} / 7`, t('hx.daysOn'),
-        `<div class="hx-bars">${d.week.map((x, i) => `<i class="${x.on ? 'on' : ''}${x.today ? ' now' : ''}${x.future ? ' future' : ''}" style="--h:${(sec(x.d) / max).toFixed(3)};--i:${i}" data-tip="${escH(tip(x.d))}"><b></b><span>${escH(wd[i])}</span></i>`).join('')}</div>`, 2)}
-      ${box('hx-words' + (words.length ? ' can' : ''), t('hx.newW'), num(d.newToday), words.length ? t('hx.see') : t('hx.aim', 10),
-        `<div class="hx-chips">${words.slice(0, 12).map((v, i) => `<span style="--i:${i}">${escH(v.word)}</span>`).join('')}${words.length > 12 ? `<span class="more">+${words.length - 12}</span>` : ''}</div>`, 3)}
-    </div>`;
+    const part = (k, v, sub, extra) => `<div class="hx-p"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div>${extra}<div class="st-s" data-s="${escH(sub)}">${escH(sub)}</div></div>`;
+    return `<section class="hx-hero">
+      ${part(t('st.streak'), t('st.days', d.s.streak), t('hx.best', d.s.best), '')}
+      ${part(t('hx.week'), `${on} / 7`, t('hx.daysOn'),
+        `<div class="hx-bars">${d.week.map((x, i) => `<i class="${x.on ? 'on' : ''}${x.today ? ' now' : ''}${x.future ? ' future' : ''}" style="--h:${(sec(x.d) / max).toFixed(3)};--i:${i}" data-tip="${escH(tip(x.d))}"><b></b><span>${escH(wd[i])}</span></i>`).join('')}</div>`)}
+      ${part(t('hx.today'), `${min} / ${t('st.min', d.goal)}`, t('hx.words', num(d.newToday)),
+        `<div class="hx-line" style="--k:${Math.min(1, min / d.goal).toFixed(3)}" data-tip="${escH(left > 0 ? t('hx.left', t('st.min', left)) : t('hx.past', t('st.min', -left)))}"><b></b></div>`)}
+    </section>`;
   }
 
-  // hovering a square, the line or a bar puts its day into the tile's small line; a click on the
-  // words tile lays today's words over it (the tile keeps its size), another click puts them away
-  function wire(row) {
+  // hovering a bar or the line puts it into that part's small line
+  function wire(card) {
     let felt = null;
-    row.addEventListener('pointerover', (e) => {
+    card.addEventListener('pointerover', (e) => {
       const el = e.target.closest('[data-tip]');
       if (!el || el === felt) return;
+      if (felt) felt.classList.remove('hot');
       felt = el;
-      const sub = el.closest('.st-tile').querySelector('.st-s');
+      const sub = el.closest('.hx-p').querySelector('.st-s');
       sub.textContent = el.dataset.tip;
       sub.classList.add('tip');
-      el.closest('.st-tile').querySelectorAll('.hot').forEach((x) => x.classList.remove('hot'));
       el.classList.add('hot');
       if (typeof Haptic !== 'undefined') Haptic.align();
     });
-    row.addEventListener('pointerout', (e) => {
+    card.addEventListener('pointerout', (e) => {
       const el = e.target.closest('[data-tip]');
       if (!el || (e.relatedTarget && el.contains(e.relatedTarget))) return;
       felt = null;
       el.classList.remove('hot');
-      const sub = el.closest('.st-tile').querySelector('.st-s');
+      const sub = el.closest('.hx-p').querySelector('.st-s');
       sub.textContent = sub.dataset.s;
       sub.classList.remove('tip');
-    });
-    const w = row.querySelector('.hx-words.can');
-    if (w) w.addEventListener('click', () => {
-      w.classList.toggle('open');
-      if (typeof Haptic !== 'undefined') Haptic.level();
     });
   }
 

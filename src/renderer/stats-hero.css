@@ -1,47 +1,29 @@
 /* ── Statistics top row, facts and records (stats-hero.js, Mac only) ──
    Ink only, the same tiles as the rest of the page. */
-.hx-hero { margin: 0 0 12px; }
-.hx-t { display: flex; flex-direction: column; transition: border-color 0.2s; }
-.hx-t:hover { border-color: var(--line-2); }
-.hx-t .st-s.tip { color: var(--ink); }
-.hx-t .st-s { order: 3; }
-.hx-words .st-s { order: 2; }
-/* the streak: 14 squares, filled on days that count, today outlined */
-.hx-sq { order: 2; display: grid; grid-template-columns: repeat(14, 1fr); gap: 3px; margin: 6px 0 8px; }
-.hx-sq i { aspect-ratio: 1; border-radius: 3px; background: var(--line); cursor: default; animation: hx-pop 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(120ms + var(--i) * 25ms); transition: transform 0.15s; }
-.hx-sq i.on { background: var(--ink); }
-.hx-sq i.now { box-shadow: 0 0 0 1.5px var(--bg), 0 0 0 2.5px var(--ink); }
-.hx-sq i.hot { transform: scale(1.25); }
-/* the goal: a line that fills up to it */
-.hx-line { order: 2; position: relative; height: 18px; margin: 6px 0 8px; cursor: default; }
-.hx-line::before, .hx-line b { content: ''; position: absolute; left: 0; right: 0; top: 7px; height: 4px; border-radius: 2px; background: var(--line); }
-.hx-line b { background: var(--ink); transform-origin: left; transform: scaleX(var(--k)); animation: hx-fill 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; transition: height 0.15s, top 0.15s; }
-.hx-line.hot b, .hx-line.hot::before { top: 5px; height: 8px; border-radius: 4px; }
+.hx-hero { display: grid; grid-template-columns: 1fr 1.3fr 1fr; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 14px; animation: st-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+.hx-p { padding: 16px 16px 14px; min-width: 0; display: flex; flex-direction: column; }
+.hx-p + .hx-p { border-left: 1px solid var(--line); }
+.hx-p .st-s { margin-top: auto; }
+.hx-p .st-s.tip { color: var(--ink); }
 /* the week: seven bars, by minutes read */
-.hx-bars { order: 2; display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; height: 46px; margin: 4px 0 6px; }
-.hx-bars i { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; cursor: default; }
-.hx-bars b { width: 100%; max-width: 18px; height: calc(4px + var(--h) * 26px); border-radius: 3px; background: var(--line-2); transform-origin: bottom; animation: hx-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(150ms + var(--i) * 50ms); transition: opacity 0.15s; }
+.hx-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 40px; margin: 2px 0 8px; }
+.hx-bars i { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 3px; }
+.hx-bars b { width: 100%; max-width: 16px; height: calc(3px + var(--h) * 22px); border-radius: 3px; background: var(--line-2); transform-origin: bottom; animation: hx-grow 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(150ms + var(--i) * 50ms); transition: opacity 0.15s; }
 .hx-bars i.on b { background: var(--ink); }
-.hx-bars i.future b { background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.hx-bars i.future b { background: var(--line); }
 .hx-bars span { font: 600 9.5px var(--ui); color: var(--muted); }
 .hx-bars i.now span { color: var(--ink); }
 .hx-bars:has(.hot) b { opacity: 0.35; }
 .hx-bars i.hot b { opacity: 1; }
-/* new words: a click lays today's words over the tile, which keeps its size */
-.hx-words { position: relative; overflow: hidden; }
-.hx-words.can { cursor: pointer; user-select: none; }
-.hx-words.can .st-s::after { content: ' ↓'; }
-.hx-words > .st-k, .hx-words > .st-v, .hx-words > .st-s { transition: opacity 0.25s, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
-.hx-words.open > .st-v, .hx-words.open > .st-s { opacity: 0; transform: translateY(-6px); }
-.hx-chips { position: absolute; inset: 40px 12px 12px 16px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 4px; overflow-y: auto; scrollbar-width: none; pointer-events: none; mask-image: linear-gradient(#000 calc(100% - 18px), transparent); }
-.hx-words.open .hx-chips { pointer-events: auto; }
-.hx-chips span { font: 12px var(--ui); color: var(--ink); background: var(--soft); border-radius: 6px; padding: 3px 7px; opacity: 0; transform: translateY(6px); transition: opacity 0.2s, transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
-.hx-words.open .hx-chips span { opacity: 1; transform: none; transition-delay: calc(80ms + var(--i) * 25ms); }
-.hx-chips .more { color: var(--muted); }
+/* today: a line that fills up to the goal */
+.hx-line { position: relative; height: 16px; margin: 2px 0 6px; }
+.hx-line::before, .hx-line b { content: ''; position: absolute; left: 0; right: 0; top: 6px; height: 4px; border-radius: 2px; background: var(--line); transition: top 0.15s, height 0.15s; }
+.hx-line b { background: var(--ink); transform-origin: left; transform: scaleX(var(--k)); animation: hx-fill 1s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both; }
+.hx-line.hot b, .hx-line.hot::before { top: 4px; height: 8px; border-radius: 4px; }
 @keyframes hx-fill { from { transform: scaleX(0); } }
 @keyframes hx-grow { from { transform: scaleY(0); } }
-@keyframes hx-pop { from { transform: scale(0); } }
-@media (prefers-reduced-motion: reduce) { .hx-sq i, .hx-line b, .hx-bars b { animation: none; } }
+@media (max-width: 820px) { .hx-hero { grid-template-columns: 1fr; } .hx-p + .hx-p { border-left: 0; border-top: 1px solid var(--line); } }
+@media (prefers-reduced-motion: reduce) { .hx-line b, .hx-bars b { animation: none; } }
 
 /* records: one row each, an icon, what it is, when, and the number on the right */
 .hx-recs { padding: 4px 16px; }
