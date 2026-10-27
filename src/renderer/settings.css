@@ -189,3 +189,41 @@
 .kv-caps kbd.down { transform: translateY(1px); border-bottom-width: 1px; background: var(--hover-2); }
 @media (max-width: 620px) { .kv-grid { grid-template-columns: 1fr; } }
 
+
+/* Storage (storage.js): one big number, a bar split by part, the parts with their sizes, and
+   the whole disk underneath. The parts are shades of the ink, the bars grow in once counted. */
+.st-use { padding: 18px 18px 16px; --c-app: var(--ink); --c-library: color-mix(in srgb, var(--ink) 62%, var(--bg)); --c-notes: color-mix(in srgb, var(--ink) 38%, var(--bg)); --c-cache: color-mix(in srgb, var(--ink) 20%, var(--bg)); --c-update: color-mix(in srgb, var(--ink) 10%, var(--bg)); }
+.st-wait { min-height: 120px; display: grid; place-items: center; font: 13px var(--ui); color: var(--muted); }
+.st-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.st-top small { display: block; font: 12px var(--ui); color: var(--muted); }
+.st-top b { display: block; margin-top: 2px; font: 700 34px/1.1 var(--serif); letter-spacing: -0.02em; color: var(--ink); font-variant-numeric: tabular-nums; }
+.st-top > span { font: 12.5px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+.st-bar { display: flex; gap: 3px; height: 12px; margin: 16px 0 6px; }
+.st-bar i { flex-basis: 0; min-width: 4px; border-radius: 4px; background: var(--c); transform: scaleX(0); transform-origin: left; transition: transform 700ms var(--ease) calc(var(--j) * 70ms); }
+.st-use.in .st-bar i { transform: none; }
+.st-app { --c: var(--c-app); }
+.st-library { --c: var(--c-library); }
+.st-notes { --c: var(--c-notes); }
+.st-cache { --c: var(--c-cache); }
+.st-update { --c: var(--c-update); }
+.st-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.st-list li { display: grid; grid-template-columns: 12px 1fr auto; align-items: center; gap: 12px; padding: 11px 0; border-top: 1px solid var(--line); opacity: 0; transform: translateY(4px); transition: opacity 420ms var(--ease) calc(120ms + var(--j) * 50ms), transform 420ms var(--ease) calc(120ms + var(--j) * 50ms); }
+.st-list li:first-child { border-top: 0; }
+.st-use.in .st-list li { opacity: 1; transform: none; }
+.st-dot { width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
+.st-list b { display: block; font: 600 14px var(--ui); color: var(--ink); }
+.st-list small { display: block; margin-top: 2px; font: 12px/1.4 var(--ui); color: var(--muted); }
+.st-n { text-align: right; font: 600 14px var(--ui); color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.st-n small { font-weight: 400; }
+.st-disk { margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.st-dbar { display: flex; height: 6px; border-radius: 3px; background: var(--soft); overflow: hidden; }
+.st-dbar i { display: block; height: 100%; transform: scaleX(0); transform-origin: left; transition: transform 800ms var(--ease) 200ms; }
+.st-use.in .st-dbar i { transform: none; }
+.st-dbar .st-me, .st-dkey .st-me { background: var(--ink); }
+.st-dbar .st-other, .st-dkey .st-other { background: color-mix(in srgb, var(--ink) 22%, var(--bg)); }
+.st-dkey { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 8px; font: 12px var(--ui); color: var(--muted); font-variant-numeric: tabular-nums; }
+.st-dkey span { display: inline-flex; align-items: center; gap: 6px; }
+.st-dkey i { width: 8px; height: 8px; border-radius: 2px; background: var(--soft); box-shadow: inset 0 0 0 1px var(--line); }
+.st-clear { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.st-clear small { font: 12px var(--ui); color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .st-bar i, .st-list li, .st-dbar i { transition: none; } }

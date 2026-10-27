@@ -22,8 +22,8 @@ async function get(url) {
   return r.text();
 }
 
-/* YouTube's feeds/videos.xml started answering 404 for every show (Oct 2026). Then the show's own
-   page is read instead: its ytInitialData lists the videos as lockupViewModel entries (id, title,
+/* YouTube's feeds/videos.xml lists only the newest 15 and started answering 404 for every show
+   (Oct 2026), so the show's own page is read first: its ytInitialData lists the videos as lockupViewModel entries (id, title,
    channel, "106K" views, "2w ago"). The date is only that rough "ago", turned back into a day. */
 const feedUrl = (kind, id) => `https://www.youtube.com/feeds/videos.xml?${kind === 'playlist' ? 'playlist_id' : 'channel_id'}=${encodeURIComponent(id)}`;
 const pageUrl = (kind, id) => (kind === 'playlist' ? `https://www.youtube.com/playlist?list=${encodeURIComponent(id)}` : `https://www.youtube.com/channel/${encodeURIComponent(id)}/videos`);
@@ -43,15 +43,13 @@ function count(txt) {
   const m = String(txt || '').replace(/,/g, '').match(/([\d.]+)\s*([KMB])?/i);
   return m ? Math.round(+m[1] * ({ k: 1e3, m: 1e6, b: 1e9 }[(m[2] || '').toLowerCase()] || 1)) : 0;
 }
-function pageItems(data) {
-  const owner = (data.metadata && data.metadata.channelMetadataRenderer && data.metadata.channelMetadataRenderer.title) || '';
+function pageItems(root, owner, seen) {
   const found = [];
   (function walk(o) {
     if (!o || typeof o !== 'object') return;
     if (o.lockupViewModel) return void found.push(o.lockupViewModel);
     for (const k in o) walk(o[k]);
-  })(data.contents);
-  const seen = new Set();
+  })(root);
   const items = [];
   for (const l of found) {
     if (l.contentType !== 'LOCKUP_CONTENT_TYPE_VIDEO' || !/^[\w-]{11}$/.test(l.contentId || '') || seen.has(l.contentId)) continue;
@@ -66,6 +64,51 @@ function pageItems(data) {
   }
   return items;
 }
+// the list's own "load more" at its end; a channel page also has other continuations (sort chips)
+function nextToken(root) {
+  let token = '';
+  (function walk(o) {
+    if (!o || typeof o !== 'object') return;
+    if (o.continuationItemRenderer) {
+      const m = JSON.stringify(o.continuationItemRenderer).match(/"token":"([^"]+)"/);
+      if (m) token = m[1];
+      return;
+    }
+    for (const k in o) walk(o[k]);
+  })(root);
+  return token;
+}
+
+// A channel's page lists 30 videos; YouTube's own "load more" call brings 30 more each time.
+// MORE of them make about 150 episodes per show (a playlist page already lists 100).
+const MORE = 4;
+async function pageFeed(kind, id) {
+  const html = await get(pageUrl(kind, id));
+  const data = initialData(html);
+  const owner = (data.metadata && data.metadata.channelMetadataRenderer && data.metadata.channelMetadataRenderer.title) || '';
+  const seen = new Set();
+  const items = pageItems(data.contents, owner, seen);
+  const version = (html.match(/"INNERTUBE_CLIENT_VERSION":"([^"]+)"/) || [])[1];
+  let token = nextToken(data.contents);
+  for (let i = 0; i < MORE && token && version; i++) {
+    let more;
+    try {
+      const r = await fetch('https://www.youtube.com/youtubei/v1/browse?prettyPrint=false', {
+        method: 'POST',
+        headers: { 'User-Agent': UA, 'Content-Type': 'application/json', 'Accept-Language': 'en' },
+        body: JSON.stringify({ context: { client: { clientName: 'WEB', clientVersion: version, hl: 'en' } }, continuation: token }),
+      });
+      if (!r.ok) break;
+      more = await r.json();
+    } catch {
+      break; // what came so far is still a good list
+    }
+    const root = more.onResponseReceivedActions || more;
+    items.push(...pageItems(root, owner, seen));
+    token = nextToken(root);
+  }
+  return items;
+}
 const pageTitle = (data) =>
   (data.metadata && data.metadata.channelMetadataRenderer && data.metadata.channelMetadataRenderer.title) ||
   (data.metadata && data.metadata.playlistMetadataRenderer && data.metadata.playlistMetadataRenderer.title) ||
@@ -76,15 +119,15 @@ async function feed(kind, id) {
   const key = kind + ':' + id;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < FRESH) return hit.items;
-  let xml;
+  // the show's page first: it lists far more than the feed's 15 (and the feed is often down)
   try {
-    xml = await get(feedUrl(kind, id));
-  } catch {
-    const items = pageItems(initialData(await get(pageUrl(kind, id))));
-    if (!items.length) throw new Error('no videos');
-    cache.set(key, { at: Date.now(), items });
-    return items;
-  }
+    const items = await pageFeed(kind, id);
+    if (items.length) {
+      cache.set(key, { at: Date.now(), items });
+      return items;
+    }
+  } catch {}
+  const xml = await get(feedUrl(kind, id));
   const items = xml.split('<entry>').slice(1).map((e) => {
     const v = tag(e, 'yt:videoId');
     const views = (e.match(/<media:statistics views="(\d+)"/) || [])[1];

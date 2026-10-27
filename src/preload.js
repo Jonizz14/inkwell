@@ -32,6 +32,8 @@ contextBridge.exposeInMainWorld('api', {
   updateRun: () => ipcRenderer.invoke('update:run'),
   updateCheck: () => ipcRenderer.invoke('update:check'),
   appVersion: () => ipcRenderer.invoke('app:version'),
+  storageUsage: () => ipcRenderer.invoke('storage:usage'),
+  storageClear: () => ipcRenderer.invoke('storage:clear'),
   updateDone: () => ipcRenderer.invoke('update:done'),
   updateDemo: () => ipcRenderer.invoke('update:demo'),
   updateRestart: (v) => ipcRenderer.invoke('update:restart', v),

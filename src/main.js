@@ -14,8 +14,30 @@ const guardian = require('./guardian');
 const REMIND_RUN = process.argv.includes('--remind');
 // Windows shows notifications under the installed shortcut's id (electron-builder sets it to appId)
 if (process.platform === 'win32') app.setAppUserModelId('uz.javohir.articles365');
-// the data folder keeps the name the app first shipped under, so nothing moves on an update
-app.setPath('userData', path.join(app.getPath('appData'), '365 Articles Reader'));
+// The data folder (notes, articles, caches) carries the app's name. It was "365 Articles Reader":
+// on the first start it is renamed, not copied, and a link with the old name is left behind, so
+// an older build opened later still finds everything. When both folders hold data, or the rename
+// fails (a file held open on Windows), nothing is touched and the old folder stays in use.
+app.setPath('userData', (() => {
+  const now = path.join(app.getPath('appData'), 'Inkwell');
+  const before = path.join(app.getPath('appData'), '365 Articles Reader');
+  try {
+    const old = fs.lstatSync(before, { throwIfNoEntry: false });
+    if (!old || !old.isDirectory()) return now;
+    if (fs.existsSync(now)) {
+      if (fs.readdirSync(now).length) return before;
+      fs.rmdirSync(now);
+    }
+    fs.renameSync(before, now);
+    try {
+      fs.symlinkSync(now, before, 'junction');
+    } catch {}
+    return now;
+  } catch (e) {
+    console.error('data folder', e.message);
+    return fs.existsSync(before) ? before : now;
+  }
+})());
 app.setName('Inkwell');
 const primary = app.requestSingleInstanceLock();
 if (!primary) app.quit();
@@ -280,6 +302,59 @@ function thumbs(list) {
   return list;
 }
 ipcMain.handle('library:list', async () => thumbs(await readJson(INDEX(), [])));
+
+// Settings → Storage: how much of the disk Inkwell takes, by part. Sizes are what the files hold
+// (as Finder counts them); links are not followed. Kept for a minute, since walking the app takes a moment.
+async function sizeOf(p) {
+  let st;
+  try {
+    st = await fsp.lstat(p);
+  } catch {
+    return 0;
+  }
+  if (!st.isDirectory()) return st.size;
+  let names = [];
+  try {
+    names = await fsp.readdir(p);
+  } catch {}
+  let sum = 0;
+  for (let i = 0; i < names.length; i += 64) sum += (await Promise.all(names.slice(i, i + 64).map((n) => sizeOf(path.join(p, n))))).reduce((a, b) => a + b, 0);
+  return sum;
+}
+const NOTES_FILES = ['notes.json', 'index.json', 'remind.json', 'backups'];
+let usage = null;
+// Settings → Storage → Clear cache: Chromium's page and code caches only. Notes, articles,
+// settings and what the pages keep for themselves (localStorage) stay.
+ipcMain.handle('storage:clear', async () => {
+  const s = session.defaultSession;
+  await s.clearCache();
+  await s.clearCodeCaches({});
+  await s.clearStorageData({ storages: ['shadercache', 'cachestorage'] });
+  usage = null;
+  return true;
+});
+ipcMain.handle('storage:usage', async () => {
+  if (usage && Date.now() - usage.at < 60000) return usage.v;
+  // the app itself: the .app bundle on a Mac, the install folder elsewhere
+  const bundle = process.platform === 'darwin' ? path.resolve(process.execPath, '../../..') : path.dirname(process.execPath);
+  const names = await fsp.readdir(DATA()).catch(() => []);
+  const [app_, library, notes, update, all] = await Promise.all([
+    app.isPackaged ? sizeOf(bundle) : 0,
+    sizeOf(LIB()),
+    Promise.all(NOTES_FILES.map((n) => sizeOf(path.join(DATA(), n)))).then((l) => l.reduce((a, b) => a + b, 0)),
+    sizeOf(path.join(DATA(), 'update')),
+    Promise.all(names.map((n) => sizeOf(path.join(DATA(), n)))).then((l) => l.reduce((a, b) => a + b, 0)),
+  ]);
+  let disk = null;
+  try {
+    const f = await fsp.statfs(DATA());
+    disk = { total: f.blocks * f.bsize, free: f.bavail * f.bsize };
+  } catch {}
+  // everything else in the data folder is Chromium's caches and the page's own storage
+  const v = { parts: { app: app_, library, notes, cache: Math.max(0, all - library - notes - update), update }, disk };
+  usage = { at: Date.now(), v };
+  return v;
+});
 ipcMain.handle('library:article', async (_e, id) => {
   const file = path.join(LIB(), String(id).replace(/\W/g, '') + '.json');
   const index = await readJson(INDEX(), []);

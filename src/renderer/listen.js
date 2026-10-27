@@ -192,13 +192,13 @@ const Listen = (() => {
     return e.done ? 'done' : e.t > 5 ? 'reading' : 'new';
   };
 
-  // the library's own row: the date where the number is, the thumbnail where a picture goes,
+  // the library's own row (rows past the first screens come in still, as there): the date where the number is, the thumbnail where a picture goes,
   // the ring (or ✓), the time left and how much you wrote on the right
   function rowHtml(it, i) {
     const e = L().eps[it.v] || {};
     const p = e.done ? 1 : e.d ? Math.min(1, e.t / e.d) : 0;
     const left = e.d && !e.done && e.t > 5 ? t('ls.left', Math.max(1, Math.round((e.d - e.t) / 60))) : '';
-    return `<li class="item ${statusOfEp(it.v)} has-img ls-row" data-v="${esc(it.v)}" style="animation-delay:${Math.min(i, 14) * 22}ms">
+    return `<li class="item ${statusOfEp(it.v)} has-img ls-row${i >= 24 ? ' still' : ''}" data-v="${esc(it.v)}" style="animation-delay:${Math.min(i, 14) * 22}ms">
         <div class="item-num">${esc(fmtDay(it.date))}</div>
         <div><h3 class="item-title">${esc(it.title)}</h3><p class="item-ex">${esc(it.about || it.by)}</p></div>
         <img class="item-img" src="https://i.ytimg.com/vi/${esc(it.v)}/mqdefault.jpg" alt="" loading="lazy" decoding="async" />

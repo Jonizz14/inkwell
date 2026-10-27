@@ -99,8 +99,8 @@ The app isn't notarized. If macOS blocks a downloaded build, right-click it, cho
 
 ## Your data
 Everything stays on your computer:
-- macOS: `~/Library/Application Support/365 Articles Reader/`
-- Windows: `%APPDATA%\365 Articles Reader\`
+- macOS: `~/Library/Application Support/Inkwell/`
+- Windows: `%APPDATA%\Inkwell\`
 
 `notes.json` holds your highlights, words, notes, progress and settings, so back up that file. `library/` holds the imported PDFs and the extracted text.
 

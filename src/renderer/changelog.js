@@ -1,10 +1,40 @@
 // Update history: every version of Inkwell and what it brought, in the app's language.
 // Release notes on GitHub are English and written for developers; these are the same
 // changes told for readers, in Uzbek, English and Russian. A new release adds its entry on top.
-// Opened from the ⋯ menu ("Update history") and from the bottom of "What's new".
+// Opened from the ⋯ menu ("Update history") and from the bottom of "What's new"; the list shows
+// each update in short, and a click opens it in full with the versions on either side.
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.45', '2026-10-27', {
+      uz: ['Ko‘proq video va maqola, Sozlamalarda xotira', [
+        'Listening: har bir kanal uchun endi taxminan 150 ta epizod chiqadi (oldin 30 ta edi), pleylistlardan 100 tagacha',
+        'The Guardian: har bir bo‘limda endi 100 tagacha maqola chiqadi (oldin 30 ta edi)',
+        'Yangilanishlar tarixi: har bir yangilanishni bosib to‘liq o‘qish mumkin, oldingi va keyingi versiyaga o‘tish tugmalari bilan',
+        'Uzun ro‘yxatlarda birinchi ekrandan keyingi qatorlar animatsiyasiz chiqadi, shuning uchun aylantirish silliq qoladi',
+        'Sozlamalar → Xotira: Inkwell diskda qancha joy egallayotgani — ilovaning o‘zi, maqolalar, qaydlar va kesh alohida, butun disk ichidagi ulushi bilan',
+        '«Keshni tozalash» tugmasi: vaqtinchalik fayllar o‘chadi, qaydlar, maqolalar va sozlamalar joyida qoladi',
+        'Ma’lumotlar papkasi endi «Inkwell» deb ataladi (oldin «365 Articles Reader» edi): u ko‘chirilmaydi, faqat qayta nomlanadi, hech narsa yo‘qolmaydi',
+      ]],
+      en: ['More videos and articles, and Storage in Settings', [
+        'Listening: each channel now shows about 150 episodes (it was 30), and up to 100 from a playlist',
+        'The Guardian: every section now lists up to 100 articles (it was 30)',
+        'Update history: click any update to read it in full, with buttons to the older and newer versions',
+        'In long lists, rows past the first screen come in without animation, so scrolling stays smooth',
+        'Settings → Storage: how much room Inkwell takes on the disk — the app, articles, notes and cache apart, and its share of the whole disk',
+        'A Clear cache button: temporary files go, your notes, articles and settings stay',
+        'The data folder is now called “Inkwell” (it was “365 Articles Reader”): it is renamed, not copied, and nothing is lost',
+      ]],
+      ru: ['Больше видео и статей, хранилище в настройках', [
+        'Listening: у каждого канала теперь около 150 эпизодов (было 30), из плейлиста — до 100',
+        'The Guardian: в каждом разделе теперь до 100 статей (было 30)',
+        'История обновлений: любое обновление можно открыть и прочитать целиком, с переходом к предыдущей и следующей версии',
+        'В длинных списках строки ниже первого экрана появляются без анимации, поэтому прокрутка остаётся плавной',
+        'Настройки → Хранилище: сколько места Inkwell занимает на диске — приложение, статьи, заметки и кэш по отдельности, и доля от всего диска',
+        'Кнопка «Очистить кэш»: временные файлы удаляются, заметки, статьи и настройки остаются',
+        'Папка с данными теперь называется «Inkwell» (была «365 Articles Reader»): она переименовывается, а не копируется, ничего не теряется',
+      ]],
+    }],
     ['1.1.44', '2026-10-27', {
       uz: ['Barcha yangilanishlar bir joyda', [
         '⋯ menyusida yangi qator — «Yangilanishlar tarixi»: Inkwell’ning har bir versiyasi va u olib kelgan o‘zgarishlar, eng yangisi tepada',
@@ -440,20 +470,27 @@ const Changelog = (() => {
   ];
 
   const TX = {
-    uz: { page: 'Yangilanishlar tarixi', title: 'Barcha yangilanishlar', meta: (n) => `${n} ta yangilanish · eng yangisi tepada`, yours: 'Sizdagi versiya', newer: 'Yangiroq — yangilang',
+    uz: { page: 'Yangilanishlar tarixi', title: 'Barcha yangilanishlar', meta: (n) => `${n} ta yangilanish · eng yangisi tepada · bosib to‘liq o‘qing`, yours: 'Sizdagi versiya', newer: 'Yangiroq — yangilang',
+      changes: (n) => `${n} ta o‘zgarish`, read: 'To‘liq o‘qish', older: 'Oldingi versiya', next: 'Keyingi versiya', what: 'Nimalar o‘zgardi',
       months: ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'], date: (d, m, y) => `${y}-yil ${d}-${m}` },
-    en: { page: 'Update history', title: 'Every update', meta: (n) => `${n} updates · newest first`, yours: 'Your version', newer: 'Newer — update to get it',
+    en: { page: 'Update history', title: 'Every update', meta: (n) => `${n} updates · newest first · click one to read it all`, yours: 'Your version', newer: 'Newer — update to get it',
+      changes: (n) => `${n} ${n === 1 ? 'change' : 'changes'}`, read: 'Read in full', older: 'Older version', next: 'Newer version', what: 'What changed',
       months: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], date: (d, m, y) => `${d} ${m} ${y}` },
-    ru: { page: 'История обновлений', title: 'Все обновления', meta: (n) => `${n} обновлений · новые сверху`, yours: 'Ваша версия', newer: 'Новее — обновитесь',
+    ru: { page: 'История обновлений', title: 'Все обновления', meta: (n) => `${n} обновлений · новые сверху · нажмите, чтобы прочитать целиком`, yours: 'Ваша версия', newer: 'Новее — обновитесь',
+      changes: (n) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'изменение' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'изменения' : 'изменений'}`,
+      read: 'Читать целиком', older: 'Предыдущая версия', next: 'Следующая версия', what: 'Что изменилось',
       months: ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'], date: (d, m, y) => `${d} ${m} ${y}` },
   };
   const tx = () => TX[document.documentElement.lang] || TX.uz;
+  const lang = () => (TX[document.documentElement.lang] ? document.documentElement.lang : 'uz');
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
   const num = (v) => v.split('.').map(Number);
   const newer = (a, b) => { const x = num(a), y = num(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] > y[i]; return false; };
   const when = (iso) => { const [y, m, d] = iso.split('-').map(Number); const t = tx(); return t.date(d, t.months[m - 1], y); };
+  const notesOf = (entry) => entry[2][lang()] || entry[2].en;
 
-  let page, from = 'library', installed = '';
+  // sel: the version opened in full, or '' for the list; listTop keeps the list where it was
+  let page, from = 'library', installed = '', sel = '', listTop = 0;
   if (typeof api !== 'undefined' && api.appVersion) api.appVersion().then((v) => (installed = v || '')).catch(() => {});
 
   function ensure() {
@@ -469,32 +506,77 @@ const Changelog = (() => {
       </header>
       <main class="scroller"><div class="wn ch" id="ch-body"></div></main>`;
     document.querySelector('#stats').after(page);
-    page.querySelector('#ch-back').onclick = () => showView(from);
+    page.querySelector('#ch-back').onclick = () => (sel ? show('') : showView(from));
+    page.querySelector('#ch-body').addEventListener('click', (e) => {
+      const go = e.target.closest('[data-v]');
+      if (go) show(go.dataset.v);
+    });
+  }
+
+  const tags = (v) => {
+    const t = tx(), mine = v === installed, ahead = installed && newer(v, installed);
+    return mine ? `<span class="ch-tag">${esc(t.yours)}</span>` : ahead ? `<span class="ch-tag soft">${esc(t.newer)}</span>` : '';
+  };
+
+  function listHtml() {
+    const t = tx();
+    let k = 2;
+    return `
+      <h1 class="wn-ver" style="--k:0">${esc(t.title)}</h1>
+      <p class="wn-meta" style="--k:1">${esc(t.meta(LOG.length))}</p>
+      ${LOG.map((entry) => {
+        const [v, date] = entry, [title, points] = notesOf(entry);
+        const ahead = installed && newer(v, installed);
+        return `<button type="button" class="ch-rel${v === installed ? ' mine' : ''}${ahead ? ' ahead' : ''}" data-v="${esc(v)}" style="--k:${Math.min(k++, 9)}">
+          <span class="ch-head"><span class="ch-v">v${esc(v)}</span><time datetime="${date}">${esc(when(date))}</time>${tags(v)}</span>
+          <span class="ch-title">${esc(title)}</span>
+          <span class="ch-sum">${esc(points[0])}</span>
+          <span class="ch-more">${esc(t.changes(points.length))} · ${esc(t.read)} <i aria-hidden="true">›</i></span>
+        </button>`;
+      }).join('')}`;
+  }
+
+  // one update in full: every change on its own, and the versions on either side
+  function detailHtml(i) {
+    const t = tx(), entry = LOG[i], [v, date] = entry, [title, points] = notesOf(entry);
+    const side = (j, label, cls) => {
+      if (!LOG[j]) return '<span></span>';
+      return `<button type="button" class="ch-side ${cls}" data-v="${esc(LOG[j][0])}"><small>${esc(label)} · v${esc(LOG[j][0])}</small><b>${esc(notesOf(LOG[j])[0])}</b></button>`;
+    };
+    return `
+      <p class="ch-head ch-top" style="--k:0"><span class="ch-v">v${esc(v)}</span><time datetime="${date}">${esc(when(date))}</time>${tags(v)}</p>
+      <h1 class="wn-ver ch-h" style="--k:1">${esc(title)}</h1>
+      <section class="wn-sec ch-full" style="--k:2"><h3>${esc(t.what)} · ${esc(t.changes(points.length))}</h3>
+        <ol>${points.map((p) => `<li>${esc(p)}</li>`).join('')}</ol>
+      </section>
+      <nav class="ch-nav" style="--k:3">${side(i + 1, t.older, 'prev')}${side(i - 1, t.next, 'next')}</nav>`;
   }
 
   function render() {
     if (!page) return;
-    const t = tx(), lang = TX[document.documentElement.lang] ? document.documentElement.lang : 'uz';
-    page.querySelector('#ch-back').innerHTML = window.t('reader.back'); // i18n.js
-    page.querySelector('#ch-title').textContent = t.page;
-    let k = 2;
-    page.querySelector('#ch-body').innerHTML = `
-      <h1 class="wn-ver" style="--k:0">${esc(t.title)}</h1>
-      <p class="wn-meta" style="--k:1">${esc(t.meta(LOG.length))}</p>
-      ${LOG.map(([v, date, notes]) => {
-        const [title, points] = notes[lang] || notes.en;
-        const mine = v === installed, ahead = installed && newer(v, installed);
-        return `<article class="ch-rel${mine ? ' mine' : ''}${ahead ? ' ahead' : ''}" style="--k:${Math.min(k++, 9)}">
-          <div class="ch-head"><span class="ch-v">v${esc(v)}</span><time datetime="${date}">${esc(when(date))}</time>
-            ${mine ? `<span class="ch-tag">${esc(t.yours)}</span>` : ahead ? `<span class="ch-tag soft">${esc(t.newer)}</span>` : ''}</div>
-          <h2>${esc(title)}</h2>
-          <ul>${points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>
-        </article>`;
-      }).join('')}`;
+    const t = tx(), i = sel ? LOG.findIndex((e) => e[0] === sel) : -1;
+    if (sel && i < 0) sel = '';
+    page.querySelector('#ch-back').innerHTML = sel ? `← ${esc(t.page)}` : window.t('reader.back'); // i18n.js
+    page.querySelector('#ch-title').textContent = sel ? 'v' + sel : t.page;
+    page.querySelector('#ch-body').innerHTML = sel ? detailHtml(i) : listHtml();
+  }
+
+  // list → one update, one update → another, or back to the list where it was left
+  function show(v) {
+    const scroller = page.querySelector('.scroller');
+    if (!sel) listTop = scroller.scrollTop;
+    sel = v;
+    render();
+    page.querySelector('#ch-body').classList.remove('ch-swap');
+    void page.offsetWidth;
+    page.querySelector('#ch-body').classList.add('ch-swap');
+    scroller.scrollTop = v ? 0 : listTop;
   }
 
   function open() {
     ensure();
+    sel = '';
+    listTop = 0;
     render();
     const cur = document.querySelector('.view.is-active');
     if (cur && cur.id !== 'history') from = cur.id;

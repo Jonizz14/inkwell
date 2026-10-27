@@ -46,8 +46,9 @@ const test = (key) => api(key, 'search', { 'page-size': 1 }).then(() => ({ ok: t
 // a section's newest articles
 async function feed(key, section) {
   const where = WHERE[section] || { section: SECTIONS.includes(section) ? section : 'news' };
-  const res = await api(key, 'search', { ...where, type: 'article', 'order-by': 'newest', 'page-size': 30, 'show-fields': 'trailText,byline,thumbnail' });
-  return res.results
+  // two pages of 50: about a hundred articles a section (one was 30)
+  const pages = await Promise.all([1, 2].map((page) => api(key, 'search', { ...where, type: 'article', 'order-by': 'newest', 'page-size': 50, page, 'show-fields': 'trailText,byline,thumbnail' }).catch((e) => (page === 1 ? Promise.reject(e) : { results: [] }))));
+  return pages.flatMap((res) => res.results)
     .filter((it) => isArticle(it.webUrl))
     .map((it) => {
       const f = it.fields || {};

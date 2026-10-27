@@ -9,9 +9,9 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const home = os.homedir();
-const DATA = process.argv[2] || (process.platform === 'darwin'
-  ? path.join(home, 'Library', 'Application Support', '365 Articles Reader')
-  : process.platform === 'win32' ? path.join(process.env.APPDATA || '', '365 Articles Reader') : path.join(home, '.config', '365 Articles Reader'));
+// the app's data folder: "Inkwell" since 1.1.45, "365 Articles Reader" on a machine not yet started with it
+const APPDATA = process.platform === 'darwin' ? path.join(home, 'Library', 'Application Support') : process.platform === 'win32' ? process.env.APPDATA || '' : path.join(home, '.config');
+const DATA = process.argv[2] || ['Inkwell', '365 Articles Reader'].map((n) => path.join(APPDATA, n)).find((d) => fs.existsSync(path.join(d, 'index.json'))) || path.join(APPDATA, 'Inkwell');
 
 const index = JSON.parse(fs.readFileSync(path.join(DATA, 'index.json'), 'utf8'));
 const out = [];

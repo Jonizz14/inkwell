@@ -276,7 +276,7 @@ const Settings = (() => {
     `<div class="set-range"><input type="range" data-k="${key}" min="${min}" max="${max}" step="${step}" value="${val}" /><output>${fmt(val)}</output></div>`;
   const row = (label, ctl, desc = '') =>
     `<div class="set-row"><div class="set-l"><div>${esc(label)}</div>${desc ? `<small>${esc(desc)}</small>` : ''}</div><div class="set-c">${ctl}</div></div>`;
-  // groups an add-on puts in (Settings.add): { html({ group, row, esc }), click(e, root), input(e, root) },
+  // groups an add-on puts in (Settings.add): { html({ group, row, esc }), click(e, root), input(e, root), after(root) },
   // each handler returning true when the event was its own
   const extras = [];
   const group = (title, rows, i) => `<section class="set-group" style="--i:${i}"><h3>${esc(title)}</h3><div class="set-card">${rows.join('')}</div></section>`;
@@ -642,6 +642,7 @@ const Settings = (() => {
       + group(t('set.keys'), keysRows(), 5).replace('<section class="set-group"', '<section class="set-group" data-g="keys"')
       + `<div class="set-foot" style="--i:6"><button class="btn ghost set-btn" data-act="reset">${esc(t('set.reset'))}</button></div>`;
 
+    extras.forEach((x) => x.after && x.after(root));
     bootPreview();
   }
 

@@ -4,6 +4,7 @@
  * so the app opens instantly without re-processing.
  * Run: node scripts/preindex.mjs
  */
+import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -11,7 +12,7 @@ import os from 'node:os';
 import { extractPdf, stopOcr } from '../src/extract.mjs';
 
 const INBOX   = path.join(os.homedir(), 'Documents', 'Inkwell');
-const DATA    = path.join(os.homedir(), 'Library', 'Application Support', '365 Articles Reader');
+const DATA    = [path.join(os.homedir(), 'Library', 'Application Support', 'Inkwell'), path.join(os.homedir(), 'Library', 'Application Support', '365 Articles Reader')].find((d) => fs.existsSync(d)) || path.join(os.homedir(), 'Library', 'Application Support', 'Inkwell');
 const LIB     = path.join(DATA, 'library');
 const INDEX_F = path.join(DATA, 'index.json');
 
