@@ -60,7 +60,7 @@ const Settings = (() => {
     'set.r.save': "Seriya xavf ostida bo'lsa, 22:30 da yana bir marta",
     'set.r.test': "Sinab ko'rish",
     'set.r.testD': 'Hozir bitta eslatma yuboradi',
-    'set.r.pvT': (n) => `🔥 ${n} kun ketma-ket`,
+    'set.r.pvT': (n) => `${n} kun ketma-ket`,
     'set.r.pvB': "Bugun ham bitta maqola — va olov o'chmaydi.",
     'set.r.now': 'hozir',
     'set.r.hourly': 'Har soat',
@@ -135,7 +135,7 @@ const Settings = (() => {
     'set.r.save': 'Once more at 22:30 if your streak is at risk',
     'set.r.test': 'Try it',
     'set.r.testD': 'Sends one reminder now',
-    'set.r.pvT': (n) => `🔥 ${n}-day streak`,
+    'set.r.pvT': (n) => `${n}-day streak`,
     'set.r.pvB': 'One article today and the fire stays lit.',
     'set.r.now': 'now',
     'set.r.hourly': 'Every hour',
@@ -210,7 +210,7 @@ const Settings = (() => {
     'set.r.save': 'Ещё раз в 22:30, если серия под угрозой',
     'set.r.test': 'Проверить',
     'set.r.testD': 'Пришлёт одно напоминание сейчас',
-    'set.r.pvT': (n) => `🔥 ${n} дн. подряд`,
+    'set.r.pvT': (n) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? 'день' : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? 'дня' : 'дней'} подряд`,
     'set.r.pvB': 'Одна статья сегодня — и огонь не погаснет.',
     'set.r.now': 'сейчас',
     'set.r.hourly': 'Каждый час',
@@ -354,8 +354,8 @@ const Settings = (() => {
   // a macOS banner, drawn the way the real one will arrive
   const remindPv = () => `<div class="set-preview pv-notif"><div class="pv-banner">
       <img class="pv-ic" src="icon.png" onerror="this.style.visibility='hidden'" alt="" />
-      <div class="pv-txt"><div class="pv-top"><b>Inkwell</b><span>${esc(t('set.r.now'))}</span></div>
-        <div class="pv-t">${esc(t('set.r.pvT', streakNow()))}</div><div class="pv-b">${esc(t('set.r.pvB'))}</div></div>
+      <div class="pv-txt"><div class="pv-top"><b class="pv-t">${esc(t('set.r.pvT', streakNow()))}</b><span>${esc(t('set.r.now'))}</span></div>
+        <div class="pv-b">${esc(t('set.r.pvB'))}</div></div>
       <span class="pv-flame"><svg viewBox="0 0 64 64"><path d="M32 6c3 9 16 15 15 31-1 12-7 19-15 19s-15-7-15-18c0-8 5-13 8-16 0 6 3 10 6 11-2-11 0-20 1-27z" fill="#fff"/></svg><i>${streakNow()}</i></span>
     </div></div>`;
   const remindRows = () => {

@@ -1,11 +1,31 @@
 // Update history: every version of Inkwell and what it brought, in the app's language.
 // Release notes on GitHub are English and written for developers; these are the same
 // changes told for readers, in Uzbek, English and Russian. A new release adds its entry on top.
-// Opened from the ⋯ menu ("Update history") and from the bottom of "What's new"; the list shows
+// Opened from the ⋯ menu's Updates row and from the bottom of "What's new"; the list shows
 // each update in short, and a click opens it in full with the versions on either side.
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.48', '2026-10-27', {
+      uz: ['Menyu joyida, qisqaroq va tiniq', [
+        'Kutubxona aylantirilganda ⋯ menyusi endi orqa fonga — xira chiziq ostiga — tushib qolmaydi',
+        '⋯ menyusi qisqardi: «Yangilanishlar» bitta qator, u tarixni ochadi; «Yangilanishni tekshirish» tugmasi o‘sha sahifaning tepasida',
+        'Sozlamalar → Eslatmalar: namuna haqiqiy macOS bildirishnomasidek — sarlavha va vaqt bir qatorda, ortiqcha olov belgisi yo‘q',
+        'Ruscha seriya to‘g‘ri yoziladi: «1 день / 2 дня / 5 дней подряд»',
+      ]],
+      en: ['The menu stays put, shorter and sharp', [
+        'Scrolling the library no longer sends the ⋯ menu under the blurred band',
+        'A shorter ⋯ menu: Updates is one row that opens the history, with Check for updates at the top of that page',
+        'Settings → Reminders: the sample looks like a real macOS banner — title and time on one line, no extra flame',
+        'Russian streaks read properly: «1 день / 2 дня / 5 дней подряд»',
+      ]],
+      ru: ['Меню на месте — короче и чётче', [
+        'При прокрутке библиотеки меню ⋯ больше не уходит под размытую полосу',
+        'Меню ⋯ короче: «Обновления» — одна строка, она открывает историю, а «Проверить обновления» — вверху этой страницы',
+        'Настройки → Напоминания: образец выглядит как настоящее уведомление macOS — заголовок и время в одной строке, без лишнего огонька',
+        'Серия по-русски пишется правильно: «1 день / 2 дня / 5 дней подряд»',
+      ]],
+    }],
     ['1.1.47', '2026-10-27', {
       uz: ['Silliq surilish, toza ro‘yxatlar, boshqariladigan xotira', [
         'Sahifalar endi bir tekis sekinlashib kiradi: oldingi harakat yo‘lning uchdan birida keskin tormozlanib, keyin sudralardi va qotgandek ko‘rinardi',
@@ -557,6 +577,7 @@ const Changelog = (() => {
     document.querySelector('#stats').after(page);
     page.querySelector('#ch-back').onclick = () => (sel ? show('') : showView(from));
     page.querySelector('#ch-body').addEventListener('click', (e) => {
+      if (e.target.closest('.ch-check')) return checkUpdates();
       const go = e.target.closest('[data-v]');
       if (go) show(go.dataset.v);
     });
@@ -572,7 +593,7 @@ const Changelog = (() => {
     let k = 2;
     return `
       <h1 class="wn-ver" style="--k:0">${esc(t.title)}</h1>
-      <p class="wn-meta" style="--k:1">${esc(t.meta(LOG.length))}</p>
+      <div class="ch-intro" style="--k:1"><p class="wn-meta">${esc(t.meta(LOG.length))}</p>${typeof checkUpdates === 'function' && checkUpdates ? `<button type="button" class="wn-act ch-check">${esc(window.t('up.checkNow'))}</button>` : ''}</div>
       ${LOG.map((entry) => {
         const [v, date] = entry, [title, points] = notesOf(entry);
         const ahead = installed && newer(v, installed);
@@ -646,10 +667,6 @@ const Changelog = (() => {
   return { open, render, isOpen: () => !!page && page.classList.contains('is-active') };
 })();
 
-Object.assign(I18N.uz, { 'up.history': 'Yangilanishlar tarixi', 'up.all': 'Barcha yangilanishlar ›' });
-Object.assign(I18N.en, { 'up.history': 'Update history', 'up.all': 'Every update ›' });
-Object.assign(I18N.ru, { 'up.history': 'История обновлений', 'up.all': 'Все обновления ›' });
-if (document.querySelector('#btn-history')) {
-  document.querySelector('#btn-history b').textContent = t('up.history');
-  document.querySelector('#btn-history').addEventListener('click', () => (closeMenu(), Changelog.open()));
-}
+Object.assign(I18N.uz, { 'up.all': 'Barcha yangilanishlar ›', 'up.checkNow': 'Yangilanishni tekshirish' });
+Object.assign(I18N.en, { 'up.all': 'Every update ›', 'up.checkNow': 'Check for updates' });
+Object.assign(I18N.ru, { 'up.all': 'Все обновления ›', 'up.checkNow': 'Проверить обновления' });

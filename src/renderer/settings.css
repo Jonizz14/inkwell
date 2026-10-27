@@ -136,9 +136,10 @@
 @keyframes pv-drop { from { transform: translateY(-10px); opacity: 0; filter: blur(4px); } }
 .pv-ic { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; }
 .pv-txt { min-width: 0; flex: 1; font: 13px/1.3 var(--ui); color: var(--ink); }
-.pv-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 1px; }
-.pv-top b { font-weight: 600; color: var(--ink-2); }
-.pv-t { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* as macOS draws a banner: the title in bold with the time on its right, the text under it */
+.pv-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 1px; }
+.pv-top span { flex-shrink: 0; font-size: 11px; color: var(--muted); }
+.pv-t { font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pv-b { color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pv-flame {
   position: relative; width: 40px; height: 40px; flex-shrink: 0; border-radius: 10px;

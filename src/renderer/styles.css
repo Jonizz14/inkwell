@@ -184,6 +184,10 @@ body.in-reader #dim { opacity: 0.18; }
 .lib-head h1 { font: 600 34px/1.1 var(--serif); letter-spacing: -0.01em; margin: 0 0 6px; }
 .lib-head p { margin: 0; }
 .lib-actions { display: flex; gap: 6px; }
+/* the buttons' own layer sits above the blur band (.pblur, 9): when the header condenses, the
+   buttons are moved by a transform, which makes them a layer of their own; without a z-index
+   that layer, and the ⋯ menu inside it, went under the band and blurred */
+.lib-actions { position: relative; z-index: 10; }
 .lib-tools { display: flex; gap: 12px; align-items: center; margin-top: 28px; padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
 #search {
   flex: 1;

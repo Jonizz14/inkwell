@@ -376,7 +376,7 @@ const UpdateUI = (() => {
 // ⋯ menu → "Check for updates": asks GitHub now and answers in a toast, or with the banner when
 // there is something new; the version installed stands beside it
 Object.assign(I18N.uz, {
-  'up.check': 'Yangilanish', 'up.checking': 'Tekshirilmoqda…', 'up.latest': (v) => `Sizda eng yangi versiya · v${v}`,
+  'up.check': 'Yangilanishlar', 'up.checking': 'Tekshirilmoqda…', 'up.latest': (v) => `Sizda eng yangi versiya · v${v}`,
   'up.error': "Tekshirib bo'lmadi — internetni tekshiring", 'up.dev': "Bu nusxa o'zi yangilanmaydi (o'zingiz yig'gan nusxa)",
   'up.ready': 'Yangilanish tayyor — ilovani qayta oching', 'up.busy': 'Yangilanmoqda…',
 });
@@ -390,12 +390,19 @@ Object.assign(I18N.ru, {
   'up.error': 'Не удалось проверить — проверьте интернет', 'up.dev': 'Эта копия не обновляется сама (собрана вами)',
   'up.ready': 'Обновление готово — перезапустите приложение', 'up.busy': 'Обновляется…',
 });
+// The ⋯ menu's one Updates row (with the version beside it) opens the update history; the
+// history's own button asks GitHub (checkUpdates), so the menu stays short
+let checkUpdates = null;
 if (typeof api !== 'undefined' && api.updateCheck && document.querySelector('#btn-update')) {
   const btn = document.querySelector('#btn-update');
   if (api.appVersion) api.appVersion().then((v) => (document.querySelector('#app-ver').textContent = v ? 'v' + v : ''));
   let asking = false;
-  btn.addEventListener('click', async () => {
+  btn.addEventListener('click', () => {
     closeMenu();
+    if (typeof Changelog !== 'undefined') Changelog.open();
+    else checkUpdates();
+  });
+  checkUpdates = async () => {
     if (asking) return;
     asking = true;
     toast(t('up.checking'), 4000);
@@ -403,7 +410,7 @@ if (typeof api !== 'undefined' && api.updateCheck && document.querySelector('#bt
     asking = false;
     if (r.state === 'found') return (toast(''), document.querySelector('#toast').classList.remove('show'), UpdateUI.announce(r.info));
     toast(r.state === 'latest' ? t('up.latest', r.current) : t('up.' + r.state), 3200);
-  });
+  };
 }
 
 // main.js (update.js) found a newer release on GitHub

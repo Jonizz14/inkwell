@@ -151,6 +151,9 @@
 .ch-side small { font: 12px var(--ui); color: var(--muted); }
 .ch-side b { font: 600 15px/1.35 var(--serif); color: var(--ink); }
 #ch-body.ch-swap > * { animation: wn-in 520ms var(--ease) both; animation-delay: calc(var(--k, 0) * 50ms); }
+.ch-intro { display: flex; align-items: center; justify-content: space-between; gap: 12px 16px; flex-wrap: wrap; margin-top: 8px; }
+.ch-intro .wn-meta { margin: 0; }
+#history.is-active .ch-intro { animation: wn-in 640ms var(--ease) both; animation-delay: calc(180ms + var(--k, 0) * 70ms); }
 .wn-all { display: inline-block; margin-top: 32px; padding: 0; border: 0; background: none; font: 600 13px var(--ui); color: var(--ink); cursor: pointer; border-bottom: 1px solid var(--line-2, var(--line)); }
 .wn-all:hover { border-bottom-color: var(--ink); }
 #history.is-active :is(.wn-ver, .wn-meta, .ch-rel, .ch-top, .ch-full, .ch-nav) { animation: wn-in 640ms var(--ease) both; animation-delay: calc(180ms + var(--k, 0) * 70ms); }
