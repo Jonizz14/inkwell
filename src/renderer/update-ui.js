@@ -208,7 +208,10 @@ const UpdateUI = (() => {
       <p class="wn-meta" id="wn-meta" style="--k:1"></p>
       <div class="wn-stage" id="wn-stage" style="--k:2"></div>
       ${secs}
-      ${info.files.length ? `<section class="wn-sec" ${kk()}><h3>${esc(t.files)}</h3><div class="wn-files">${info.files.map(([n, s], i) => `<div data-i="${i}"><span class="wn-st"><i></i>${CHECK}</span><span class="wn-fn">${esc(n)}</span><span>${s} KB</span></div>`).join('')}</div></section>` : ''}`;
+      ${info.files.length ? `<section class="wn-sec" ${kk()}><h3>${esc(t.files)}</h3><div class="wn-files">${info.files.map(([n, s], i) => `<div data-i="${i}"><span class="wn-st"><i></i>${CHECK}</span><span class="wn-fn">${esc(n)}</span><span>${s} KB</span></div>`).join('')}</div></section>` : ''}
+      ${typeof Changelog !== 'undefined' ? `<button class="wn-all wn-sec" type="button" ${kk()}>${esc(window.t('up.all'))}</button>` : ''}`;
+    const all = page.querySelector('.wn-all');
+    if (all) all.onclick = () => Changelog.open();
     pageState();
   }
 

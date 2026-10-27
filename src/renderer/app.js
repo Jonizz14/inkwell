@@ -702,6 +702,7 @@ function setLang(l) {
   if (state.view === 'cards') Cards.render();
   if (typeof Player !== 'undefined') Player.render();
   if (typeof Plan !== 'undefined') state.view === 'plan' ? Plan.render() : Plan.badge();
+  if (typeof Changelog !== 'undefined' && Changelog.isOpen()) Changelog.render();
 }
 // stats, folder, theme and language live in the ⋯ menu to keep the header calm
 $('#btn-more').addEventListener('click', () => $('#more-menu').classList.toggle('show'));
