@@ -501,7 +501,8 @@ let widgetT = 0;
 let widgetNotes = null;
 ipcMain.handle('notes:save', (_e, data) => {
   widgetNotes = data;
-  if (!widgetT) widgetT = setTimeout(() => ((widgetT = 0), remind.widget(widgetNotes).catch(() => {})), 2000);
+  // a widget that can't be written must never take the app down (a throw or a non-promise included)
+  if (!widgetT) widgetT = setTimeout(() => ((widgetT = 0), Promise.resolve().then(() => remind.widget(widgetNotes)).catch(() => {})), 2000);
   return writeJson(NOTES(), data);
 });
 // a focus session started or ended: the widget's countdown can't wait for the 20 s above

@@ -300,11 +300,16 @@ let lang = 'uz';
 
 // Intl formatters are slow to make (a Statistics page asked for a new one hundreds of times):
 // one per language and options, made on first use
+// (a caller that keeps its options in a constant skips even the key: looked up by the object)
 const intlFmts = new Map();
+const intlByOpts = new WeakMap();
 function intlFmt(Kind, opts) {
+  const own = opts && intlByOpts.get(opts);
+  if (own && own.lang === lang && own.Kind === Kind) return own.f;
   const k = Kind.name + lang + JSON.stringify(opts || {});
   let f = intlFmts.get(k);
   if (!f) intlFmts.set(k, (f = new Kind(lang, opts)));
+  if (opts) intlByOpts.set(opts, { lang, Kind, f });
   return f;
 }
 const dateFmt = (opts) => intlFmt(Intl.DateTimeFormat, opts);

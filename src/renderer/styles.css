@@ -636,6 +636,7 @@ body.drawer-open #library { padding-right: var(--drawer-w); }
   overflow: hidden;
   transition: border-color var(--t-fast);
   min-height: 24px;
+  field-sizing: content; /* grows with its text without JS measuring (autosize in app.js) */
 }
 .vtr::placeholder { color: var(--ph); }
 .vtr:hover { border-bottom-color: var(--line-2); }

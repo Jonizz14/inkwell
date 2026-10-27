@@ -51,3 +51,8 @@
 .od-z { color: transparent; }
 /* waits on 0 until it is on screen, so the value never shows first and then jumps back */
 .od-s { position: absolute; left: 0; right: 0; top: 0; display: block; text-align: center; white-space: pre; line-height: var(--odh); user-select: none; pointer-events: none; }
+
+/* the long parts under the first screen of Statistics (about a thousand elements) wait until
+   scrolled near; the heights are what they measure, so the scrollbar doesn't jump */
+#stats-body > .hx-more { content-visibility: auto; contain-intrinsic-size: auto 652px; }
+#stats-body > .sx { content-visibility: auto; contain-intrinsic-size: auto 1980px; }

@@ -6,6 +6,29 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.46', '2026-10-27', {
+      uz: ['Tezroq — animatsiyalar o‘sha-o‘sha', [
+        'Maqoladan kutubxonaga qaytish endi bitta ham kadr yo‘qotmaydi: Inky har qadamda o‘zini qaytadan chizmaydi',
+        'Maqola tezroq ochiladi: bosgandan keyingi kutish uchdan birga qisqardi',
+        'Lug‘at paneli o‘lchash ishisiz ochiladi: tarjima maydonlari balandligini endi brauzer o‘zi beradi',
+        'Sozlamalar va Statistika ekrandan pastdagi qismlarni ko‘rinmaguncha hisoblamaydi',
+        'Listening ro‘yxatida sana va sonlar tezroq yoziladi',
+      ]],
+      en: ['Faster, with every animation kept', [
+        'Going back from an article to the library no longer drops a frame: Inky stopped redrawing itself from scratch at every step',
+        'Articles open sooner: the wait after a click is a third shorter',
+        'The vocabulary drawer opens without measuring: the browser now sizes the translation fields itself',
+        'Settings and Statistics leave the parts below the first screen alone until you scroll near them',
+        'Dates and numbers in the Listening list are written faster',
+      ]],
+      ru: ['Быстрее — анимации на месте', [
+        'Возврат из статьи в библиотеку больше не теряет ни одного кадра: Inky не перерисовывает себя заново на каждом шаге',
+        'Статьи открываются быстрее: ожидание после нажатия стало на треть короче',
+        'Панель словаря открывается без замеров: высоту полей перевода теперь задаёт сам браузер',
+        'Настройки и Статистика не просчитывают части ниже первого экрана, пока вы до них не прокрутите',
+        'Даты и числа в списке Listening выводятся быстрее',
+      ]],
+    }],
     ['1.1.45', '2026-10-27', {
       uz: ['Ko‘proq video va maqola, Sozlamalarda xotira', [
         'Listening: har bir kanal uchun endi taxminan 150 ta epizod chiqadi (oldin 30 ta edi), pleylistlardan 100 tagacha',

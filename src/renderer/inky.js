@@ -311,8 +311,17 @@ const Inky = (() => {
 
   let shown = '';
   let dy = 0;
+  // each frame's paths are parsed once and kept as a node; a step only swaps nodes (walking swaps
+  // every 85 ms, and re-parsing the markup each time cost ~5 ms in the middle of a page slide)
+  const nodes = {};
+  const frame = (f) => {
+    if (nodes[f]) return nodes[f];
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.innerHTML = paths(f);
+    return (nodes[f] = g);
+  };
   const draw = (f, y = 0) => {
-    if (shown !== f) (svg.innerHTML = paths(f)), (shown = f);
+    if (shown !== f) svg.replaceChildren(frame(f)), (shown = f);
     if (dy !== y) (dy = y), (me.style.transform = y ? `translateY(${y * PX}px)` : '');
   };
 

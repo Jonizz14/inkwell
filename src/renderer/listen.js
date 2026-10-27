@@ -182,11 +182,13 @@ const Listen = (() => {
     });
   }
 
+  const DAY = { day: 'numeric', month: 'short' };
+  const COMPACT = { notation: 'compact' };
   const fmtDay = (d) => {
     const x = new Date(d);
-    return isNaN(x) ? '' : dateFmt({ day: 'numeric', month: 'short' }).format(x);
+    return isNaN(x) ? '' : dateFmt(DAY).format(x);
   };
-  const fmtNum = (n) => numFmt({ notation: 'compact' }).format(n);
+  const fmtNum = (n) => numFmt(COMPACT).format(n);
   const statusOfEp = (v) => {
     const e = L().eps[v] || {};
     return e.done ? 'done' : e.t > 5 ? 'reading' : 'new';

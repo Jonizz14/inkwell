@@ -58,9 +58,19 @@ function bump(el) {
   el._bump = el.animate([{ transform: 'none' }, { transform: 'scale(1.35)', offset: 0.3 }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' });
 }
 
+// Textareas that grow with their text. Chromium does it in CSS (field-sizing: content, see .vtr),
+// with no measuring: the vocabulary drawer used to read every row's height, one forced layout
+// of the whole list (20+ ms) each time it opened. Elsewhere it is measured as before.
+const CSS_SIZING = CSS.supports('field-sizing', 'content');
 function autosize(ta) {
+  if (!ta || CSS_SIZING) return;
   ta.style.height = 'auto';
   ta.style.height = ta.scrollHeight + 'px';
+}
+function autosizeAll(tas) {
+  if (CSS_SIZING) return;
+  tas.forEach((ta) => (ta.style.height = 'auto'));
+  tas.map((ta) => ta.scrollHeight).forEach((h, i) => (tas[i].style.height = h + 'px'));
 }
 
 let pushTimer;
@@ -1500,9 +1510,7 @@ function flushVocab() {
   body.insertAdjacentHTML('beforeend', html);
   const added = [...body.children].slice(at);
   added.forEach((el) => el.classList.add('below'));
-  const tas = added.map((el) => $('.vtr', el)).filter(Boolean);
-  tas.forEach((ta) => (ta.style.height = 'auto'));
-  tas.map((ta) => ta.scrollHeight).forEach((h, i) => (tas[i].style.height = h + 'px'));
+  autosizeAll(added.map((el) => $('.vtr', el)).filter(Boolean));
 }
 function renderVocab(focusHlId, enter) {
   if (vocabRest) (clearTimeout(vocabRest.t), (vocabRest = null));
@@ -1514,10 +1522,8 @@ function renderVocab(focusHlId, enter) {
   const first = enter && !focusHlId ? Math.ceil(innerHeight / 48) + 8 : html.length;
   body.innerHTML = html.slice(0, first).join('');
   if (html.length > first) vocabRest = { html: html.slice(first).join(''), t: setTimeout(flushVocab, 600) };
-  // all writes, then all reads, then all writes: one layout for the whole list, not one per row
-  const tas = $$('#vocab-body .vtr');
-  tas.forEach((ta) => (ta.style.height = 'auto'));
-  tas.map((ta) => ta.scrollHeight).forEach((h, i) => (tas[i].style.height = h + 'px'));
+  // sized by CSS where it can be; otherwise measured in one go (one layout, not one per row)
+  autosizeAll($$('#vocab-body .vtr'));
   if (enter) {
     const fold = body.getBoundingClientRect().top + body.clientHeight;
     // every row is measured before any is marked: one layout, not one per row

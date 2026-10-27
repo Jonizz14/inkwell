@@ -227,3 +227,7 @@
 .st-clear { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 .st-clear small { font: 12px var(--ui); color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .st-bar i, .st-list li, .st-dbar i { transition: none; } }
+
+/* groups below the first screen are neither styled nor laid out until scrolled near: opening
+   Settings restyled all eight (42 ms). The browser keeps each one's real height once seen. */
+.set-group { content-visibility: auto; contain-intrinsic-size: auto 420px; }
