@@ -137,9 +137,7 @@ code { font: 12px var(--mono); background: var(--soft); padding: 1px 5px; border
    which drifts left and dims underneath; back reverses it. Only transform
    and opacity animate, so it all stays on the GPU. */
 .view {
-  /* one even deceleration: the old curve (520ms, 0.32 0.72 0 1) braked hard at a third of the way
-     and then crept for 350 ms, which read as the page sticking; this one slows down evenly */
-  --push: 440ms cubic-bezier(0.28, 0.8, 0.25, 1);
+  --push: 520ms cubic-bezier(0.32, 0.72, 0, 1); /* the user prefers this one to an evenly slowing 440 ms curve (tried in 1.1.47) */
   position: absolute;
   inset: 0;
   background: var(--bg);

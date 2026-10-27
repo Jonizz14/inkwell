@@ -17,10 +17,10 @@
   transform: translate3d(calc(100% + 48px), 0, 0);
   /* closed, it isn't drawn at all: the glass is costly to keep around off screen */
   visibility: hidden;
-  transition: transform 560ms cubic-bezier(0.28, 0.8, 0.25, 1), visibility 0s linear 620ms;
+  transition: transform 620ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s linear 620ms;
 }
 [data-theme="dark"] .ib-panel { box-shadow: -24px 0 48px rgba(0, 0, 0, 0.5); }
-.ib-panel.open { transform: none; visibility: visible; transition: transform 560ms cubic-bezier(0.28, 0.8, 0.25, 1), visibility 0s; }
+.ib-panel.open { transform: none; visibility: visible; transition: transform 620ms cubic-bezier(0.32, 0.72, 0, 1), visibility 0s; }
 .ib-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 56px 20px 10px; }
 .ib-head h2 { margin: 0; font: 700 24px/1.15 var(--serif); letter-spacing: -0.01em; color: var(--ink); }
 .ib-clear { border: 0; background: none; padding: 4px 2px; font: 500 12.5px var(--ui); color: var(--muted); cursor: pointer; transition: color 160ms; }

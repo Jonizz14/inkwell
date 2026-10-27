@@ -6,6 +6,20 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.49', '2026-10-27', {
+      uz: ['Sahifalar avvalgidek surilib kiradi', [
+        'Sahifalarning surilish harakati 1.1.47 dan oldingi holatiga qaytarildi — yangi, bir tekis sekinlashadigan harakat yoqmadi',
+        'Statistika, Sozlamalar va Yangilanishlar tarixini oldindan tayyorlash saqlanib qoldi',
+      ]],
+      en: ['Pages slide in as they used to', [
+        'The page slide is back to how it was before 1.1.47 — the new, evenly slowing motion wasn’t liked',
+        'Statistics, Settings and Update history are still prepared before they slide in',
+      ]],
+      ru: ['Страницы въезжают как раньше', [
+        'Движение страниц вернулось к тому, что было до 1.1.47 — новое, равномерно замедляющееся, не понравилось',
+        'Статистика, Настройки и История обновлений по-прежнему готовятся заранее, до въезда',
+      ]],
+    }],
     ['1.1.48', '2026-10-27', {
       uz: ['Menyu joyida, qisqaroq va tiniq', [
         'Kutubxona aylantirilganda ⋯ menyusi endi orqa fonga — xira chiziq ostiga — tushib qolmaydi',
