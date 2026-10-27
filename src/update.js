@@ -332,4 +332,4 @@ function start(win) {
   setInterval(check, EVERY).unref();
 }
 
-module.exports = { start, hold, pending: () => staged && staged.version, newer, notesOf, _test: { fetchTo, stageSmall } };
+module.exports = { start, hold, pending: () => staged && staged.version, working: () => downloading || busy, newer, notesOf, _test: { fetchTo, stageSmall } };

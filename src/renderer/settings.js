@@ -296,7 +296,7 @@ const Settings = (() => {
 
   /* ---------- previews: every group shows what its settings do, live ---------- */
   // the reader's bar in small: Music, Focus, Session, Menu and the vocab
-  const pvBar = () => `<div class="pv-bar"><span data-t="back">${t('reader.back')}</span><span class="pv-acts">${[['music', 'bar.music'], ['focus', 'focus.btn'], ['session', 'bar.session'], ['menu', 'bar.tools']]
+  const pvBar = () => `<div class="pv-bar"><span data-t="back">${t('reader.back')}</span><span class="pv-acts">${[['music', 'bar.music'], ['focus', 'focus.btn'], ['menu', 'bar.tools']]
     .map(([d, k]) => `<span data-t="${d}">${esc(t(k))}</span>`).join('')}<span class="pv-solid" data-t="vocab">${esc(t('lib.vocab'))} <i>26</i></span></span></div>`;
   const SAMPLE = 'Reading every day keeps the mind focused: you begin to notice words and ideas you would once have consciously skipped.';
   // a small window of the app itself, in the theme and language being used right now
@@ -386,7 +386,7 @@ const Settings = (() => {
   /* ---------- shortcuts: grouped tiles — what to press on the right, what it does under the name ---------- */
   // [keys, id]: label is set.k.<id>, the line under it set.kd.<id>
   const KEYS = [
-    ['set.kg.read', [[['F'], 'focus'], [['S'], 'session'], [['V'], 'vocab'], [['N'], 'note'], [['M'], 'music'], ...(IS_MAC ? [[['R'], 'ra']] : [])]],
+    ['set.kg.read', [[['F'], 'focus'], [['V'], 'vocab'], [['N'], 'note'], [['M'], 'music'], ...(IS_MAC ? [[['R'], 'ra']] : [])]],
     ['set.kg.menu', [[['⌘', 'K'], 'menu'], [['⌘', '+', '−'], 'size'], [['⌘', '0'], 'size0'], [['D'], 'theme'], [['⇧', '⌘', 'O'], 'pdf'], [['⇧', '⌘', 'A'], 'ai'], [['⇧', '⌘', 'C'], 'aicopy']]],
     ['set.kg.app', [[['⌘', 'F'], 'search'], [['⌘', ','], 'set'], [['Esc'], 'back']]],
   ];
@@ -394,8 +394,7 @@ const Settings = (() => {
   const caps = (ks) => ks.map((k) => `<kbd>${esc(CAP[k] || k)}</kbd>`).join('');
   // the app itself, small, above the list, playing the shortcuts one after another for real
   const PV_W = 1180;
-  const keysLive = () => (typeof PREVIEW !== 'undefined' && PREVIEW ? '' : `<div class="kv-live"><iframe data-src="index.html?preview&os=${encodeURIComponent(api.platform)}" tabindex="-1" title="Demo"></iframe><div class="kv-press"><span class="kv-pk"></span><span class="kv-pl"></span></div></div>`);
-  const keysRows = () => [keysLive()].concat(KEYS.map(([g, rows]) => `<div class="kv-group">${esc(t(g))}</div><div class="kv-grid">`
+  const keysRows = () => [].concat(KEYS.map(([g, rows]) => `<div class="kv-group">${esc(t(g))}</div><div class="kv-grid">`
     + rows.map(([ks, id]) => `<div class="kv-tile" data-d="${id}"><div class="kv-txt"><b>${esc(t('set.k.' + id))}</b><small>${esc(t('set.kd.' + id))}</small></div><div class="kv-caps">${caps(ks)}</div></div>`).join('')
     + '</div>'));
 

@@ -194,7 +194,7 @@ const Guardian = (() => {
     return `<li class="item new gd-row${it.img ? ' has-img' : ''}" data-url="${esc(it.url)}" style="animation-delay:${Math.min(i, 14) * 22}ms">
         <div class="item-num">${esc(fmtDay(it.date))}</div>
         <div><h3 class="item-title">${esc(it.title)}</h3><p class="item-ex">${esc(it.excerpt)}</p></div>${it.img ? `<img class="item-img" src="${esc(it.img)}" alt="" loading="lazy" decoding="async" />` : ''}
-        <div class="item-meta"><span class="gd-dl" title="${esc(t('gd.save'))}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10"/></svg></span>${it.by ? `<span>${esc(it.by.split(',')[0])}</span>` : ''}</div>
+        <div class="item-meta"><span class="gd-dl" title="${esc(t('gd.save'))}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10"/></svg></span></div>
         <i class="gd-load"></i>
       </li>`;
   }

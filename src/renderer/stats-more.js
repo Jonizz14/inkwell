@@ -411,18 +411,7 @@
     if (!host) return;
     root = host.querySelector('.sx') || host.appendChild(Object.assign(document.createElement('div'), { className: 'sx' }));
     const d = data();
-    const pct = d.sessions ? Math.round((d.done / d.sessions) * 100) : 0;
     root.innerHTML = `
-      <h2 class="sx-h">${escH(t('sx.focus'))}</h2>
-      <div class="st-tiles">
-        ${tile(t('sx.fToday'), dur(d.fToday), '', 0)}
-        ${tile(t('sx.fTotal'), dur(d.fTotal), '', 1)}
-        ${tile(t('sx.fSessions'), num(d.sessions), d.sessions ? t('sx.fSessionsSub', pct) : '', 2)}
-        ${tile(t('sx.fAvg'), d.sessions ? dur(d.avgSec) : '—', d.sessions ? t('sx.fAvgSub', d.avgAway.toFixed(1)) : '', 3)}
-      </div>
-      ${d.anyFocus ? '' : `<p class="st-empty sx-empty">${escH(t('sx.fNone'))}</p>`}
-      ${card(t('sx.fChart'), 'sx-focus', 80)}
-      ${card(t('sx.fHours'), 'sx-fhours', 120)}
       <h2 class="sx-h">${escH(t('sx.listen'))}</h2>
       <div class="st-tiles">
         ${tile(t('sx.lToday'), dur(d.listen.today), '', 4)}
@@ -448,7 +437,7 @@
     if (!root || !root.isConnected) return;
     // every width is read before any chart is written: one layout instead of one per chart
     const widths = {};
-    for (const id of ['sx-focus', 'sx-listen', 'sx-fhours', 'sx-hours', 'sx-week', 'sx-heat', 'sx-growth']) {
+    for (const id of ['sx-listen', 'sx-hours', 'sx-week', 'sx-heat', 'sx-growth']) {
       const el = root.querySelector('#' + id);
       widths[id] = Math.max(260, (el && el.clientWidth) || 600);
     }
@@ -459,15 +448,10 @@
       hover(box, tipOf);
     };
     const minAxis = (v) => Math.round(v);
-    put('sx-focus', bars(d.focus30.map((x) => x.sec / 60), { W: W('sx-focus'), today: 29, axis: minAxis, label: (i) => ((29 - i) % 7 === 0 ? fmtDay(d.focus30[i].date, { day: 'numeric', month: 'short' }) : '') }), (i) => {
-      const x = d.focus30[i];
-      return `<b>${escH(i === 29 ? t('st.today') : fmtDay(x.date))}</b><br>${escH(t('sx.fTip', Math.round(x.sec / 60), x.sessions || 0, x.away || 0))}`;
-    });
     put('sx-listen', bars(d.listen30.map((x) => x.sec / 60), { W: W('sx-listen'), today: 29, axis: minAxis, label: (i) => ((29 - i) % 7 === 0 ? fmtDay(d.listen30[i].date, { day: 'numeric', month: 'short' }) : '') }), (i) => {
       const x = d.listen30[i];
       return `<b>${escH(i === 29 ? t('st.today') : fmtDay(x.date))}</b><br>${escH(t('sx.lTip', Math.round(x.sec / 60)))}`;
     });
-    put('sx-fhours', bars(d.fHours, { W: W('sx-fhours'), H: 140, every: 3, label: (i) => pad(i), axis: (v) => Math.round(v) }), (i) => `<b>${pad(i)}:00–${pad(i)}:59</b><br>${escH(t('sx.fSessions'))}: ${d.fHours[i]}`);
     put('sx-hours', bars(d.hours, { W: W('sx-hours'), H: 150, every: 3, label: (i) => pad(i), axis: minAxis }), (i) => escH(t('sx.hourTip', pad(i), dur(d.hours[i] * 60))));
     const wd = t('sx.wd');
     put('sx-week', bars(d.weekday, { W: W('sx-week'), H: 150, label: (i) => wd[i], axis: minAxis, today: (new Date().getDay() + 6) % 7 }), (i) => escH(t('sx.dayTip', wd[i], dur(d.weekday[i] * 60))));

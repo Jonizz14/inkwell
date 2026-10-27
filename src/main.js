@@ -323,22 +323,30 @@ async function sizeOf(p) {
 }
 const NOTES_FILES = ['notes.json', 'index.json', 'remind.json', 'backups'];
 let usage = null;
-// Settings → Storage → Clear cache: Chromium's page and code caches only. Notes, articles,
-// settings and what the pages keep for themselves (localStorage) stay.
-ipcMain.handle('storage:clear', async () => {
-  const s = session.defaultSession;
-  await s.clearCache();
-  await s.clearCodeCaches({});
-  await s.clearStorageData({ storages: ['shadercache', 'cachestorage'] });
+// Settings → Storage, one action per part. 'cache': Chromium's page and code caches only (notes,
+// articles, settings and the pages' own localStorage stay). 'update': a downloaded update's
+// folder, only while nothing is being downloaded or waiting to be installed from it.
+ipcMain.handle('storage:clear', async (_e, part = 'cache') => {
+  if (part === 'update') {
+    if (update.pending() || update.working()) return false;
+    await fsp.rm(path.join(DATA(), 'update'), { recursive: true, force: true });
+  } else {
+    const s = session.defaultSession;
+    await s.clearCache();
+    await s.clearCodeCaches({});
+    await s.clearStorageData({ storages: ['shadercache', 'cachestorage'] });
+  }
   usage = null;
   return true;
 });
+// …and 'library' shows the articles' folder, anything else the data folder, in Finder/Explorer
+ipcMain.handle('storage:show', (_e, part) => shell.openPath(part === 'library' ? LIB() : DATA()));
 ipcMain.handle('storage:usage', async () => {
   if (usage && Date.now() - usage.at < 60000) return usage.v;
   // the app itself: the .app bundle on a Mac, the install folder elsewhere
   const bundle = process.platform === 'darwin' ? path.resolve(process.execPath, '../../..') : path.dirname(process.execPath);
   const names = await fsp.readdir(DATA()).catch(() => []);
-  const [app_, library, notes, update, all] = await Promise.all([
+  const [app_, library, notes, updateBytes, all] = await Promise.all([
     app.isPackaged ? sizeOf(bundle) : 0,
     sizeOf(LIB()),
     Promise.all(NOTES_FILES.map((n) => sizeOf(path.join(DATA(), n)))).then((l) => l.reduce((a, b) => a + b, 0)),
@@ -351,7 +359,7 @@ ipcMain.handle('storage:usage', async () => {
     disk = { total: f.blocks * f.bsize, free: f.bavail * f.bsize };
   } catch {}
   // everything else in the data folder is Chromium's caches and the page's own storage
-  const v = { parts: { app: app_, library, notes, cache: Math.max(0, all - library - notes - update), update }, disk };
+  const v = { parts: { app: app_, library, notes, cache: Math.max(0, all - library - notes - updateBytes), update: updateBytes }, disk, pending: update.pending() || null };
   usage = { at: Date.now(), v };
   return v;
 });

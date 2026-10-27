@@ -1,5 +1,9 @@
 'use strict';
-// Deep focus sessions (Mac only): a timed stretch of reading in focus mode with the rest of
+// Deep focus sessions were taken out of the app (Oct 2026): nothing opens the sheet any more
+// (no button, no S key, the widget opens the article). The module stays for its strings, which
+// Settings and Statistics share, and for clearing a session left in the notes.
+//
+// What it was — Deep focus sessions (Mac only): a timed stretch of reading in focus mode with the rest of
 // the world kept out. S, the timer button in the header/focus controls, or the Focus widget
 // opens the sheet: pick 10/25/45/60 minutes and breathe in for three seconds while focus
 // mode settles under a blur. While it runs a small timer sits in the corner; leaving the
@@ -732,19 +736,11 @@ const Session = (() => {
   });
   $('#fs-pause').addEventListener('click', () => pause('user'));
   $('#fs-stop').addEventListener('click', () => finish(false));
-  for (const b of $$('.fs-open')) b.addEventListener('click', open);
 
   window.addEventListener('keydown', (e) => {
     const typing = e.target.closest && e.target.closest('input, textarea, [contenteditable="true"]');
     if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
-    if (!isOpen()) {
-      if (e.key.toLowerCase() === 's' && state.view === 'reader' && state.current && !state.pop && !$('.modal.show')) {
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        open();
-      }
-      return;
-    }
+    if (!isOpen()) return;
     // the card has the keyboard while it's up
     e.stopImmediatePropagation();
     const k = e.key;
@@ -772,9 +768,9 @@ const Session = (() => {
     }
   }, true);
 
-  // the Focus widget: open the article being read (or the next one) and the sheet
+  // the Focus widget: open the article being read (or the next one)
   async function fromWidget() {
-    if (state.view === 'reader' && state.current) return open();
+    if (state.view === 'reader' && state.current) return;
     const arts = state.notes.articles || {};
     const reading = state.list
       .filter((m) => arts[m.id] && arts[m.id].progress > 0.03 && arts[m.id].progress < 0.95)
@@ -782,7 +778,6 @@ const Session = (() => {
     const next = reading || state.list.find((m) => !m.kind && (!arts[m.id] || !arts[m.id].progress)) || state.list[0];
     if (!next) return;
     await openArticle(next.id);
-    setTimeout(open, 520); // once the reader has slid in
   }
 
   window.addEventListener('beforeunload', () => {

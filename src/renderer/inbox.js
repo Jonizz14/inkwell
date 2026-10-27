@@ -49,7 +49,7 @@ const Inbox = (() => {
     const d = new Date(at);
     const now = new Date();
     const same = d.toDateString() === now.toDateString();
-    return same ? d.toLocaleTimeString(document.documentElement.lang || 'uz', { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(document.documentElement.lang || 'uz', { day: 'numeric', month: 'short' });
+    return same ? d.toLocaleTimeString(document.documentElement.lang || 'uz', { hour: '2-digit', minute: '2-digit' }) : dateFmt({ day: 'numeric', month: 'short' }).format(d);
   }
 
   function render() {

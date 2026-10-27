@@ -312,7 +312,50 @@ function intlFmt(Kind, opts) {
   if (opts) intlByOpts.set(opts, { lang, Kind, f });
   return f;
 }
-const dateFmt = (opts) => intlFmt(Intl.DateTimeFormat, opts);
+// Electron's ICU carries no Uzbek: a date came out as "M10 13". Without it, Uzbek dates are put
+// together from these names in the usual Uzbek order (13-okt · Dush, 13-okt · 2026-yil 13-oktabr).
+const UZ_DATES = (() => {
+  try {
+    return !/M\d/.test(new Intl.DateTimeFormat('uz', { month: 'short' }).format(new Date(2026, 9, 5)));
+  } catch {
+    return false;
+  }
+})();
+const UZ = {
+  mon: ['yan', 'fev', 'mar', 'apr', 'may', 'iyn', 'iyl', 'avg', 'sen', 'okt', 'noy', 'dek'],
+  month: ['yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun', 'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr'],
+  wd: ['Yak', 'Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan'],
+  weekday: ['yakshanba', 'dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma', 'shanba'],
+};
+function uzDate(o = {}) {
+  const two = (n) => String(n).padStart(2, '0');
+  return {
+    format(v) {
+      const d = v instanceof Date ? v : new Date(v);
+      const named = o.month === 'short' || o.month === 'long';
+      const m = !o.month ? '' : o.month === 'short' ? UZ.mon[d.getMonth()] : o.month === 'long' ? UZ.month[d.getMonth()] : String(d.getMonth() + 1);
+      let out;
+      if (o.day && named) out = o.year ? (o.month === 'long' ? `${d.getFullYear()}-yil ${d.getDate()}-${m}` : `${d.getDate()}-${m} ${d.getFullYear()}`) : `${d.getDate()}-${m}`;
+      else if (o.day && o.month) out = `${two(d.getDate())}.${two(d.getMonth() + 1)}${o.year ? '.' + d.getFullYear() : ''}`;
+      else if (named) out = (o.year ? `${m} ${d.getFullYear()}` : m).replace(/^./, (c) => c.toUpperCase());
+      else out = [o.day ? d.getDate() : '', o.year ? d.getFullYear() : ''].filter(Boolean).join(' ');
+      if (o.weekday) {
+        const w = o.weekday === 'long' ? UZ.weekday[d.getDay()] : UZ.wd[d.getDay()];
+        out = out ? `${w}, ${out}` : w.replace(/^./, (c) => c.toUpperCase());
+      }
+      if (o.hour) out += `${out ? ', ' : ''}${two(d.getHours())}:${two(d.getMinutes())}`;
+      return out;
+    },
+  };
+}
+const uzMade = new WeakMap();
+const dateFmt = (opts) => {
+  if (lang !== 'uz' || UZ_DATES) return intlFmt(Intl.DateTimeFormat, opts);
+  const key = opts || uzDate;
+  let f = uzMade.get(key);
+  if (!f) uzMade.set(key, (f = uzDate(opts)));
+  return f;
+};
 const numFmt = (opts) => intlFmt(Intl.NumberFormat, opts);
 
 // shortcuts are written the Mac way (⌘K, ⇧⌘O); elsewhere they read Ctrl+K, Ctrl+Shift+O

@@ -137,7 +137,9 @@ code { font: 12px var(--mono); background: var(--soft); padding: 1px 5px; border
    which drifts left and dims underneath; back reverses it. Only transform
    and opacity animate, so it all stays on the GPU. */
 .view {
-  --push: 520ms cubic-bezier(0.32, 0.72, 0, 1);
+  /* one even deceleration: the old curve (520ms, 0.32 0.72 0 1) braked hard at a third of the way
+     and then crept for 350 ms, which read as the page sticking; this one slows down evenly */
+  --push: 440ms cubic-bezier(0.28, 0.8, 0.25, 1);
   position: absolute;
   inset: 0;
   background: var(--bg);
@@ -163,7 +165,7 @@ code { font: 12px var(--mono); background: var(--soft); padding: 1px 5px; border
 .view.warm:not(.is-active) { content-visibility: visible; transition: transform var(--push), visibility 0s linear 520ms; }
 #reader, #stats, #cards, #settings, #watch { z-index: 2; transform: translate3d(100%, 0, 0); box-shadow: -1px 0 0 var(--line), -24px 0 48px rgba(0, 0, 0, 0.12); }
 #reader.is-active, #stats.is-active, #cards.is-active, #settings.is-active, #watch.is-active { transform: none; }
-#dim { position: absolute; inset: 0; z-index: 1; background: #000; opacity: 0; pointer-events: none; will-change: opacity; transition: opacity 520ms cubic-bezier(0.32, 0.72, 0, 1); }
+#dim { position: absolute; inset: 0; z-index: 1; background: #000; opacity: 0; pointer-events: none; will-change: opacity; transition: opacity var(--push); }
 body.in-reader #dim { opacity: 0.18; }
 /* the edge blurs and the bar's glass ride along with the page while it slides in: they are
    there from the first frame, never popping in after it lands */

@@ -6,6 +6,32 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.47', '2026-10-27', {
+      uz: ['Silliq surilish, toza ro‘yxatlar, boshqariladigan xotira', [
+        'Sahifalar endi bir tekis sekinlashib kiradi: oldingi harakat yo‘lning uchdan birida keskin tormozlanib, keyin sudralardi va qotgandek ko‘rinardi',
+        'Statistika, Sozlamalar va Yangilanishlar tarixi surilish boshlanishidan oldin tayyorlanadi, shuning uchun birinchi kadrdan siljiydi',
+        'The Guardian ro‘yxatida o‘ng tomondagi muallif ismlari olib tashlandi — ular qatorni surib, rasmlarni qiyshaytirardi',
+        'Sozlamalar → Xotira: har bir qismning o‘z amali bor — maqolalar va qaydlar papkasini ko‘rsatish, keshni tozalash, yuklab olingan yangilanishni o‘chirish',
+        'Sozlamalardagi jonli namoyish (ilovaning ikkinchi nusxasi) va «Chuqur fokus» sessiyalari olib tashlandi; oddiy fokus rejimi (F) joyida',
+        'O‘zbekcha sanalar to‘g‘ri yoziladi: «M10 13» o‘rniga «13-okt»',
+      ]],
+      en: ['Smooth slides, clean lists, storage you can manage', [
+        'Pages now slow down evenly as they slide in: the old motion braked hard a third of the way and then crept, which looked like sticking',
+        'Statistics, Settings and Update history are prepared before the slide starts, so they move from the first frame',
+        'The author names on the right of The Guardian list are gone — they pushed the rows around and knocked the pictures out of line',
+        'Settings → Storage: every part has its action — show the articles’ or notes’ folder, clear the cache, remove a downloaded update',
+        'The live demo in Settings (a second copy of the app) and Deep focus sessions are gone; plain focus mode (F) stays',
+        'Uzbek dates are written properly: “13-okt” instead of “M10 13”',
+      ]],
+      ru: ['Плавные переходы, чистые списки, управляемое хранилище', [
+        'Страницы теперь равномерно замедляются при въезде: прежнее движение резко тормозило на трети пути и потом ползло, будто застревало',
+        'Статистика, Настройки и История обновлений готовятся до начала перехода и двигаются с первого кадра',
+        'Имена авторов справа в списке The Guardian убраны — они сдвигали строки и сбивали картинки',
+        'Настройки → Хранилище: у каждой части своё действие — показать папку статей или заметок, очистить кэш, удалить скачанное обновление',
+        'Живая демонстрация в Настройках (вторая копия приложения) и сессии «Глубокого фокуса» убраны; обычный режим фокуса (F) остался',
+        'Узбекские даты пишутся правильно: «13-okt» вместо «M10 13»',
+      ]],
+    }],
     ['1.1.46', '2026-10-27', {
       uz: ['Tezroq — animatsiyalar o‘sha-o‘sha', [
         'Maqoladan kutubxonaga qaytish endi bitta ham kadr yo‘qotmaydi: Inky har qadamda o‘zini qaytadan chizmaydi',
@@ -575,8 +601,10 @@ const Changelog = (() => {
       <nav class="ch-nav" style="--k:3">${side(i + 1, t.older, 'prev')}${side(i - 1, t.next, 'next')}</nav>`;
   }
 
+  let drawn = ''; // what the page shows now (language, version, list or one update)
   function render() {
     if (!page) return;
+    drawn = [document.documentElement.lang, installed, sel].join('|');
     const t = tx(), i = sel ? LOG.findIndex((e) => e[0] === sel) : -1;
     if (sel && i < 0) sel = '';
     page.querySelector('#ch-back').innerHTML = sel ? `← ${esc(t.page)}` : window.t('reader.back'); // i18n.js
@@ -600,12 +628,20 @@ const Changelog = (() => {
     ensure();
     sel = '';
     listTop = 0;
-    render();
+    // built ahead while the app was idle: opening only slides it in
+    if (drawn !== [document.documentElement.lang, installed, sel].join('|')) render();
     const cur = document.querySelector('.view.is-active');
     if (cur && cur.id !== 'history') from = cur.id;
     page.querySelector('.scroller').scrollTop = 0;
-    showView('history');
+    // styled and laid out off screen first (.warm, as an article is), so the slide's first frame
+    // only paints: the page then moves from its first frame instead of after a long one
+    page.classList.add('warm');
+    settled().then(() => (showView('history'), page.classList.remove('warm')));
   }
+
+  // the page is made (and drawn, off screen and skipped by the browser) once the app is idle,
+  // so the first open doesn't spend 80 ms building it before the slide can start
+  (window.requestIdleCallback || ((fn) => setTimeout(fn, 3000)))(() => (ensure(), render()), { timeout: 5000 });
 
   return { open, render, isOpen: () => !!page && page.classList.contains('is-active') };
 })();

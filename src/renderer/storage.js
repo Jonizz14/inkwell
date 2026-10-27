@@ -1,7 +1,8 @@
 // Settings → Storage: how much room Inkwell takes on this computer, by part (the app, your
 // articles, your notes, caches, a downloaded update), and how that sits on the whole disk.
 // The sizes come from main.js (storage:usage); the bars grow in once they are known.
-// Clear cache empties Chromium's caches only (storage:clear); notes and articles are never touched.
+// Each part has its action: show the folder, clear the cache, remove a downloaded update that
+// isn't waiting to be installed (storage:show / storage:clear); notes and articles are never touched.
 const Storage = (() => {
   const TX = {
     uz: {
@@ -15,7 +16,8 @@ const Storage = (() => {
         update: ['Yangilanish', 'Yuklab olingan yangi versiya'],
       },
       disk: ['Inkwell', 'Boshqa fayllar', 'Bo‘sh'], units: ['bayt', 'KB', 'MB', 'GB', 'TB'],
-      clear: 'Keshni tozalash', clearD: 'Qaydlar, maqolalar va sozlamalar o‘chmaydi', clearing: 'Tozalanmoqda…', cleared: (n) => `Kesh tozalandi · ${n} bo‘shadi`,
+      clear: 'Tozalash', clearD: 'Hech bir amal qaydlar, maqolalar va sozlamalarni o‘chirmaydi', clearing: 'Tozalanmoqda…', cleared: (n) => `Kesh tozalandi · ${n} bo‘shadi`,
+      show: 'Ko‘rsatish', folder: 'Papkani ochish', remove: 'O‘chirish', removed: (n) => `Yangilanish fayllari o‘chirildi · ${n} bo‘shadi`, waiting: 'O‘rnatishni kutmoqda',
     },
     en: {
       title: 'Storage', total: 'Space Inkwell takes', wait: 'Counting…', fail: 'Couldn’t count it',
@@ -28,7 +30,8 @@ const Storage = (() => {
         update: ['Update', 'A new version, downloaded'],
       },
       disk: ['Inkwell', 'Other files', 'Free'], units: ['bytes', 'KB', 'MB', 'GB', 'TB'],
-      clear: 'Clear cache', clearD: 'Your notes, articles and settings stay', clearing: 'Clearing…', cleared: (n) => `Cache cleared · ${n} freed`,
+      clear: 'Clear', clearD: 'None of these touch your notes, articles or settings', clearing: 'Clearing…', cleared: (n) => `Cache cleared · ${n} freed`,
+      show: 'Show', folder: 'Open folder', remove: 'Remove', removed: (n) => `Update files removed · ${n} freed`, waiting: 'Waiting to install',
     },
     ru: {
       title: 'Хранилище', total: 'Сколько места занимает Inkwell', wait: 'Считаю…', fail: 'Не удалось посчитать',
@@ -41,7 +44,8 @@ const Storage = (() => {
         update: ['Обновление', 'Скачанная новая версия'],
       },
       disk: ['Inkwell', 'Другие файлы', 'Свободно'], units: ['байт', 'КБ', 'МБ', 'ГБ', 'ТБ'],
-      clear: 'Очистить кэш', clearD: 'Заметки, статьи и настройки останутся', clearing: 'Очищаю…', cleared: (n) => `Кэш очищен · освободилось ${n}`,
+      clear: 'Очистить', clearD: 'Ни одно действие не трогает заметки, статьи и настройки', clearing: 'Очищаю…', cleared: (n) => `Кэш очищен · освободилось ${n}`,
+      show: 'Показать', folder: 'Открыть папку', remove: 'Удалить', removed: (n) => `Файлы обновления удалены · освободилось ${n}`, waiting: 'Ждёт установки',
     },
   };
   const tx = () => TX[document.documentElement.lang] || TX.uz;
@@ -81,6 +85,15 @@ const Storage = (() => {
     const articles = (state.list || []).length;
     const desc = (k) => (typeof t.parts[k][1] === 'function' ? t.parts[k][1](articles) : t.parts[k][1]);
     const d = v.disk;
+    // what each part offers: the articles' folder, a cleared cache, a removed update (not while
+    // one waits to be installed); the app itself is left alone
+    const btn = (act, label, part) => `<button class="btn ghost set-btn st-act" data-act="${act}" data-part="${part}">${esc(label)}</button>`;
+    const action = (k) =>
+      k === 'library' ? btn('stshow', t.show, 'library')
+      : k === 'notes' ? btn('stshow', t.show, 'data')
+      : k === 'cache' && api.storageClear ? btn('stclear', t.clear, 'cache')
+      : k === 'update' && api.storageClear ? (v.pending ? `<span class="st-wait-tag">${esc(t.waiting)}</span>` : btn('stclear', t.remove, 'update'))
+      : '<span></span>';
     box.innerHTML = `
       <div class="st-top">
         <div><small>${esc(t.total)}</small><b>${esc(bytes(total))}</b></div>
@@ -90,13 +103,13 @@ const Storage = (() => {
         ${parts.map(([k, n], i) => `<i class="st-${k}" style="flex-grow:${Math.max(n / total, 0.012)};--j:${i}"></i>`).join('')}
       </div>
       <ul class="st-list">
-        ${parts.map(([k, n], i) => `<li style="--j:${i}"><span class="st-dot st-${k}"></span><div><b>${esc(t.parts[k][0])}</b><small>${esc(desc(k))}</small></div><span class="st-n">${esc(bytes(n))}<small>${esc(pct(n, total))}</small></span></li>`).join('')}
+        ${parts.map(([k, n], i) => `<li style="--j:${i}"><span class="st-dot st-${k}"></span><div><b>${esc(t.parts[k][0])}</b><small>${esc(desc(k))}</small></div><span class="st-n">${esc(bytes(n))}<small>${esc(pct(n, total))}</small></span>${action(k)}</li>`).join('')}
       </ul>
       ${d ? `<div class="st-disk">
         <div class="st-dbar"><i class="st-me" style="width:${Math.max((total / d.total) * 100, 0.6)}%"></i><i class="st-other" style="width:${Math.max(0, ((d.total - d.free - total) / d.total) * 100)}%"></i></div>
         <div class="st-dkey"><span><i class="st-me"></i>${esc(t.disk[0])}</span><span><i class="st-other"></i>${esc(t.disk[1])} · ${esc(bytes(Math.max(0, d.total - d.free - total)))}</span><span><i></i>${esc(t.disk[2])} · ${esc(bytes(d.free))}</span></div>
       </div>` : ''}
-      ${api.storageClear ? `<div class="st-clear"><small>${esc(t.clearD)}</small><button class="btn outline set-btn" data-act="stclear">${esc(t.clear)}</button></div>` : ''}`;
+      <div class="st-clear"><small>${esc(t.clearD)}</small>${api.storageShow ? `<button class="btn outline set-btn" data-act="stshow" data-part="data">${esc(t.folder)}</button>` : ''}</div>`;
     requestAnimationFrame(() => requestAnimationFrame(() => box.classList.add('in')));
   }
 
@@ -105,22 +118,25 @@ const Storage = (() => {
     api.storageUsage().then((v) => ((last = v), draw(root, v))).catch(() => draw(root, null));
   }
 
-  // the button lives in Settings' own click handler chain (Settings.add → click)
+  // the buttons live in Settings' own click handler chain (Settings.add → click)
   function click(e, root) {
-    const b = e.target.closest('[data-act="stclear"]');
+    const b = e.target.closest('[data-act="stclear"], [data-act="stshow"]');
     if (!b) return false;
-    const before = last ? last.parts.cache : 0;
+    const part = b.dataset.part;
+    if (b.dataset.act === 'stshow') return api.storageShow(part), true;
+    const before = last ? last.parts[part] : 0;
     b.disabled = true;
     b.textContent = tx().clearing;
-    api.storageClear()
+    api.storageClear(part)
       .then(() => api.storageUsage())
       .then((v) => {
         last = v;
         draw(root, v);
-        toast(tx().cleared(bytes(Math.max(0, before - v.parts.cache))));
+        const freed = bytes(Math.max(0, before - (v.parts[part] || 0)));
+        toast(part === 'update' ? tx().removed(freed) : tx().cleared(freed));
         if (typeof Haptic !== 'undefined') Haptic.level();
       })
-      .catch(() => ((b.disabled = false), (b.textContent = tx().clear)));
+      .catch(() => draw(root, last));
     return true;
   }
 
