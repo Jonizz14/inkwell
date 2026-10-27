@@ -667,7 +667,7 @@ body.drawer-open #library { padding-right: var(--drawer-w); }
   transform-origin: top right;
   transition: opacity var(--t-fast) var(--ease), transform var(--t) var(--ease), filter var(--t-fast) var(--ease), visibility 0s linear var(--t);
   -webkit-app-region: no-drag;
-  z-index: 5; /* above the header's progress line, which comes later in the DOM */
+  z-index: 10; /* above the header's progress line and the blur band under the header (.pblur, 9) */
 }
 .menu.show { opacity: 1; visibility: visible; transform: none; filter: blur(0); transition: opacity var(--t-fast) var(--ease), transform var(--t) var(--ease), filter var(--t-fast) var(--ease), visibility 0s; }
 .menu button { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 9px 10px; border-radius: 8px; transition: background var(--t-fast); }
