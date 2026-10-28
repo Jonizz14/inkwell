@@ -9,6 +9,10 @@ const remind = require('./notify');
 const update = require('./update');
 const listen = require('./listen');
 const guardian = require('./guardian');
+const tidy = require('./tidy');
+
+// the page cache stays under this; smart storage (tidy.js) looks after the rest
+app.commandLine.appendSwitch('disk-cache-size', String(tidy.CACHE_MAX));
 
 // started by the reminder agent: no window, no Dock icon unless the notification is clicked
 const REMIND_RUN = process.argv.includes('--remind');
@@ -321,7 +325,7 @@ async function sizeOf(p) {
   for (let i = 0; i < names.length; i += 64) sum += (await Promise.all(names.slice(i, i + 64).map((n) => sizeOf(path.join(p, n))))).reduce((a, b) => a + b, 0);
   return sum;
 }
-const NOTES_FILES = ['notes.json', 'index.json', 'remind.json', 'backups'];
+const NOTES_FILES = ['notes.json', 'index.json', 'remind.json', 'tidy.json', 'backups'];
 let usage = null;
 // Settings → Storage, one action per part. 'cache': Chromium's page and code caches only (notes,
 // articles, settings and the pages' own localStorage stay). 'update': a downloaded update's
@@ -336,6 +340,13 @@ ipcMain.handle('storage:clear', async (_e, part = 'cache') => {
     await s.clearCodeCaches({});
     await s.clearStorageData({ storages: ['shadercache', 'cachestorage'] });
   }
+  usage = null;
+  return true;
+});
+// smart storage, now: what it freed comes back with the new sizes
+const smart = tidy.create({ DATA, LIB, INDEX, NOTES, readJson, update });
+ipcMain.handle('storage:tidy', async () => {
+  await smart.pass({ force: true });
   usage = null;
   return true;
 });
@@ -359,7 +370,7 @@ ipcMain.handle('storage:usage', async () => {
     disk = { total: f.blocks * f.bsize, free: f.bavail * f.bsize };
   } catch {}
   // everything else in the data folder is Chromium's caches and the page's own storage
-  const v = { parts: { app: app_, library, notes, cache: Math.max(0, all - library - notes - updateBytes), update: updateBytes }, disk, pending: update.pending() || null };
+  const v = { parts: { app: app_, library, notes, cache: Math.max(0, all - library - notes - updateBytes), update: updateBytes }, disk, pending: update.pending() || null, tidy: await smart.last() };
   usage = { at: Date.now(), v };
   return v;
 });
@@ -438,7 +449,8 @@ ipcMain.handle('library:openPdf', async (_e, id) => {
   // an article saved from the web has no PDF: its own page opens instead
   const m = (await readJson(INDEX(), [])).find((a) => a.id === id);
   if (m && m.url) return shell.openExternal(m.url);
-  return shell.openPath(path.join(LIB(), String(id).replace(/\W/g, '') + '.pdf'));
+  // smart storage may have let the library's copy go while the original is where it was imported from
+  return shell.openPath(m ? tidy.pdfOf(LIB(), m) : path.join(LIB(), String(id).replace(/\W/g, '') + '.pdf'));
 });
 
 ipcMain.handle('library:dir', () => LIB());
@@ -622,6 +634,7 @@ app.whenReady().then(async () => {
     remind.widget().catch((e) => console.error('widget', e));
     // a newer release is announced in the window; it comes down when the reader asks (update.js)
     update.start(() => win);
+    smart.start();
     return;
   }
   if (app.dock) app.dock.hide();

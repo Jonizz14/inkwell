@@ -6,6 +6,32 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.51', '2026-10-28', {
+      uz: ['Aqlli xotira', [
+        'Inkwell endi xotirani o‘zi tartibda saqlaydi: ochilgandan bir daqiqa o‘tib va har 6 soatda',
+        'PDF ning asl fayli joyida turgan va aynan o‘sha fayl bo‘lsa, kutubxonadagi takror nusxasi olib tashlanadi — «PDF ni ochish» aslini ochadi',
+        'Sahifa keshi 150 MB dan oshmaydi, kod keshi 100 MB dan oshsa tozalanadi; eski yangilanish fayllari va 30 kun ishlatilmagan OCR fayllari ketadi',
+        'Diskda 2 GB dan kam joy qolsa, butun kesh tozalanadi',
+        'Sozlamalar → Xotira: «Aqlli xotira» yoqish/o‘chirish, «Hozir tozalash» va oxirgi marta qancha joy bo‘shagani',
+        'Qaydlar, so‘zlar, statistika, maqola matnlari va zaxira nusxalarga hech qachon tegmaydi',
+      ]],
+      en: ['Smart storage', [
+        'Inkwell now keeps its storage tidy on its own: a minute after it opens and every 6 hours',
+        'A PDF’s copy in the library goes when the original is still where it was imported from and is the very same file — Open PDF opens the original',
+        'The page cache stays under 150 MB, the code cache is cleared past 100 MB; old update files and OCR data unused for 30 days go',
+        'With under 2 GB free on the disk, the whole cache is cleared',
+        'Settings → Storage: Smart storage on/off, Tidy now, and what the last run freed',
+        'Notes, words, statistics, article texts and backups are never touched',
+      ]],
+      ru: ['Умное хранилище', [
+        'Inkwell теперь сам поддерживает порядок в хранилище: через минуту после запуска и каждые 6 часов',
+        'Копия PDF в библиотеке убирается, если оригинал лежит там же, откуда его импортировали, и это тот же самый файл — «Открыть PDF» откроет оригинал',
+        'Кэш страниц не больше 150 МБ, кэш кода очищается после 100 МБ; старые файлы обновлений и данные OCR, не нужные 30 дней, удаляются',
+        'Если на диске меньше 2 ГБ, очищается весь кэш',
+        'Настройки → Хранилище: «Умное хранилище» вкл/выкл, «Навести порядок» и сколько освободилось в последний раз',
+        'Заметки, слова, статистика, тексты статей и резервные копии не трогаются никогда',
+      ]],
+    }],
     ['1.1.50', '2026-10-28', {
       uz: ['Har kuni qaraydigan statistika, qimirlamaydigan sarlavha', [
         'Statistika: tepada seriya, hafta va kunlik maqsad; ostida jami natijalar — umumiy vaqt, o‘qilgan so‘zlar, tugatilgan maqolalar, lug‘atdagi so‘zlar',

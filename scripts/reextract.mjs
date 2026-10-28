@@ -56,7 +56,8 @@ const lost = [];
 for (const a of index) {
   if (only && !only.has(a.id)) continue;
   n++;
-  const pdf = path.join(LIB, a.id + '.pdf');
+  // smart storage (src/tidy.js) may have let the copy go while the imported file is still there
+  const pdf = fs.existsSync(path.join(LIB, a.id + '.pdf')) || !a.src ? path.join(LIB, a.id + '.pdf') : a.src;
   const t0 = Date.now();
   const old = await readJson(path.join(LIB, a.id + '.json')).catch(() => null);
   const res = from ? await readJson(path.join(from, a.id + '.json')) : await extractPdf(await fsp.readFile(pdf), { path: pdf });
