@@ -1754,7 +1754,13 @@ document.addEventListener('error', (e) => e.target.matches && e.target.matches('
   if (typeof Settings !== 'undefined') Settings.apply();
   applyTheme(state.notes.settings.theme || (darkMq.matches ? 'dark' : 'light'));
   state.inboxPath = await api.inboxPath();
-  setLang(state.notes.settings.lang || 'uz');
+  // a first start takes the language the launch card was drawn in (on the web, the one picked on
+  // the presentation page)
+  let firstLang = null;
+  try {
+    firstLang = localStorage.getItem('a365.lang');
+  } catch {}
+  setLang(state.notes.settings.lang || (I18N[firstLang] ? firstLang : 'uz'));
   try {
     const nm = state.notes.settings.name; // the launch card greets by it (splash.js)
     nm ? localStorage.setItem('a365.name', nm) : localStorage.removeItem('a365.name');

@@ -2,7 +2,7 @@
   "name": "Inkwell",
   "short_name": "Inkwell",
   "description": "A reader for articles: highlights, vocabulary, focus mode, notes and reading stats",
-  "start_url": "/",
+  "start_url": "/read",
   "display": "standalone",
   "background_color": "#0d0d0d",
   "theme_color": "#0d0d0d",

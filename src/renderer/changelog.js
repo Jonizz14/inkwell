@@ -6,6 +6,23 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.52', '2026-10-28', {
+      uz: ['Yangi sayt', [
+        'Saytning bosh sahifasi endi Inkwell taqdimoti: Apple uslubida, uch tilda, haqiqiy ekranlar bilan; brauzerdagi o‘quvchi /read manzilida',
+        'Telefonga o‘rnatilgan sayt to‘g‘ridan-to‘g‘ri o‘quvchini ochadi',
+        'Birinchi ochilishda ilova sahifada tanlangan tilda boshlanadi',
+      ]],
+      en: ['A new website', [
+        'The site’s front page is now Inkwell’s presentation: Apple-style, in three languages, with real screens; the reader in the browser lives at /read',
+        'The site installed on a phone opens the reader directly',
+        'On its first start the app opens in the language picked on the page',
+      ]],
+      ru: ['Новый сайт', [
+        'Главная страница сайта теперь — презентация Inkwell: в стиле Apple, на трёх языках, с настоящими экранами; читалка в браузере — по адресу /read',
+        'Сайт, установленный на телефон, сразу открывает читалку',
+        'При первом запуске приложение открывается на языке, выбранном на странице',
+      ]],
+    }],
     ['1.1.51', '2026-10-28', {
       uz: ['Aqlli xotira', [
         'Inkwell endi xotirani o‘zi tartibda saqlaydi: ochilgandan bir daqiqa o‘tib va har 6 soatda',

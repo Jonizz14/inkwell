@@ -13,8 +13,9 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
-  // the page answers to / and /index.html, with or without ?preview (the Settings demo)
-  const key = e.request.mode === 'navigate' || url.pathname === '/index.html' ? '/' : url.pathname;
+  // two pages: the presentation at / (and /index.html), the reader at /read (and /app.html)
+  const page = url.pathname === '/' || url.pathname === '/index.html' ? '/' : '/read';
+  const key = e.request.mode === 'navigate' || /^\/(index|app)\.html$/.test(url.pathname) ? page : url.pathname;
   e.respondWith(
     caches.open(V).then(async (c) => {
       const hit = await c.match(key);

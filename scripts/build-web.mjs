@@ -85,24 +85,31 @@ html = html
   .replace(/\s*<script src="[^"]+"><\/script>/g, '')
   .replace('</body>', () => `<script>${appJs}</script>\n</body>`)
   .replace("script-src 'self'", () => `script-src 'self' ${sha(splashJs)} ${sha(appJs)}`);
-fs.writeFileSync(path.join(OUT, 'index.html'), html);
+// the reader lives at /read (vercel.json below); / is the presentation page (web/landing)
+fs.writeFileSync(path.join(OUT, 'app.html'), html);
+fs.cpSync(path.join(W, 'landing'), OUT, { recursive: true });
 for (const f of [...srcs, ...fs.readdirSync(OUT).filter((f) => f.endsWith('.css'))]) fs.rmSync(path.join(OUT, f), { force: true });
 
 // the offline copy: the page and what it loads, under a name that changes with them. pdf.js and
 // the PDF reader are only cached once someone adds a PDF; the texts once api.js asks for them.
 const lazy = new Set(['extract.js', 'pdf.worker.min.mjs', 'data.json']);
+const pages = new Set(['index.html', 'app.html']);
 const files = fs.readdirSync(OUT).filter((f) => fs.statSync(path.join(OUT, f)).isFile());
 const hash = createHash('sha1');
 for (const f of files.sort()) hash.update(f).update(fs.readFileSync(path.join(OUT, f)));
 const sw = fs.readFileSync(path.join(W, 'sw.js'), 'utf8')
   .replace('__VERSION__', 'inkwell-' + hash.digest('hex').slice(0, 10))
-  .replace('__ASSETS__', JSON.stringify(['/', ...files.filter((f) => !lazy.has(f) && f !== 'index.html').map((f) => '/' + f)]));
+  .replace('__ASSETS__', JSON.stringify(['/', '/read', ...files.filter((f) => !lazy.has(f) && !pages.has(f)).map((f) => '/' + f)]));
 fs.writeFileSync(path.join(OUT, 'sw.js'), sw);
 // the service worker itself is always asked for fresh, so a new deploy is found on the next visit
-fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({ headers: [{ source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }] }] }));
+fs.writeFileSync(path.join(OUT, 'vercel.json'), JSON.stringify({
+  rewrites: [{ source: '/read', destination: '/app.html' }],
+  redirects: [{ source: '/app.html', destination: '/read', permanent: false }],
+  headers: [{ source: '/sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }] }],
+}));
 
 // the Vercel project this deploys to (kept out of the repository)
 const link = path.join(W, '.vercel');
 if (fs.existsSync(link)) fs.cpSync(link, path.join(OUT, '.vercel'), { recursive: true });
 
-console.log(`web/dist: index.html ${Math.round(fs.statSync(path.join(OUT, 'index.html')).size / 1024)} KB, ${files.length + 1} files`);
+console.log(`web/dist: app.html ${Math.round(fs.statSync(path.join(OUT, 'app.html')).size / 1024)} KB, index.html ${Math.round(fs.statSync(path.join(OUT, 'index.html')).size / 1024)} KB, ${files.length} files`);
