@@ -12,6 +12,7 @@
       h1: 'Ingliz tilida o‘qing.<br><span class="soft">Har bir so‘z siz bilan qoladi.</span>',
       sub: 'Maqolalar, podkastlar va o‘zingizning lug‘atingiz — bitta tinch, qora-oq oynada.',
       ctaRead: 'Brauzerda o‘qish', ctaBack: 'O‘qishni davom ettirish', ctaDl: 'Mac yoki Windows uchun yuklab olish',
+      zCap: 'MacBook’da, Windows’da va brauzerda — <b>bir xil Inkwell.</b>',
       hlT: 'Asosiylari.',
       g1: 'Kutubxona. <span>Sizning PDF’laringiz, The Guardian va podkastlar — bitta qatorda.</span>',
       g2: 'O‘qish. <span>Notanish so‘zni bosing — tarjimasi bilan lug‘atga tushadi.</span>',
@@ -43,6 +44,7 @@
       h1: 'Read in English.<br><span class="soft">Keep every word.</span>',
       sub: 'Articles, podcasts and a vocabulary of your own — in one calm, black-and-white window.',
       ctaRead: 'Read in your browser', ctaBack: 'Continue reading', ctaDl: 'Download for Mac or Windows',
+      zCap: 'On a Mac, on Windows, in your browser — <b>the same Inkwell.</b>',
       hlT: 'Get the highlights.',
       g1: 'Library. <span>Your PDFs, The Guardian and podcasts — side by side.</span>',
       g2: 'Reading. <span>Tap a word you don’t know — it goes to your vocabulary with its translation.</span>',
@@ -74,6 +76,7 @@
       h1: 'Читайте по-английски.<br><span class="soft">Каждое слово остаётся.</span>',
       sub: 'Статьи, подкасты и ваш собственный словарь — в одном спокойном чёрно-белом окне.',
       ctaRead: 'Читать в браузере', ctaBack: 'Продолжить чтение', ctaDl: 'Загрузить для Mac или Windows',
+      zCap: 'На Mac, на Windows и в браузере — <b>тот же Inkwell.</b>',
       hlT: 'Главное.',
       g1: 'Библиотека. <span>Ваши PDF, The Guardian и подкасты — рядом.</span>',
       g2: 'Чтение. <span>Нажмите на незнакомое слово — оно попадёт в словарь с переводом.</span>',
@@ -161,25 +164,54 @@
   const io = new IntersectionObserver((es) => es.forEach((e) => e.isIntersecting && (e.target.classList.add('in'), io.unobserve(e.target))), { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
   $$('.rv').forEach((el) => io.observe(el));
 
-  /* ---------- the bar gets its line once the page moves; the hero picture settles in ---------- */
+  /* ---------- the bar gets its line once the page moves; the laptop draws back ---------- */
   const nav = $('#nav');
-  const shot = $('#shot');
+  const zoom = $('#zoom');
+  const mac = $('#mac');
+  const lid = $('#lid');
+  const scr = $('#scr');
+  const sview = $('#sview');
+  const sbody = $('#sbody');
+  const zcap = $('#zcap');
+  const clamp = (v) => Math.min(1, Math.max(0, v));
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  const END = 0.418; // where that heading is, as a part of img/screen-body.jpg's height
+  // Over the section's 300vh: first the screen fills the window and the article scrolls in it,
+  // then the whole laptop draws back to its own size (from the screen's centre, which starts at
+  // the window's centre), and last the line under it comes in through a blur. Sizes are read
+  // without the transform (offset*), so nothing here makes the page lay out again.
+  function zoomFrame() {
+    if (reduce) return;
+    const span = zoom.offsetHeight - innerHeight;
+    const p = clamp(-zoom.getBoundingClientRect().top / span);
+    const sw = scr.offsetWidth;
+    const sh = scr.offsetHeight;
+    const cover = Math.max(innerWidth / sw, innerHeight / sh) * 1.02;
+    const s0 = Math.min(cover, innerWidth < 735 ? 2.4 : 4);
+    const e = ease(clamp((p - 0.1) / 0.65));
+    const s = s0 + (1 - s0) * e;
+    const oy = lid.offsetTop + scr.offsetTop + sh / 2; // the screen's centre, inside the laptop
+    const ty = (innerHeight / 2 - (mac.offsetTop + oy)) * (1 - e);
+    mac.style.transformOrigin = `50% ${oy}px`;
+    mac.style.transform = `translateY(${ty.toFixed(1)}px) scale(${s.toFixed(4)})`;
+    // the article scrolls until its second heading sits just under the app's bar, so the screen
+    // never ends on a line cut in half
+    sbody.style.transform = `translateY(${(-sbody.offsetHeight * END * ease(clamp(p / 0.85))).toFixed(1)}px)`;
+    const q = clamp((p - 0.74) / 0.16);
+    zcap.style.opacity = q;
+    zcap.style.filter = q < 1 ? `blur(${((1 - q) * 10).toFixed(1)}px)` : 'none';
+    zcap.style.transform = `translateY(${((1 - q) * 14).toFixed(1)}px)`;
+  }
+
   let ticking = false;
   function onScroll() {
     ticking = false;
-    const y = scrollY;
-    nav.classList.toggle('lined', y > 8);
-    if (reduce || !shot.classList.contains('in')) return;
-    const p = Math.min(1, y / (innerHeight * 0.7));
-    shot.style.transform = `perspective(1600px) rotateX(${(1 - p) * 9}deg) scale(${0.9 + p * 0.1})`;
+    nav.classList.toggle('lined', scrollY > 8);
+    zoomFrame();
   }
   addEventListener('scroll', () => ticking || ((ticking = true), requestAnimationFrame(onScroll)), { passive: true });
-  shot.addEventListener('transitionend', () => {
-    shot.style.transition = 'none';
-    onScroll();
-  }, { once: true });
-  // the picture comes in with its starting tilt; once it is in, the scroll takes over
-  if (!reduce) shot.style.transform = 'perspective(1600px) rotateX(9deg) scale(0.9)';
+  addEventListener('resize', () => requestAnimationFrame(onScroll));
+  sbody.addEventListener('load', onScroll);
 
   /* ---------- the highlights: a dot per card, the one in the middle is long ---------- */
   const gal = $('#gal');
@@ -254,11 +286,11 @@
   const INK = 'M14 2h1v1h-1zM13 3h2v1h-2zM12 4h2v1h-2zM11 5h2v1h-2zM9 6h6v1h-6zM9 7h6v1h-6zM7 8h10v1h-10zM6 9h12v1h-12zM6 10h2v1h-2zM10 10h4v1h-4zM16 10h2v1h-2zM5 11h3v1h-3zM10 11h4v1h-4zM16 11h3v1h-3zM6 12h12v1h-12zM6 13h12v1h-12zM7 14h10v1h-10zM7 15h1v1h-1zM9 15h1v1h-1zM14 15h1v1h-1zM16 15h1v1h-1z';
   $('#inky').innerHTML = `<svg viewBox="0 0 26 16" width="156" height="96" shape-rendering="crispEdges" aria-hidden="true">
       <path d="${INK}" fill="currentColor"/><path class="lid" d="M8 10h2v1h-2zM14 10h2v1h-2z" fill="currentColor"/></svg>`;
-  const lid = $('#inky .lid');
+  const inkyLid = $('#inky .lid');
   (function blink() {
     setTimeout(() => {
-      lid.style.opacity = 1;
-      setTimeout(() => ((lid.style.opacity = 0), blink()), 140);
+      inkyLid.style.opacity = 1;
+      setTimeout(() => ((inkyLid.style.opacity = 0), blink()), 140);
     }, 2200 + Math.random() * 2600);
   })();
 

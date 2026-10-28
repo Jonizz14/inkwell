@@ -57,11 +57,24 @@
     h1 .soft { color: var(--mute); }
     .sub { font: 400 clamp(19px, 2.2vw, 24px)/1.35 var(--ui); color: var(--mute); max-width: 720px; margin: 22px auto 0; }
     .ctas { display: flex; justify-content: center; align-items: center; gap: 28px; margin-top: 30px; flex-wrap: wrap; }
-    .shot { position: relative; width: min(1180px, calc(100% - 44px)); margin: 64px auto 0; transform-origin: 50% 0; will-change: transform; }
-    .frame { border-radius: 18px; overflow: hidden; background: #0d0d0d; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 40px 120px rgba(0, 0, 0, 0.6), 0 0 160px rgba(255, 255, 255, 0.06); }
-    .frame .dots { height: 30px; display: flex; gap: 8px; align-items: center; padding: 0 14px; background: #161616; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
-    .frame .dots i { width: 11px; height: 11px; border-radius: 50%; background: #3a3a3c; }
-    .glow { position: absolute; inset: 10% 8% -6%; z-index: -1; border-radius: 40px; background: radial-gradient(60% 60% at 50% 40%, rgba(255, 255, 255, 0.16), transparent 70%); filter: blur(40px); }
+
+    /* ---------- the app on a MacBook Pro: it fills the window, the article scrolls in it, and the
+       picture draws back until it is a laptop on the table (landing.js zoomFrame). Sizes inside
+       the laptop are in cqw, so it is the same machine at any width. ---------- */
+    .zoom { position: relative; height: 300vh; margin-top: 40px; }
+    .stage { position: sticky; top: 0; height: 100vh; height: 100svh; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .mac { position: relative; width: min(1040px, 86vw, (100svh - 300px) * 1.45); container-type: inline-size; transform-origin: 50% 50%; will-change: transform; }
+    .lid { position: relative; padding: 1.5cqw 1.5cqw 1.9cqw; border-radius: 2.4cqw 2.4cqw 1.2cqw 1.2cqw; background: #0a0a0b; box-shadow: 0 0 0 0.12cqw #48484a, inset 0 0 0 0.15cqw #1c1c1e, 0 3cqw 8cqw rgba(0, 0, 0, 0.55); }
+    .notch { position: absolute; z-index: 2; top: 1.5cqw; left: 50%; width: 11cqw; height: 1.55cqw; transform: translateX(-50%); background: #0a0a0b; border-radius: 0 0 0.8cqw 0.8cqw; }
+    .notch::after { content: ""; position: absolute; left: 50%; top: 0.45cqw; width: 0.55cqw; height: 0.55cqw; margin-left: -0.275cqw; border-radius: 50%; background: #1c1c2a; box-shadow: inset 0 0 0 0.1cqw #2c2c34; }
+    .screen { aspect-ratio: 16 / 10; display: flex; flex-direction: column; overflow: hidden; border-radius: 0.7cqw 0.7cqw 0.2cqw 0.2cqw; background: #0d0d0d; }
+    .sbar { width: 100%; flex: none; }
+    .sview { flex: 1; min-height: 0; overflow: hidden; }
+    .sbody { width: 100%; will-change: transform; }
+    .base { position: relative; width: 116%; margin-left: -8%; height: 2.1cqw; border-radius: 0.2cqw 0.2cqw 2.2cqw 2.2cqw / 0.2cqw 0.2cqw 1.6cqw 1.6cqw; background: linear-gradient(#f2f2f4 0, #c7c7cc 18%, #a1a1a6 60%, #6e6e73 100%); box-shadow: 0 1.4cqw 3.2cqw rgba(0, 0, 0, 0.6); }
+    .base i { position: absolute; top: 0; left: 50%; width: 15cqw; height: 0.8cqw; transform: translateX(-50%); border-radius: 0 0 1cqw 1cqw; background: linear-gradient(#8e8e93, #c7c7cc); }
+    .zcap { margin: 40px 22px 0; text-align: center; font: 600 clamp(22px, 3vw, 40px)/1.15 var(--ui); letter-spacing: -0.025em; color: var(--mute); opacity: 0; }
+    .zcap b { color: var(--ink); font-weight: 600; }
 
     /* ---------- sections ---------- */
     section { position: relative; }
@@ -151,7 +164,7 @@
     footer .mark { font-size: 17px; color: var(--ink); margin-right: auto; }
     footer a:hover { color: var(--ink); }
 
-    @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; filter: none; transform: none; transition: none; } .shot { transform: none !important; } html { scroll-behavior: auto; } }
+    @media (prefers-reduced-motion: reduce) { .rv { opacity: 1; filter: none; transform: none; transition: none; } .zoom { height: auto; } .stage { position: static; height: auto; padding: 60px 0; } .zcap { opacity: 1; } html { scroll-behavior: auto; } }
   </style>
 </head>
 <body>
@@ -176,11 +189,20 @@
         <a class="more" href="#download" data-k="ctaDl">Mac yoki Windows uchun yuklab olish</a>
       </div>
     </div>
-    <div class="shot rv" style="--d: 4" id="shot">
-      <div class="glow"></div>
-      <div class="frame"><div class="dots"><i></i><i></i><i></i></div><img src="img/reader.jpg" width="1600" height="724" alt="" /></div>
-    </div>
   </header>
+
+  <section class="zoom" id="zoom" aria-hidden="true">
+    <div class="stage">
+      <div class="mac" id="mac">
+        <div class="lid" id="lid">
+          <i class="notch"></i>
+          <div class="screen" id="scr"><img class="sbar" src="img/screen-bar.jpg" width="2400" height="94" alt="" /><div class="sview" id="sview"><img class="sbody" id="sbody" src="img/screen-body.jpg" width="2400" height="3974" alt="" /></div></div>
+        </div>
+        <div class="base"><i></i></div>
+      </div>
+      <p class="zcap" id="zcap" data-k="zCap">MacBook’da, Windows’da va brauzerda.</p>
+    </div>
+  </section>
 
   <section class="sec" id="features">
     <div class="wrap">
