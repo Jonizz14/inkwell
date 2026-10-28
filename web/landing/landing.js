@@ -115,9 +115,6 @@
     },
   };
 
-  // the installed app opens the reader, not this page
-  if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) return void location.replace('/read');
-
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
