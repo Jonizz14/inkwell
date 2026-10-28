@@ -1,43 +1,20 @@
 'use strict';
-// More statistics for the Mac app, under the shared ones (stats.js stays as the web has it):
-//  - deep focus: today / total / sessions / average tiles, 30 days of focused minutes and the
-//    hours sessions start at (notes.stats.focus, written by session.js)
-//  - habits: the hours of the day you read at (notes.stats.hours) and the average per weekday
+// More statistics, under the shared 30-day chart (stats.js):
 //  - half a year of reading as a calendar heat map
+//  - listening: 30 days of minutes, the total and the episodes finished in the card's head
 //  - vocabulary: words saved over the last 60 days, and how far the cards have got
 // Everything is one series per chart in the app's ink, so no chart needs a legend; every bar,
 // cell and point answers on hover. Same look as stats.js (.st-* classes in stats.css).
 // Needs stats.js, i18n.js and app.js (state).
 (() => {
   Object.assign(I18N.uz, {
-    'sx.focus': 'Chuqur fokus',
     'sx.listen': 'Tinglash',
-    'sx.lToday': 'Bugun tinglangan',
     'sx.lTotal': 'Jami tinglangan',
     'sx.lEps': 'Epizodlar',
-    'sx.lEpsSub': (n) => `${n} tasi boshlangan`,
-    'sx.lDict': "Yozilgan so'zlar",
-    'sx.lDictSub': (n) => `${n} ta epizod haqida`,
     'sx.lChart': "Tinglash daqiqalari — so'nggi 30 kun",
     'sx.lNone': "Hali hech narsa tinglanmagan. Kutubxonada Listening'ni oching — birinchisi shu yerda paydo bo'ladi.",
     'sx.lTip': (m) => `${m} daq. tinglangan`,
-    'sx.fToday': 'Bugun fokusda',
-    'sx.fTotal': 'Jami fokus',
-    'sx.fSessions': 'Sessiyalar',
-    'sx.fSessionsSub': (p) => `${p}% oxirigacha`,
-    'sx.fAvg': "O'rtacha sessiya",
-    'sx.fAvgSub': (a) => `sessiyada ${a} chalg'ish`,
-    'sx.fChart': "Fokus daqiqalari — so'nggi 30 kun",
-    'sx.fHours': 'Sessiyalar qaysi soatda boshlanadi',
-    'sx.fNone': "Hali sessiya yo'q. Maqolada S tugmasini bosing — birinchisi shu yerda paydo bo'ladi.",
-    'sx.fTip': (m, n, a) => `${m} daq. · ${n} sessiya · ${a} chalg'ish`,
-    'sx.habits': 'Odatlar',
-    'sx.hours': "Kunning qaysi soatida o'qiysiz",
-    'sx.week': "Hafta kunlari bo'yicha o'rtacha",
-    'sx.hourTip': (h, m) => `${h}:00–${h}:59 · ${m}`,
-    'sx.dayTip': (d, m) => `${d} · o'rtacha ${m}`,
     'sx.heat': "Yarim yil o'qish",
-    'sx.heatTip': (d, m) => `${d} · ${m}`,
     'sx.less': 'Kam',
     'sx.more': "Ko'p",
     'sx.vocab': "Lug'at",
@@ -51,34 +28,13 @@
     'sx.wd': ['Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya'],
   });
   Object.assign(I18N.en, {
-    'sx.focus': 'Deep focus',
     'sx.listen': 'Listening',
-    'sx.lToday': 'Listened today',
     'sx.lTotal': 'Listened in all',
     'sx.lEps': 'Episodes',
-    'sx.lEpsSub': (n) => `${n} started`,
-    'sx.lDict': 'Words written',
-    'sx.lDictSub': (n) => `about ${n} episodes`,
     'sx.lChart': 'Minutes listened — last 30 days',
     'sx.lNone': 'Nothing listened to yet. Open Listening in the library and the first one shows here.',
     'sx.lTip': (m) => `${m} min listened`,
-    'sx.fToday': 'Focused today',
-    'sx.fTotal': 'Total focus',
-    'sx.fSessions': 'Sessions',
-    'sx.fSessionsSub': (p) => `${p}% finished`,
-    'sx.fAvg': 'Average session',
-    'sx.fAvgSub': (a) => `${a} distractions per session`,
-    'sx.fChart': 'Focused minutes — last 30 days',
-    'sx.fHours': 'When your sessions start',
-    'sx.fNone': 'No sessions yet. Press S in an article — the first one will show up here.',
-    'sx.fTip': (m, n, a) => `${m} min · ${n} ${n === 1 ? 'session' : 'sessions'} · ${a} distractions`,
-    'sx.habits': 'Habits',
-    'sx.hours': 'The hours you read at',
-    'sx.week': 'Average by weekday',
-    'sx.hourTip': (h, m) => `${h}:00–${h}:59 · ${m}`,
-    'sx.dayTip': (d, m) => `${d} · ${m} on average`,
     'sx.heat': 'Half a year of reading',
-    'sx.heatTip': (d, m) => `${d} · ${m}`,
     'sx.less': 'Less',
     'sx.more': 'More',
     'sx.vocab': 'Vocabulary',
@@ -92,34 +48,13 @@
     'sx.wd': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
   });
   Object.assign(I18N.ru, {
-    'sx.focus': 'Глубокий фокус',
     'sx.listen': 'Аудирование',
-    'sx.lToday': 'Сегодня прослушано',
     'sx.lTotal': 'Всего прослушано',
     'sx.lEps': 'Выпуски',
-    'sx.lEpsSub': (n) => `начато: ${n}`,
-    'sx.lDict': 'Написано слов',
-    'sx.lDictSub': (n) => `о ${n} выпусках`,
     'sx.lChart': 'Минуты аудирования — последние 30 дней',
     'sx.lNone': 'Пока ничего не прослушано. Откройте Listening в библиотеке — первое появится здесь.',
     'sx.lTip': (m) => `прослушано ${m} мин`,
-    'sx.fToday': 'Сегодня в фокусе',
-    'sx.fTotal': 'Всего в фокусе',
-    'sx.fSessions': 'Сессии',
-    'sx.fSessionsSub': (p) => `${p}% до конца`,
-    'sx.fAvg': 'Средняя сессия',
-    'sx.fAvgSub': (a) => `отвлечений за сессию: ${a}`,
-    'sx.fChart': 'Минуты в фокусе — последние 30 дней',
-    'sx.fHours': 'Когда начинаются сессии',
-    'sx.fNone': 'Сессий пока нет. Нажмите S в статье — первая появится здесь.',
-    'sx.fTip': (m, n, a) => `${m} мин · сессий: ${n} · отвлечений: ${a}`,
-    'sx.habits': 'Привычки',
-    'sx.hours': 'В какие часы вы читаете',
-    'sx.week': 'В среднем по дням недели',
-    'sx.hourTip': (h, m) => `${h}:00–${h}:59 · ${m}`,
-    'sx.dayTip': (d, m) => `${d} · в среднем ${m}`,
     'sx.heat': 'Полгода чтения',
-    'sx.heatTip': (d, m) => `${d} · ${m}`,
     'sx.less': 'Меньше',
     'sx.more': 'Больше',
     'sx.vocab': 'Словарь',
@@ -157,35 +92,7 @@
   function data() {
     const st = state.notes.stats || {};
     const days = st.days || {};
-    const fo = st.focus || {};
-    const fdays = fo.days || {};
-    const log = fo.log || [];
     const today = new Date();
-    const fd = (k) => fdays[k] || { sec: 0, sessions: 0, away: 0 };
-
-    const focus30 = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = addDays(today, -i);
-      focus30.push({ date: d, ...fd(key(d)) });
-    }
-    const fTotal = Object.values(fdays).reduce((s, d) => s + (d.sec || 0), 0);
-    const done = log.filter((x) => x.done).length;
-    const fHours = Array(24).fill(0);
-    for (const x of log) fHours[new Date(x.t).getHours()] += 1;
-
-    const hours = (st.hours || Array(24).fill(0)).map((s) => s / 60);
-
-    // weekday averages over the weeks since reading started
-    const used = Object.keys(days).filter((k) => days[k].sec || days[k].words).sort();
-    const [fy, fm, fdd] = (used[0] || key(today)).split('-').map(Number);
-    const first = new Date(fy, fm - 1, fdd);
-    const wdSum = Array(7).fill(0);
-    const wdN = Array(7).fill(0);
-    for (let d = first; d <= today; d = addDays(d, 1)) {
-      wdSum[wdOf(d)] += ((days[key(d)] && days[key(d)].sec) || 0) / 60;
-      wdN[wdOf(d)]++;
-    }
-    const weekday = wdSum.map((s, i) => (wdN[i] ? s / wdN[i] : 0));
 
     // 26 weeks, Monday-first columns, ending with this week
     const start = addDays(today, -(wdOf(today) + 25 * 7));
@@ -218,30 +125,19 @@
       due: withTr.filter((v) => v.srs && v.srs.due <= now).length,
     };
 
-    // listening (listen.js): seconds per day, episodes, words written about them
+    // listening (listen.js): seconds per day and the episodes finished
     const ls = state.notes.listen || {};
     const ldays = ls.days || {};
     const listen30 = [];
     for (let i = 29; i >= 0; i--) listen30.push({ date: addDays(today, -i), sec: ldays[key(addDays(today, -i))] || 0 });
     const eps = Object.values(ls.eps || {});
-    const wrote = eps.filter((e) => e.wn);
     const listen = {
-      today: ldays[key(today)] || 0,
       total: Object.values(ldays).reduce((s, x) => s + x, 0),
       done: eps.filter((e) => e.done).length,
-      started: eps.filter((e) => e.t > 5 && !e.done).length,
-      words: wrote.reduce((s, e) => s + e.wn, 0),
-      wrote: wrote.length,
       any: eps.length > 0,
     };
 
-    return {
-      listen30, listen,
-      focus30, fToday: fd(key(today)).sec, fTotal, sessions: log.length, done,
-      avgSec: log.length ? log.reduce((s, x) => s + x.sec, 0) / log.length : 0,
-      avgAway: log.length ? log.reduce((s, x) => s + (x.away || 0), 0) / log.length : 0,
-      fHours, hours, weekday, heat, growth, srs, anyFocus: log.length > 0 || fTotal > 0,
-    };
+    return { listen30, listen, heat, growth, srs };
   }
 
   /* ---------------- charts ---------------- */
@@ -402,8 +298,7 @@
 
   /* ---------------- the page ---------------- */
 
-  const tile = (k, v, sub, i) => `<div class="st-tile" style="animation-delay:${i * 40}ms"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div><div class="st-s">${escH(sub)}</div></div>`;
-  const card = (title, id, delay, extra = '') => `<section class="st-card sx-card" style="animation-delay:${delay}ms"><div class="st-card-head"><h3>${escH(title)}</h3>${extra}</div><div class="st-chart" id="${id}"></div></section>`;
+  const card = (title, id, delay, extra = '', sum = '') => `<section class="st-card sx-card" style="animation-delay:${delay}ms"><div class="st-card-head"><h3>${escH(title)}</h3>${extra}</div>${sum}<div class="st-chart" id="${id}"></div></section>`;
 
   let root = null;
   function render(el) {
@@ -411,25 +306,15 @@
     if (!host) return;
     root = host.querySelector('.sx') || host.appendChild(Object.assign(document.createElement('div'), { className: 'sx' }));
     const d = data();
+    const lsum = d.listen.any ? `<p class="st-sum">${escH(t('sx.lTotal'))}: ${escH(dur(d.listen.total))} · ${escH(t('sx.lEps'))}: ${num(d.listen.done)}</p>` : '';
     root.innerHTML = `
+      ${card(t('sx.heat'), 'sx-heat', 160, `<div class="sx-legend"><span>${escH(t('sx.less'))}</span>${[0, 1, 2, 3, 4].map((l) => `<i class="sx-cell l${l}"></i>`).join('')}<span>${escH(t('sx.more'))}</span></div>`)}
       <h2 class="sx-h">${escH(t('sx.listen'))}</h2>
-      <div class="st-tiles">
-        ${tile(t('sx.lToday'), dur(d.listen.today), '', 4)}
-        ${tile(t('sx.lTotal'), dur(d.listen.total), '', 5)}
-        ${tile(t('sx.lEps'), num(d.listen.done), d.listen.started ? t('sx.lEpsSub', d.listen.started) : '', 6)}
-        ${tile(t('sx.lDict'), num(d.listen.words), d.listen.wrote ? t('sx.lDictSub', d.listen.wrote) : '', 7)}
-      </div>
       ${d.listen.any ? '' : `<p class="st-empty sx-empty">${escH(t('sx.lNone'))}</p>`}
-      ${card(t('sx.lChart'), 'sx-listen', 140)}
-      <h2 class="sx-h">${escH(t('sx.habits'))}</h2>
-      <div class="sx-pair">
-        ${card(t('sx.hours'), 'sx-hours', 160)}
-        ${card(t('sx.week'), 'sx-week', 200)}
-      </div>
-      ${card(t('sx.heat'), 'sx-heat', 240, `<div class="sx-legend"><span>${escH(t('sx.less'))}</span>${[0, 1, 2, 3, 4].map((l) => `<i class="sx-cell l${l}"></i>`).join('')}<span>${escH(t('sx.more'))}</span></div>`)}
+      ${card(t('sx.lChart'), 'sx-listen', 200, '', lsum)}
       <h2 class="sx-h">${escH(t('sx.vocab'))}</h2>
-      ${card(t('sx.growth'), 'sx-growth', 280)}
-      <section class="st-card sx-card" style="animation-delay:320ms"><div class="st-card-head"><h3>${escH(t('sx.cards'))}</h3><span class="sx-due">${escH(t('sx.cDue', d.srs.due))}</span></div><div id="sx-srs"></div></section>`;
+      ${card(t('sx.growth'), 'sx-growth', 240)}
+      <section class="st-card sx-card" style="animation-delay:280ms"><div class="st-card-head"><h3>${escH(t('sx.cards'))}</h3><span class="sx-due">${escH(t('sx.cDue', d.srs.due))}</span></div><div id="sx-srs"></div></section>`;
     draw(d);
   }
 
@@ -437,7 +322,7 @@
     if (!root || !root.isConnected) return;
     // every width is read before any chart is written: one layout instead of one per chart
     const widths = {};
-    for (const id of ['sx-listen', 'sx-hours', 'sx-week', 'sx-heat', 'sx-growth']) {
+    for (const id of ['sx-listen', 'sx-heat', 'sx-growth']) {
       const el = root.querySelector('#' + id);
       widths[id] = Math.max(260, (el && el.clientWidth) || 600);
     }
@@ -452,9 +337,6 @@
       const x = d.listen30[i];
       return `<b>${escH(i === 29 ? t('st.today') : fmtDay(x.date))}</b><br>${escH(t('sx.lTip', Math.round(x.sec / 60)))}`;
     });
-    put('sx-hours', bars(d.hours, { W: W('sx-hours'), H: 150, every: 3, label: (i) => pad(i), axis: minAxis }), (i) => escH(t('sx.hourTip', pad(i), dur(d.hours[i] * 60))));
-    const wd = t('sx.wd');
-    put('sx-week', bars(d.weekday, { W: W('sx-week'), H: 150, label: (i) => wd[i], axis: minAxis, today: (new Date().getDay() + 6) % 7 }), (i) => escH(t('sx.dayTip', wd[i], dur(d.weekday[i] * 60))));
     const hm = heatSvg(d.heat, W('sx-heat'));
     put('sx-heat', hm.svg, (i) => `<b>${escH(fmtDay(d.heat[i].date, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }))}</b><br>${escH(dur(d.heat[i].min * 60))}`);
     put('sx-growth', areaSvg(d.growth, W('sx-growth')), (i) => {

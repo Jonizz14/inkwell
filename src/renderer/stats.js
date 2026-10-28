@@ -178,35 +178,14 @@ const Stats = (() => {
     return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${escH(t('st.chart'))}">${g}${bars}${avgLine}${xl}${hits}</svg>`;
   }
 
-  function tile(k, v, sub, i) {
-    return `<div class="st-tile" style="animation-delay:${i * 40}ms"><div class="st-k">${escH(k)}</div><div class="st-v">${escH(v)}</div><div class="st-s">${escH(sub)}</div></div>`;
-  }
-
   let el;
   function render(target) {
     el = target || el;
     if (!el) return;
     const s = summary();
-    const tiles = [
-      tile(t('st.today'), dur(s.today.sec), t('st.words', num(s.today.words)), 0),
-      tile(t('st.avg'), dur(s.avgSec), t('st.avgSub', num(s.avgWords), s.n), 1),
-      tile(t('st.streak'), t('st.days', s.streak), t('st.bestStreak', s.best), 2),
-      tile(t('st.total'), dur(s.totalSec), t('st.totalSub', num(s.totalWords), s.finished), 3),
-    ].join('');
-    const extra = [
-      tile(t('st.finished'), num(s.finished), '', 4),
-      tile(t('st.vocab'), num(s.vocab), '', 5),
-      tile(t('st.notes'), num(s.notes), '', 6),
-      tile(t('st.bestDay'), s.bestDay && s.bestDay[1].sec ? dur(s.bestDay[1].sec) : '—', s.bestDay && s.bestDay[1].sec ? fmtDay(new Date(s.bestDay[0] + 'T00:00')) : '', 7),
-    ].join('');
-    const rows = [...s.series]
-      .reverse()
-      .map((d) => `<tr><td>${escH(fmtDay(d.date, { weekday: 'short', day: 'numeric', month: 'short' }))}</td><td>${escH(dur(d.sec))}</td><td>${escH(num(d.words))}</td></tr>`)
-      .join('');
     el.innerHTML = `
       <h1 class="st-h">${escH(t('st.title'))}</h1>
       ${s.any ? '' : `<p class="st-empty">${escH(t('st.empty'))}</p>`}
-      <div class="st-tiles">${tiles}</div>
       <section class="st-card">
         <div class="st-card-head">
           <h3>${escH(t('st.chart'))}</h3>
@@ -216,12 +195,7 @@ const Stats = (() => {
           </div>
         </div>
         <div class="st-chart" id="st-chart"></div>
-        <details class="st-table"><summary>${escH(t('st.table'))}</summary>
-          <table><thead><tr><th>${escH(t('st.date'))}</th><th>${escH(t('st.time'))}</th><th>${escH(t('st.wordsTab'))}</th></tr></thead><tbody>${rows}</tbody></table>
-        </details>
-      </section>
-      <div class="st-tiles st-extra">${extra}</div>
-      <p class="st-note">${escH(t('st.note'))}</p>`;
+      </section>`;
     drawChart(s);
     el.querySelector('#st-metric').addEventListener('click', (e) => {
       const b = e.target.closest('button');

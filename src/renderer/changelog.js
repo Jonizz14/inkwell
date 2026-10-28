@@ -6,6 +6,32 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.50', '2026-10-28', {
+      uz: ['Har kuni qaraydigan statistika, qimirlamaydigan sarlavha', [
+        'Statistika: tepada seriya, hafta va kunlik maqsad; ostida jami natijalar — umumiy vaqt, o‘qilgan so‘zlar, tugatilgan maqolalar, lug‘atdagi so‘zlar',
+        'Yangi «Rekordlar»: eng ko‘p o‘qilgan kun, eng uzun seriya, eng zo‘r hafta',
+        'Ortiqcha kataklar, faktlar, jadval va soat/hafta kuni grafiklari olib tashlandi — 30 kunlik grafik, yarim yillik xarita, tinglash va lug‘at qoldi',
+        'Kutubxona aylantirilganda sarlavha endi kichraymaydi va siljimaydi — joyida turadi',
+        'Ochilish oynasida faqat ilova nomi chiziladi; Inky u yopilgandan keyin burchakdan kirib keladi',
+        '«Bugun / Bu hafta» kartochkalari bir daqiqadan kam vaqtga nisbatan foiz ko‘rsatmaydi (+20200% kabi)',
+      ]],
+      en: ['Statistics worth checking every day, a header that stays still', [
+        'Statistics: the streak, the week and the daily goal on top; under them all-time totals — time, words read, articles finished, words saved',
+        'New Records: the best day, the longest streak, the best week',
+        'The extra tiles, facts, table and hour/weekday charts are gone — the 30-day chart, the half-year map, listening and vocabulary stay',
+        'The library header no longer shrinks or slides while you scroll — it stays where it is',
+        'The launch card draws the name alone; Inky walks in from the corner once it has gone',
+        'The Today / This week cards no longer show a percentage against less than a minute (like +20200%)',
+      ]],
+      ru: ['Статистика, в которую хочется заглядывать, и неподвижная шапка', [
+        'Статистика: наверху серия, неделя и дневная цель; под ними итоги за всё время — время, прочитанные слова, дочитанные статьи, слова в словаре',
+        'Новые «Рекорды»: лучший день, самая длинная серия, лучшая неделя',
+        'Лишние плитки, факты, таблица и графики по часам и дням недели убраны — остались график за 30 дней, карта за полгода, аудирование и словарь',
+        'Шапка библиотеки больше не сжимается и не сдвигается при прокрутке — стоит на месте',
+        'Заставка рисует только название; Инки входит из угла, когда она исчезла',
+        'Карточки «Сегодня / Эта неделя» не показывают процент относительно меньше минуты (вроде +20200%)',
+      ]],
+    }],
     ['1.1.49', '2026-10-27', {
       uz: ['Sahifalar avvalgidek surilib kiradi', [
         'Sahifalarning surilish harakati 1.1.47 dan oldingi holatiga qaytarildi — yangi, bir tekis sekinlashadigan harakat yoqmadi',

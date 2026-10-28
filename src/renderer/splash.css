@@ -31,10 +31,6 @@
 
 .sp-hi { margin-top: 24px; font: 15px/1.4 var(--ui); color: var(--ink-2); opacity: 0; filter: blur(6px); animation: sp-letter 800ms var(--sp-ease) forwards 1150ms; }
 
-/* Inky (inky.js) walks up beside the word: a slot of no width, so the name stays centred */
-.sp-pal { display: block; width: 0; align-self: baseline; }
-.sp-pal { position: relative; }
-.sp-pal .inky { display: inline-block; margin-left: 4px; opacity: 0; color: var(--ink); line-height: 0; }
 
 #splash.out { opacity: 0; pointer-events: none; }
 #splash.out .sp-mark { opacity: 0; filter: blur(12px); }

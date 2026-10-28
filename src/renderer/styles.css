@@ -171,20 +171,15 @@ body.in-reader #dim { opacity: 0.18; }
 
 /* ---------- library ---------- */
 #library { overflow-y: auto; padding: 0; }
-#library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur):not(.lib-bg) { width: min(1000px, calc(100% - 64px)); margin-left: auto; margin-right: auto; }
-/* the header stays pinned while the list scrolls under it (top: -24px keeps
-   the title clear of the window buttons once it sticks) */
-.lib-top { position: sticky; top: -24px; z-index: 20; padding-top: 56px; }
-/* its background (app.js scales it when the header condenses) */
-.lib-bg { position: absolute; inset: 0; z-index: -1; background: var(--bg); transform-origin: 50% 0; pointer-events: none; }
+#library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur) { width: min(1000px, calc(100% - 64px)); margin-left: auto; margin-right: auto; }
+/* the header stays pinned exactly where it is while the list scrolls under it: nothing in it moves */
+.lib-top { position: sticky; top: 0; z-index: 20; padding-top: 56px; background: var(--bg); }
 #list { padding-bottom: 80px; }
 .lib-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; }
 .lib-head h1 { font: 600 34px/1.1 var(--serif); letter-spacing: -0.01em; margin: 0 0 6px; }
 .lib-head p { margin: 0; }
 .lib-actions { display: flex; gap: 6px; }
-/* the buttons' own layer sits above the blur band (.pblur, 9): when the header condenses, the
-   buttons are moved by a transform, which makes them a layer of their own; without a z-index
-   that layer, and the ⋯ menu inside it, went under the band and blurred */
+/* the buttons, and the ⋯ menu inside them, sit above the blur band (.pblur, 9) */
 .lib-actions { position: relative; z-index: 10; }
 .lib-tools { display: flex; gap: 12px; align-items: center; margin-top: 28px; padding-bottom: 14px; border-bottom: 1px solid var(--ink); }
 #search {
@@ -774,19 +769,6 @@ body.drawer-open #reader .pblur { right: calc(var(--drawer-w) + 16px); }
 #reader .bar { background: color-mix(in srgb, var(--bg) 88%, transparent); }
 .pblur-top { opacity: 0; transition: opacity var(--t) var(--ease); }
 .scrolled .pblur-top { opacity: 1; }
-
-/* condensed library header (see #library scroll handler) */
-.lib-head h1 { transition: font-size var(--t-slow) var(--ease), margin var(--t-slow) var(--ease); }
-#lib-stats { max-height: 24px; overflow: hidden; transition: max-height var(--t-slow) var(--ease), opacity var(--t) var(--ease); }
-.lib-tools { transition: margin-top var(--t-slow) var(--ease), padding-bottom var(--t-slow) var(--ease); }
-#library.compact .lib-head { align-items: center; }
-#library.compact .lib-head h1 { font-size: 20px; margin: 0; }
-#library.compact #lib-stats { max-height: 0; opacity: 0; }
-#library.compact .lib-tools { margin-top: 12px; padding-bottom: 10px; }
-/* while the compact layout is put in, its sizes and gaps change at once (the FLIP in app.js moves
-   everything); only the counts line keeps its fade */
-#library.flip .lib-head h1, #library.flip .lib-tools, #library.flip .lib-chips, #library.flip .lib-head, #library.flip .shelf { transition: none !important; }
-#library.flip #lib-stats { transition: opacity var(--t) var(--ease) !important; }
 
 /* ⋯ menu: rows drop in one after another, language as a small segmented row */
 .more-menu { width: 230px; }

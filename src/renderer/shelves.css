@@ -7,7 +7,7 @@
    smaller type in a narrow window, then "+ Add" becomes "+"). The counts line under the names
    doesn't widen the block (it ends in "…" instead). */
 .lib-head h1.shelf { font-size: 28px; }
-#library:not(.compact) .lib-head h1.shelf { font-size: var(--shelf-size, 28px); }
+#library .lib-head h1.shelf { font-size: var(--shelf-size, 28px); }
 .lib-head { flex-wrap: nowrap; }
 .lib-head > div:first-child { flex: 1 1 0; min-width: 0; }
 .lib-actions { flex: none; gap: 3px; }
@@ -27,7 +27,6 @@
 .lib-chips { display: grid; grid-template-rows: 0fr; margin-top: 0; }
 .lib-chips > .chips { min-height: 0; }
 #library.gd .lib-chips { grid-template-rows: 1fr; margin-top: 8px; }
-#library.gd.compact .lib-chips { margin-top: 6px; }
 #search.busy, #btn-add.busy { opacity: 0.6; pointer-events: none; }
 #btn-add { justify-content: center; transition: opacity 160ms ease, filter 200ms ease; }
 #btn-add.swap, #lib-stats.swap, #filter button.swap { opacity: 0; filter: blur(4px); }
@@ -98,7 +97,6 @@ body.focus .doc-hero { opacity: var(--f-dim, 0.16); filter: blur(var(--f-blur, 4
 .gd-skel i:nth-child(2) { height: 16px; width: 70%; }
 .gd-skel i:nth-child(3) { grid-column: 2; width: 92%; }
 @keyframes gd-breathe { 50% { opacity: 0.45; } }
-#library.compact .shelf { gap: 12px; }
 /* the tools sit a little closer under an open chips row */
 #library.gd .lib-tools { margin-top: 14px; }
 #filter button { transition: color var(--t-fast) var(--ease), background var(--t-fast) var(--ease), opacity 160ms ease, filter 200ms ease; }
@@ -106,6 +104,5 @@ body.focus .doc-hero { opacity: var(--f-dim, 0.16); filter: blur(var(--f-blur, 4
 #chips button:focus { outline: none; }
 #chips button:focus-visible { box-shadow: 0 0 0 3px var(--ring); }
 /* on every shelf the buttons stay at the right end of the titles' row (the user wants them
-   after "Listening"); condensing only moves them up, never across */
-/* the buttons line up with the titles, not with the counts line under them */
-#library:not(.compact) .lib-actions { align-self: flex-start; margin-top: -3px; }
+   after "Listening"), lined up with the titles, not with the counts line under them */
+#library .lib-actions { align-self: flex-start; margin-top: -3px; }

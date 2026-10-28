@@ -270,31 +270,8 @@ const Inky = (() => {
     };
   }
 
-  /* ---------- on the launch card: as the name is drawn Inky drops in from above, lands beside it
-     and blinks once — nothing more; the card then melts with it, and the corner
-     one walks in from the edge ---------- */
-  const word = document.querySelector('#splash:not(.still) .sp-word');
-  let splashOn = false;
-  if (word && typeof Splash !== 'undefined' && Splash.t0 != null) {
-    splashOn = true;
-    const SP = 3;
-    const slot = document.createElement('span');
-    slot.className = 'sp-pal';
-    slot.innerHTML = html('idle', SP);
-    const ink = slot.firstChild;
-    const pic = ink.firstChild;
-    word.append(slot);
-    const put = (f, y = 0) => {
-      pic.innerHTML = paths(f);
-      ink.style.transform = `translateY(${y * SP}px)`;
-    };
-    const at = (ms, fn) => setTimeout(fn, Math.max(0, Splash.t0 + ms - performance.now()));
-    put('idle', -12);
-    // it just drops in beside the name, lands and blinks once
-    [[-12, 'idle'], [-6, 'idle'], [0, 'idle']].forEach(([y, f], i) => at(1000 + i * 60, () => ((ink.style.opacity = 1), put(f, y))));
-    at(1700, () => put('blink'));
-    at(1820, () => put('idle'));
-  }
+  // the launch card is the name alone; Inky walks in from the edge once it has gone
+  let splashOn = !!document.querySelector('#splash:not(.still)');
 
   /* ---------- the companion ---------- */
   const PX = 3;

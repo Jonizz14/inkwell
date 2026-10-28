@@ -1,5 +1,4 @@
-/* ── Statistics top row, facts and records (stats-hero.js, Mac only) ──
-   Ink only, the same tiles as the rest of the page. */
+/* ── Statistics top card, totals and records (stats-hero.js) ── ink only, like the rest of the page */
 .hx-hero { display: grid; grid-template-columns: 1fr 1.3fr 1fr; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 14px; animation: st-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 .hx-p { padding: 16px 16px 14px; min-width: 0; display: flex; flex-direction: column; }
 .hx-p + .hx-p { border-left: 1px solid var(--line); }
@@ -25,6 +24,9 @@
 @media (max-width: 820px) { .hx-hero { grid-template-columns: 1fr; } .hx-p + .hx-p { border-left: 0; border-top: 1px solid var(--line); } }
 @media (prefers-reduced-motion: reduce) { .hx-line b, .hx-bars b { animation: none; } }
 
+/* all-time totals: four tiles under the top card */
+.hx-totals { margin-bottom: 12px; }
+
 /* records: one row each, an icon, what it is, when, and the number on the right */
 .hx-recs { padding: 4px 16px; }
 .hx-rec { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); animation: st-rise 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
@@ -34,4 +36,3 @@
 .hx-rl { font: 14px var(--ui); color: var(--ink); }
 .hx-rl small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
 .hx-rec .st-v { margin: 0; font-size: 20px; }
-

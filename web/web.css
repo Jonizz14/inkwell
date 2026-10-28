@@ -13,13 +13,13 @@ html.web:not(.speech) #ra-btn { display: none; }
   /* the pages waiting off to the right for their slide (reader, plan, statistics…) widened the
      page to twice the screen: phones ignore overflow-x on body, but not paint containment */
   body { contain: paint; }
-  #library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur):not(.lib-bg) { width: calc(100% - 32px); }
+  #library > *:not(.lib-top):not(.pblur), .lib-top > *:not(.pblur) { width: calc(100% - 32px); }
   .lib-top { padding-top: 24px; }
   /* the shelf names take the whole first row (fitHead in app.js sizes them to it), the buttons
      go under them; a third shelf made the names wider than a phone and the page scrolled sideways */
   .lib-head { flex-wrap: wrap; align-items: flex-start; gap: 12px; }
   .lib-head > div:first-child { flex: 1 1 100%; min-width: 0; }
-  #library:not(.compact) .lib-head h1.shelf { font-size: var(--shelf-size, 24px); }
+  #library .lib-head h1.shelf { font-size: var(--shelf-size, 24px); }
   .lib-actions { flex: 1 1 100%; flex-wrap: wrap; gap: 4px; }
   .lib-tools { flex-direction: column; align-items: stretch; gap: 10px; margin-top: 18px; }
   .lib-tools .seg { overflow-x: auto; scrollbar-width: none; }

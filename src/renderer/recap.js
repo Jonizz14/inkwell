@@ -427,7 +427,8 @@ const Recap = (() => {
     const w = data('week');
     const pct = (a, b) => (b ? Math.round(((a - b) / b) * 100) : null);
     const card = (k, title, x) => {
-      const p = pct(x.sec, x.was);
+      // against less than a minute the percentage means nothing (+20200%): no trend then
+      const p = x.was >= 60 ? pct(x.sec, x.was) : null;
       const trend = p == null ? '' : `<span class="rc-trend ${p > 0 ? 'up' : p < 0 ? 'down' : ''}">${p > 0 ? ARROW : p < 0 ? ARROW : ''}${Math.abs(p)}%</span>`;
       return `<button class="rc-card" data-open="${k}"><span class="rc-ck">${escH(title)}</span><span class="rc-cv">${escH(t('st.min', Math.round(x.sec / 60)))}${trend}</span><span class="rc-co">${escH(t('rc.open'))} →</span></button>`;
     };

@@ -591,42 +591,6 @@ $('#scroller').addEventListener('scroll', onScroll, { passive: true });
 for (const [sc, view] of [[$('#library'), $('#library')], [$('#scroller'), $('#reader')]]) {
   sc.addEventListener('scroll', () => view.classList.toggle('scrolled', sc.scrollTop > 4), { passive: true });
 }
-// the pinned library header condenses to one slim row once the list is under way;
-// the gap between the two thresholds keeps it from flickering as its height changes
-// The change is one continuous move (FLIP): every part of the header is measured, the compact
-// layout is put in at once, and each part glides from where it was to where it now is by
-// transform only — the title scales down as it goes, the buttons move up beside it, the chips,
-// the search row and the list follow. Nothing is laid out frame by frame.
-const FLIP_PARTS = ['.lib-head h1', '.lib-actions', '.lib-chips', '.lib-tools', '#import-bar', '#list', '.lib-top .pblur-top'];
-// the header's own background is a layer of its own, so it can shrink with the rest (by scale)
-const libBg = Object.assign(document.createElement('i'), { className: 'lib-bg' });
-$('.lib-top').prepend(libBg);
-function setCompact(lib, on) {
-  if (lib.classList.contains('compact') === on) return;
-  Haptic.level();
-  if (reduceMotion.matches) return void lib.classList.toggle('compact', on);
-  const els = FLIP_PARTS.map((s) => $(s, lib)).filter((el) => el && !el.hidden);
-  for (const el of els) el.getAnimations().forEach((a) => a.finish());
-  const top = $('.lib-top', lib);
-  const before = els.map((el) => el.getBoundingClientRect());
-  const hA = top.offsetHeight;
-  lib.classList.add('flip');
-  lib.classList.toggle('compact', on);
-  const after = els.map((el) => el.getBoundingClientRect());
-  const hB = top.offsetHeight;
-  lib.classList.remove('flip');
-  libBg.getAnimations().forEach((a) => a.finish());
-  if (hB && Math.abs(hA - hB) > 0.5) libBg.animate([{ transform: `scaleY(${hA / hB})` }, { transform: 'none' }], { duration: 460, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
-  els.forEach((el, i) => {
-    const a = before[i];
-    const b = after[i];
-    const dx = a.left - b.left;
-    const dy = a.top - b.top;
-    const s = el.matches('h1') && b.height ? a.height / b.height : 1;
-    if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(s - 1) < 0.005) return;
-    el.animate([{ transformOrigin: '0 0', transform: `translate(${dx}px, ${dy}px) scale(${s})` }, { transformOrigin: '0 0', transform: 'none' }], { duration: 460, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' });
-  });
-}
 // The shelf titles and the buttons share one row. When the row is narrower than both, the titles'
 // type shrinks to fit (down to 18px) rather than the buttons wrapping under them.
 (function fitHead() {
@@ -639,7 +603,7 @@ function setCompact(lib, on) {
   const add = $('#btn-add');
   let actsFull = 0; // the buttons' width with "+ Add"'s words and their usual spacing
   const fit = () => {
-    if ($('#library').classList.contains('compact') || !head.clientWidth) return;
+    if (!head.clientWidth) return;
     const cs = getComputedStyle(shelf);
     const cur = parseFloat(cs.fontSize) || BASE;
     const btns = [...shelf.children];
@@ -667,12 +631,6 @@ function setCompact(lib, on) {
   ro.observe(acts);
   document.fonts.ready.then(fit);
 })();
-$('#library').addEventListener('scroll', (e) => {
-  const lib = e.currentTarget;
-  if (lib.scrollTop > 60) setCompact(lib, true);
-  else if (lib.scrollTop < 8) setCompact(lib, false);
-}, { passive: true });
-
 $('#btn-back').addEventListener('click', backToLibrary);
 async function backToLibrary() {
   if (state.view === 'library') return;
