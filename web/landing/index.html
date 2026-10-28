@@ -47,6 +47,8 @@
     .more { color: var(--ink); font-size: 17px; white-space: nowrap; }
     .more::after { content: " ›"; }
     .more:hover { text-decoration: underline; }
+    .more.film::after { content: ""; }
+    .more.film::before { content: ""; display: inline-block; width: 26px; height: 26px; margin-right: 8px; vertical-align: -7px; border-radius: 50%; background: var(--ink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 7l9 5-9 5z'/%3E%3C/svg%3E") center / 16px no-repeat; }
     @media (max-width: 734px) { .nav .lk { display: none; } }
 
     /* ---------- hero ---------- */
@@ -187,6 +189,7 @@
       <div class="ctas rv" style="--d: 3">
         <a class="pill" href="/read" data-k="ctaRead">Brauzerda o‘qish</a>
         <a class="more" href="#download" data-k="ctaDl">Mac yoki Windows uchun yuklab olish</a>
+        <a class="more film" href="film.html" data-k="ctaFilm">Filmni ko‘rish</a>
       </div>
     </div>
   </header>

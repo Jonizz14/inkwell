@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:; media-src 'self'" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>Inkwell — film</title>
+  <link rel="icon" href="icon-192.png" />
+  <!-- Inkwell's one-minute film, played like a video but made of the page itself (film.js).
+       A 1920×1080 stage scaled to the window; every frame is worked out from the music's clock,
+       so scenes land on the beat (120 bpm) and a frame can be drawn for any time t. -->
+  <style>
+    :root { --ink: #f5f5f7; --mute: #86868b; --ui: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", Inter, Roboto, sans-serif; --serif: "Iowan Old Style", Charter, Georgia, serif; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: #000; color: var(--ink); overflow: hidden; font-family: var(--ui); -webkit-font-smoothing: antialiased; }
+    #frame { position: fixed; inset: 0; display: grid; place-items: center; }
+    #stage { position: relative; width: 1920px; height: 1080px; flex: none; overflow: hidden; background: #000; transform-origin: 50% 50%; }
+    .sc { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; will-change: opacity, transform, filter; }
+    .big { font: 600 168px/1.02 var(--ui); letter-spacing: -0.045em; text-align: center; margin: 0; }
+    .mid { font: 600 104px/1.05 var(--ui); letter-spacing: -0.04em; text-align: center; margin: 0; }
+    .sub { font: 500 44px/1.25 var(--ui); letter-spacing: -0.02em; color: var(--mute); text-align: center; margin: 28px 0 0; }
+    .w { display: inline-block; will-change: opacity, transform, filter; }
+    .soft { color: var(--mute); }
+
+    /* the name, drawn as the app's launch card draws it */
+    .word { font: 600 220px/1 var(--serif); letter-spacing: -0.02em; display: flex; align-items: baseline; }
+    .word .i { position: relative; display: inline-block; }
+    .word .stem { display: inline-block; }
+    .word .dot { position: absolute; left: 50%; top: -0.06em; width: 0.19em; height: 0.19em; margin-left: -0.095em; border-radius: 50%; background: var(--ink); }
+    .word .l { display: inline-block; }
+
+    /* reading: a paragraph, words saved on the beat */
+    .para { width: 1400px; font: 400 62px/1.75 var(--serif); color: #e8e8ed; }
+    .para .m { position: relative; border-radius: 6px; transition: none; }
+    .para .m.on { background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 -4px 0 #f5f5f7; }
+    .tip { position: absolute; left: 50%; bottom: calc(100% + 14px); white-space: nowrap; font: 600 30px/1 var(--ui); padding: 16px 22px; border-radius: 16px; background: #1c1c1e; color: var(--ink); box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12), 0 20px 50px rgba(0, 0, 0, 0.5); opacity: 0; }
+    .tip small { display: block; font: 600 18px var(--ui); letter-spacing: 0.08em; color: var(--mute); margin-bottom: 10px; text-transform: uppercase; }
+    .count { margin-top: 70px; display: inline-flex; gap: 18px; align-items: center; padding: 20px 34px; border-radius: 99px; background: rgba(255, 255, 255, 0.09); font: 600 36px var(--ui); }
+    .count b { font-variant-numeric: tabular-nums; min-width: 1.2ch; }
+
+    /* a flashcard that turns over */
+    .cardwrap { perspective: 2400px; }
+    .card { position: relative; width: 1100px; height: 560px; transform-style: preserve-3d; }
+    .face { position: absolute; inset: 0; border-radius: 48px; background: #1c1c1e; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 60px 140px rgba(0, 0, 0, 0.6); backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; }
+    .face.back { transform: rotateY(180deg); }
+    .face .fw { font: 600 120px/1 var(--serif); }
+    .face .ft { font: 600 64px/1.1 var(--ui); letter-spacing: -0.02em; }
+    .face .fs { font: 400 36px/1.4 var(--serif); color: var(--mute); max-width: 860px; text-align: center; }
+    .face .fs b { color: var(--ink); font-weight: 600; }
+    .grades { display: flex; gap: 22px; margin-top: 50px; }
+    .grades span { width: 320px; padding: 26px 0; border-radius: 26px; background: #161618; text-align: center; font: 600 34px var(--ui); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.06); }
+
+    /* streak */
+    .streak { display: flex; align-items: flex-end; gap: 90px; }
+    .streak .n { font: 700 420px/0.85 var(--ui); letter-spacing: -0.06em; font-variant-numeric: tabular-nums; }
+    .bars { display: flex; gap: 22px; align-items: flex-end; height: 260px; }
+    .bars i { width: 70px; height: 100%; border-radius: 18px; background: rgba(255, 255, 255, 0.12); transform-origin: bottom; display: block; }
+    .bars i b { display: block; width: 100%; height: 100%; border-radius: 18px; background: var(--ink); transform-origin: bottom; transform: scaleY(0); }
+
+    /* totals */
+    .tiles { display: grid; grid-template-columns: repeat(3, 480px); gap: 36px; }
+    .tile { border-radius: 40px; padding: 48px 48px 44px; background: #111; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.07); }
+    .tile small { display: block; font: 600 24px var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--mute); }
+    .tile b { display: block; margin-top: 18px; white-space: nowrap; font: 700 84px/1 var(--serif); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+    /* the laptop (same machine as the site's) */
+    .mac { position: relative; width: 1180px; container-type: inline-size; will-change: transform; }
+    .lid { position: relative; padding: 1.5cqw 1.5cqw 1.9cqw; border-radius: 2.4cqw 2.4cqw 1.2cqw 1.2cqw; background: #0a0a0b; box-shadow: 0 0 0 0.12cqw #48484a, inset 0 0 0 0.15cqw #1c1c1e, 0 3cqw 8cqw rgba(0, 0, 0, 0.55); }
+    .notch { position: absolute; z-index: 2; top: 1.5cqw; left: 50%; width: 11cqw; height: 1.55cqw; transform: translateX(-50%); background: #0a0a0b; border-radius: 0 0 0.8cqw 0.8cqw; }
+    .screen { aspect-ratio: 16 / 10; display: flex; flex-direction: column; overflow: hidden; border-radius: 0.7cqw 0.7cqw 0.2cqw 0.2cqw; background: #0d0d0d; }
+    .sbar { width: 100%; flex: none; display: block; }
+    .sview { flex: 1; min-height: 0; overflow: hidden; }
+    .sbody { width: 100%; display: block; will-change: transform; }
+    .base { position: relative; width: 116%; margin-left: -8%; height: 2.1cqw; border-radius: 0.2cqw 0.2cqw 2.2cqw 2.2cqw / 0.2cqw 0.2cqw 1.6cqw 1.6cqw; background: linear-gradient(#f2f2f4 0, #c7c7cc 18%, #a1a1a6 60%, #6e6e73 100%); }
+    .base i { position: absolute; top: 0; left: 50%; width: 15cqw; height: 0.8cqw; transform: translateX(-50%); border-radius: 0 0 1cqw 1cqw; background: linear-gradient(#8e8e93, #c7c7cc); }
+    .maccap { position: absolute; left: 0; right: 0; bottom: 56px; text-align: center; }
+
+    /* a screen as a picture */
+    .shot { border-radius: 36px; overflow: hidden; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08), 0 60px 140px rgba(0, 0, 0, 0.6); will-change: transform; }
+    .shot img { display: block; width: 100%; height: auto; }
+    .split { display: flex; align-items: center; gap: 90px; padding: 0 140px; width: 100%; }
+    .split .txt { flex: 0 0 600px; }
+    .split .txt .mid { text-align: left; }
+    .split .txt .sub { text-align: left; }
+
+    .inky svg { width: 420px; height: auto; display: block; }
+    .inky { color: var(--ink); }
+
+    .mont { display: grid; grid-template-columns: repeat(3, 560px); gap: 28px; }
+    .mont .shot { border-radius: 26px; height: 330px; }
+    .mont .shot img { height: 100%; object-fit: cover; object-position: left top; }
+
+    .end .word { font-size: 190px; }
+    .end .url { margin-top: 44px; font: 500 40px var(--ui); color: var(--mute); letter-spacing: -0.01em; }
+    .credit { position: absolute; left: 0; right: 0; bottom: 46px; text-align: center; font: 500 20px var(--ui); color: #5a5a5e; letter-spacing: 0; }
+
+    /* the poster before it plays, and the bar under it */
+    #poster { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; background: radial-gradient(70% 60% at 50% 45%, #141416, #000); cursor: pointer; transition: opacity 0.6s, filter 0.6s; }
+    #poster.gone { opacity: 0; filter: blur(14px); pointer-events: none; }
+    #poster h1 { margin: 0; font: 600 clamp(40px, 7vw, 88px)/1 var(--serif); }
+    #poster p { margin: 0; color: var(--mute); font: 500 clamp(16px, 2vw, 22px) var(--ui); }
+    #play { width: 96px; height: 96px; border-radius: 50%; border: 0; background: var(--ink); display: grid; place-items: center; cursor: pointer; transition: transform 0.2s; }
+    #play:active { transform: scale(0.95); }
+    #play svg { width: 34px; height: 34px; margin-left: 6px; fill: #000; }
+    #bar { position: fixed; left: 0; bottom: 0; height: 3px; width: 100%; z-index: 4; background: rgba(255, 255, 255, 0.08); opacity: 0; transition: opacity 0.4s; }
+    #bar i { display: block; height: 100%; width: 100%; background: rgba(255, 255, 255, 0.6); transform-origin: left; transform: scaleX(0); }
+    body.awake #bar { opacity: 1; }
+    #back { position: fixed; top: 18px; left: 18px; z-index: 6; font: 500 14px var(--ui); color: var(--mute); text-decoration: none; padding: 8px 14px; border-radius: 99px; background: rgba(255, 255, 255, 0.08); opacity: 0; transition: opacity 0.4s; }
+    body.awake #back, #poster:not(.gone) ~ #back { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="frame"><div id="stage"></div></div>
+  <div id="bar"><i></i></div>
+  <div id="poster">
+    <h1>inkwell</h1>
+    <button id="play" aria-label="Play"><svg viewBox="0 0 24 24"><path d="M6 4l15 8-15 8z" /></svg></button>
+    <p id="ptext">Filmni ko‘rish · 1 daqiqa</p>
+  </div>
+  <a id="back" href="/">← inkwell</a>
+  <audio id="music" src="media/film.mp3" preload="auto"></audio>
+  <script src="film.js"></script>
+</body>
+</html>

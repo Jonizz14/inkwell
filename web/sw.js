@@ -12,9 +12,11 @@ self.addEventListener('activate', (e) => {
 });
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  if (e.request.method !== 'GET' || url.origin !== location.origin || url.pathname.startsWith('/api/')) return;
-  // two pages: the presentation at / (and /index.html), the reader at /read (and /app.html)
-  const page = url.pathname === '/' || url.pathname === '/index.html' ? '/' : '/read';
+  // the film's music streams (range requests), it is not kept
+  if (e.request.method !== 'GET' || url.origin !== location.origin || /^\/(api|media)\//.test(url.pathname)) return;
+  // the presentation at / (and /index.html), the reader at /read (and /app.html), the film at /film.html
+  const p = url.pathname;
+  const page = p === '/' || p === '/index.html' ? '/' : p === '/read' || p === '/app.html' ? '/read' : p;
   const key = e.request.mode === 'navigate' || /^\/(index|app)\.html$/.test(url.pathname) ? page : url.pathname;
   e.respondWith(
     caches.open(V).then(async (c) => {
