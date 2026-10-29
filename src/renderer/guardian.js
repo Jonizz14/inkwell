@@ -156,7 +156,7 @@ const Guardian = (() => {
     'gd.gone': 'Этой статьи больше нет на Guardian',
     'gd.offline': 'Текст загружается заново через 24 часа — нужен интернет',
   });
-  const SECS = ['saved', 'longread', 'science', 'environment', 'technology', 'culture', 'world', 'books', 'lifeandstyle'];
+  const SECS = ['saved', 'ielts', 'longread', 'science', 'environment', 'technology', 'culture', 'world', 'books', 'lifeandstyle'];
   const FRESH = 10 * 60000; // a section's list is fetched again after this
   const search = $('#search');
   const addBtn = $('#btn-add');
@@ -186,14 +186,16 @@ const Guardian = (() => {
 
   const known = (url) => saved().find((m) => m.url === url);
 
-  // rows look like the library's own: the date where the number is, a download mark where the
-  // progress ring is; one already saved is the real library row
-  function feedRow(it, i) {
+  // rows look like the library's own: the date where the number is (or IELTS's P1–P3), a download
+  // mark where the progress ring is; one already saved is the real library row. `tags` is a line
+  // under the excerpt (IELTS: topic, words, level)
+  function feedRow(it, i, num, tags = '') {
     const m = known(it.url);
-    if (m) return itemHtml(m.img || !it.img ? m : { ...m }, i, 0).replace('<div class="item-num">000</div>', `<div class="item-num">${esc(fmtDay(it.date))}</div>`);
+    const n = esc(num || fmtDay(it.date));
+    if (m) return itemHtml(m.img || !it.img ? m : { ...m }, i, 0).replace('<div class="item-num">000</div>', `<div class="item-num">${n}</div>`).replace('</p></div>', () => `</p>${tags}</div>`);
     return `<li class="item new gd-row${it.img ? ' has-img' : ''}" data-url="${esc(it.url)}" style="animation-delay:${Math.min(i, 14) * 22}ms">
-        <div class="item-num">${esc(fmtDay(it.date))}</div>
-        <div><h3 class="item-title">${esc(it.title)}</h3><p class="item-ex">${esc(it.excerpt)}</p></div>${it.img ? `<img class="item-img" src="${esc(it.img)}" alt="" loading="lazy" decoding="async" />` : ''}
+        <div class="item-num">${n}</div>
+        <div><h3 class="item-title">${esc(it.title)}</h3><p class="item-ex">${esc(it.excerpt)}</p>${tags}</div>${it.img ? `<img class="item-img" src="${esc(it.img)}" alt="" loading="lazy" decoding="async" />` : ''}
         <div class="item-meta"><span class="gd-dl" title="${esc(t('gd.save'))}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v8M4.5 7.5 8 11l3.5-3.5M3 13.5h10"/></svg></span></div>
         <i class="gd-load"></i>
       </li>`;
@@ -229,8 +231,12 @@ const Guardian = (() => {
     const q = state.query.trim().toLowerCase();
     // the reading filter works here too: an article not saved yet counts as unread
     const status = (it) => (known(it.url) ? statusOf(known(it.url).id) : 'new');
+    if (k === 'ielts' && typeof Ielts !== 'undefined') {
+      $('#list').innerHTML = Ielts.render(c.items, feedRow, status, q);
+      return true;
+    }
     const items = c.items.filter((it) => (state.filter === 'all' || status(it) === state.filter) && (!q || (it.title + ' ' + it.excerpt).toLowerCase().includes(q)));
-    $('#list').innerHTML = items.length ? items.map(feedRow).join('') : `<li class="gd-msg">${esc(t('gd.empty'))}</li>`;
+    $('#list').innerHTML = items.length ? items.map((it, i) => feedRow(it, i)).join('') : `<li class="gd-msg">${esc(t('gd.empty'))}</li>`;
     return true;
   }
 

@@ -1,0 +1,18 @@
+/* IELTS Reading on the Guardian shelf (ielts.js): today's set under a quiet header, then the other
+   passages that fit; each row has a line of tags (topic, words, level as three small bars). */
+.ie-head { list-style: none; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; padding: 22px 8px 12px; animation: rise var(--t-slow) var(--ease) both; }
+.ie-head h3 { margin: 0 0 3px; font: 600 21px/1.2 var(--serif); letter-spacing: -0.01em; }
+.ie-head p { margin: 0; font: 13px/1.5 var(--ui); color: var(--muted); }
+.ie-dots { display: flex; gap: 5px; padding-bottom: 4px; }
+.ie-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); transition: background var(--t) var(--ease); }
+.ie-dots i.on { background: var(--ink); }
+.ie-head.all p { color: var(--ink-2); }
+.ie-sep { list-style: none; padding: 34px 8px 10px; font: 600 11px/1 var(--ui); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+.ie-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 8px 0 0; font: 12px/1.3 var(--ui); color: var(--muted); }
+.ie-lv { display: inline-flex; align-items: center; gap: 2px; }
+.ie-lv i { width: 3px; border-radius: 1px; background: var(--line-2); }
+.ie-lv i:nth-child(1) { height: 5px; }
+.ie-lv i:nth-child(2) { height: 8px; }
+.ie-lv i:nth-child(3) { height: 11px; margin-right: 5px; }
+.ie-lv.l1 i:nth-child(1), .ie-lv.l2 i:nth-child(-n + 2), .ie-lv.l3 i { background: var(--ink-2); }

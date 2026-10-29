@@ -43,16 +43,22 @@ async function api(key, path, params) {
 // does a key answer? (Settings → The Guardian → Check)
 const test = (key) => api(key, 'search', { 'page-size': 1 }).then(() => ({ ok: true }), (e) => ({ ok: false, err: e.message }));
 
+// "IELTS Reading" (renderer/ielts.js picks from it): the sections passages come from, at once
+const IELTS = { section: 'science|environment|education|society|technology|global-development|books|culture' };
+
 // a section's newest articles
 async function feed(key, section) {
-  const where = WHERE[section] || { section: SECTIONS.includes(section) ? section : 'news' };
-  // two pages of 50: about a hundred articles a section (one was 30)
-  const pages = await Promise.all([1, 2].map((page) => api(key, 'search', { ...where, type: 'article', 'order-by': 'newest', 'page-size': 50, page, 'show-fields': 'trailText,byline,thumbnail' }).catch((e) => (page === 1 ? Promise.reject(e) : { results: [] }))));
-  return pages.flatMap((res) => res.results)
-    .filter((it) => isArticle(it.webUrl))
-    .map((it) => {
+  const ask = (where, page) => api(key, 'search', { ...where, type: 'article', 'order-by': 'newest', 'page-size': 50, page, 'show-fields': 'trailText,byline,thumbnail,wordcount' });
+  // two pages of 50: about a hundred articles a section (one was 30); IELTS takes three of its
+  // sections and one of the Long Read
+  const asks = section === 'ielts' ? [[IELTS, 1], [IELTS, 2], [IELTS, 3], [WHERE.longread, 1]] : [1, 2].map((page) => [WHERE[section] || { section: SECTIONS.includes(section) ? section : 'news' }, page]);
+  const pages = await Promise.all(asks.map(([where, page], i) => ask(where, page).catch((e) => (i === 0 ? Promise.reject(e) : { results: [] }))));
+  const seen = new Set();
+  return pages.flatMap((res, i) => res.results.map((it) => ({ it, longread: asks[i][0] === WHERE.longread })))
+    .filter(({ it }) => isArticle(it.webUrl) && !seen.has(it.webUrl) && seen.add(it.webUrl))
+    .map(({ it, longread }) => {
       const f = it.fields || {};
-      return { url: it.webUrl.split('?')[0], title: it.webTitle, excerpt: text(f.trailText).slice(0, 260), date: Date.parse(it.webPublicationDate) || 0, by: f.byline || '', img: f.thumbnail || null };
+      return { url: it.webUrl.split('?')[0], title: it.webTitle, excerpt: text(f.trailText).slice(0, 260), date: Date.parse(it.webPublicationDate) || 0, by: f.byline || '', img: f.thumbnail || null, words: +f.wordcount || 0, section: longread ? 'longread' : it.sectionId || section };
     });
 }
 

@@ -6,6 +6,26 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.53', '2026-10-29', {
+      uz: ['IELTS Reading', [
+        'The Guardian javonida yangi «IELTS Reading» bo‘limi: IELTS matnlari olinadigan bo‘limlardan (fan, tabiat, ta’lim, jamiyat, texnologiya, Long Read) mos maqolalar o‘zi saralanadi',
+        'Fikr maqolalari, taqrizlar, sport, siyosat yangiliklari va juda qisqa/uzun matnlar chiqmaydi',
+        '«Bugungi to‘plam»: osondan qiyinga 3 ta matn (P1, P2, P3) — xuddi imtihondagidek; kun bo‘yi o‘zgarmaydi, nechtasi o‘qilgani ko‘rinadi',
+        'Har bir matn ostida mavzu, so‘z soni va qiyinlik darajasi',
+      ]],
+      en: ['IELTS Reading', [
+        'A new “IELTS Reading” section on The Guardian shelf: articles from the sections IELTS passages come from (science, nature, education, society, technology, the Long Read) are picked out on their own',
+        'Opinion, reviews, sport, political news and texts far too short or long are left out',
+        '“Today’s set”: 3 passages from easier to harder (P1, P2, P3), like the test; it stays the same all day and shows how many are read',
+        'Each text shows its topic, word count and level',
+      ]],
+      ru: ['IELTS Reading', [
+        'Новый раздел «IELTS Reading» на полке The Guardian: статьи из разделов, откуда берутся тексты IELTS (наука, природа, образование, общество, технологии, Long Read), отбираются сами',
+        'Колонки мнений, рецензии, спорт, политические новости и слишком короткие или длинные тексты не попадают',
+        '«Набор на сегодня»: 3 текста от простого к сложному (P1, P2, P3), как на экзамене; весь день не меняется и показывает, сколько прочитано',
+        'У каждого текста — тема, число слов и уровень сложности',
+      ]],
+    }],
     ['1.1.52', '2026-10-28', {
       uz: ['Yangi sayt', [
         'Saytning bosh sahifasi endi Inkwell taqdimoti: Apple uslubida, uch tilda, haqiqiy ekranlar bilan; brauzerdagi o‘quvchi /read manzilida',
