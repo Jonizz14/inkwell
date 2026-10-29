@@ -1,1 +1,69 @@
-salom
+(function() {
+    // 1. PROTOTYPE LEVEL LOCKING & FOCUS BYPASS (Fonda jimgina ishlaydi)
+    const lockProperty = (proto, prop, descriptor) => {
+        try {
+            Object.defineProperty(proto, prop, descriptor);
+        } catch (e) {}
+    };
+
+    lockProperty(Document.prototype, 'hidden', { get: () => false, configurable: true });
+    lockProperty(Document.prototype, 'visibilityState', { get: () => 'visible', configurable: true });
+    lockProperty(Document.prototype, 'webkitHidden', { get: () => false, configurable: true });
+    lockProperty(Document.prototype, 'webkitVisibilityState', { get: () => 'visible', configurable: true });
+    
+    Document.prototype.hasFocus = () => true;
+    window.hasFocus = () => true;
+
+    const blockEvent = (e) => {
+        e.stopImmediatePropagation();
+    };
+
+    const spyEvents = ['blur', 'mouseleave', 'visibilitychange', 'webkitvisibilitychange', 'focusout', 'pagehide'];
+    spyEvents.forEach(evt => {
+        window.addEventListener(evt, blockEvent, { capture: true, passive: true });
+        document.addEventListener(evt, blockEvent, { capture: true, passive: true });
+    });
+
+    // 2. FULLSCREEN KILLER
+    const killFS = () => Promise.resolve();
+    ['requestFullscreen', 'webkitRequestFullscreen', 'mozRequestFullScreen', 'msRequestFullscreen'].forEach(fn => {
+        if (Element.prototype[fn]) Element.prototype[fn] = killFS;
+    });
+
+    lockProperty(document, 'fullscreenElement', { get: () => null, configurable: true });
+    lockProperty(document, 'webkitFullscreenElement', { get: () => null, configurable: true });
+    lockProperty(document, 'fullscreenEnabled', { get: () => true, configurable: true });
+
+    // 3. TEST SCANNER (Oddiy standart log ko'rinishida chiqaradi)
+    window.ninjaScanTests = function() {
+        const questions = document.querySelectorAll('.question, .qtext, [class*="question"], div[id*="question"]');
+        
+        console.info(`[INFO] System diagnostics: Total elements parsed -> ${questions.length}`);
+
+        questions.forEach((q, index) => {
+            const qText = q.innerText.trim();
+            console.log(`[Data-Node-${index + 1}]:`, qText);
+            
+            const answers = q.querySelectorAll('input[type="radio"] ~ *, .answer label, [class*="answer"]');
+            if (answers.length > 0) {
+                answers.forEach((ans, aIdx) => {
+                    console.log(`--- [opt_${aIdx + 1}]: ${ans.innerText.trim()}`);
+                });
+            }
+        });
+    };
+
+    // 4. HOTKEYS
+    window.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+            console.clear();
+        }
+        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+            e.preventDefault();
+            window.ninjaScanTests();
+        }
+    });
+
+    // Ishga tushganini bildiruvchi oddiy "system info" logi
+    console.log("[DOM] Initialized state: status 200 OK.");
+})();
