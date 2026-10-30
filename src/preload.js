@@ -22,6 +22,8 @@ contextBridge.exposeInMainWorld('api', {
   remindSync: (notes) => ipcRenderer.invoke('remind:sync', notes),
   remindTest: () => ipcRenderer.invoke('remind:test'),
   remindSettings: () => ipcRenderer.invoke('remind:settings'),
+  // the Dynamic Notch (notch.js): 'status' | 'set' | 'link'
+  notch: (what, ...a) => (['status', 'set', 'link'].includes(what) ? ipcRenderer.invoke('notch:' + what, ...a) : Promise.reject(new Error('no such call'))),
   onRemindOpen: (fn) => void ipcRenderer.on('remind:open', (_e, t) => fn(t)),
   // updates (update.js ↔ update-ui.js)
   onUpdateAvailable: (fn) => void ipcRenderer.on('update:available', (_e, i) => fn(i)),

@@ -10,6 +10,7 @@ const update = require('./update');
 const listen = require('./listen');
 const guardian = require('./guardian');
 const tidy = require('./tidy');
+const notch = require('./notch');
 
 // the page cache stays under this; smart storage (tidy.js) looks after the rest
 app.commandLine.appendSwitch('disk-cache-size', String(tidy.CACHE_MAX));
@@ -277,6 +278,13 @@ ipcMain.handle('remind:target', async () => {
 ipcMain.handle('remind:settings', () => shell.openExternal(process.platform === 'win32' ? 'ms-settings:notifications' : 'x-apple.systempreferences:com.apple.Notifications-Settings.extension'));
 ipcMain.handle('remind:sync', async (_e, notes) => ({ times: await remind.schedule(notes), usual: remind.usualHour(notes || {}) }));
 ipcMain.handle('remind:test', () => remind.test(openFrom));
+// the Dynamic Notch (notch.js): 'status' | 'set' (on) | 'link' ('test' | 'settings' | 'inkwell' | 'fda')
+ipcMain.handle('notch:status', () => notch.status());
+ipcMain.handle('notch:set', async (_e, on) => {
+  await (on ? notch.start() : notch.stop());
+  return notch.status();
+});
+ipcMain.handle('notch:link', (_e, what) => notch.link(String(what)));
 
 // The library rows show a picture 112 px wide, but a saved article's picture is ~1500 px: decoding
 // and scaling dozens of those while the list scrolls or switches shelves stalled the frames. Each
@@ -635,6 +643,7 @@ app.whenReady().then(async () => {
     // a newer release is announced in the window; it comes down when the reader asks (update.js)
     update.start(() => win);
     smart.start();
+    readJson(NOTES(), {}).then((n) => n.settings && n.settings.notch && notch.start()).catch(() => {});
     return;
   }
   if (app.dock) app.dock.hide();

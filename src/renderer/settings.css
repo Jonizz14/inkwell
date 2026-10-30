@@ -234,3 +234,57 @@
 .st-act { justify-self: end; padding: 5px 10px; font-size: 12.5px; }
 .st-wait-tag { justify-self: end; font: 11.5px/1.3 var(--ui); color: var(--muted); text-align: right; }
 @media (prefers-reduced-motion: reduce) { .st-bar i, .st-list li, .st-dbar i { transition: none; } }
+
+/* ---------- Dynamic Notch: the notch in small, closed → focus timer → open on Inkwell ---------- */
+.pv-notch { position: relative; height: 136px; padding: 0; overflow: hidden; }
+.pvn-bar { position: absolute; inset: 0 0 auto; height: 22px; background: color-mix(in srgb, var(--ink) 5%, transparent); }
+.pvn {
+  position: absolute; left: 50%; top: 0; width: 300px; height: 100px; margin-left: -150px;
+  background: #000; color: #fff;
+  clip-path: inset(0 90px 78px 90px round 0 0 10px 10px);
+  animation: pvn-shape 9s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+}
+@keyframes pvn-shape {
+  0%, 20% { clip-path: inset(0 90px 78px 90px round 0 0 10px 10px); }
+  28%, 48% { clip-path: inset(0 52px 78px 52px round 0 0 10px 10px); }
+  58%, 88% { clip-path: inset(0 0 0 0 round 0 0 24px 24px); }
+  96%, 100% { clip-path: inset(0 90px 78px 90px round 0 0 10px 10px); }
+}
+.pvn-wing {
+  position: absolute; top: 0; left: 52px; right: 52px; height: 22px; padding: 0 8px;
+  display: flex; align-items: center; justify-content: space-between;
+  animation: pvn-wing 9s infinite;
+}
+.pvn-wing img { width: 14px; height: 14px; border-radius: 4px; }
+.pvn-wing b { font: 600 11px var(--ui); font-variant-numeric: tabular-nums; }
+@keyframes pvn-wing {
+  0%, 24% { opacity: 0; filter: blur(4px); }
+  30%, 48% { opacity: 1; filter: none; }
+  54%, 100% { opacity: 0; filter: blur(4px); }
+}
+.pvn-panel { position: absolute; left: 14px; right: 14px; top: 30px; transform-origin: top; animation: pvn-panel 9s infinite; }
+@keyframes pvn-panel {
+  0%, 60% { opacity: 0; filter: blur(6px); transform: scale(0.97); }
+  66%, 86% { opacity: 1; filter: none; transform: none; }
+  92%, 100% { opacity: 0; filter: blur(6px); transform: scale(0.97); }
+}
+.pvn-row { display: flex; gap: 6px; }
+.pvn-row span {
+  flex: 1; display: flex; align-items: center; gap: 5px; height: 28px; padding: 0 8px;
+  border-radius: 8px; background: rgba(255, 255, 255, 0.09); font: 600 10.5px var(--ui); white-space: nowrap;
+}
+.pvn-row i { font-style: normal; }
+.pvn-row svg { width: 14px; height: 14px; fill: none; stroke: rgba(255, 255, 255, 0.2); stroke-width: 2.5; }
+.pvn-row svg .on { stroke: #fff; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; }
+.pvn-art { display: flex; align-items: center; height: 24px; margin-top: 6px; padding: 0 9px; border-radius: 8px; background: rgba(255, 255, 255, 0.09); }
+.pvn-art span { flex: 1; height: 3px; border-radius: 2px; background: linear-gradient(90deg, #fff 0 35%, rgba(255, 255, 255, 0.2) 35%); }
+@media (prefers-reduced-motion: reduce) {
+  .pvn, .pvn-wing, .pvn-panel { animation: none; }
+  .pvn { clip-path: inset(0 0 0 0 round 0 0 24px 24px); }
+  .pvn-wing { opacity: 0; }
+}
+.n-rows > .set-row { border-top: 1px solid var(--line); }
+.n-state { font: 500 13px var(--ui); color: var(--muted); }
+.n-state.ok { color: var(--ink); }
+.n-state.ok::before { content: '✓ '; }
+.n-btns { display: flex; gap: 6px; }

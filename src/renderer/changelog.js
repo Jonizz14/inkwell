@@ -6,6 +6,29 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.58', '2026-10-30', {
+      uz: ['Dynamic Notch', [
+        'Mac’da ekran tepasida, kamera atrofida jonli «notch»: Sozlamalar → Dynamic Notch',
+        'Yopiq turganda — fokus taymeri yoki qo‘shiq; bossangiz ochiladi va bo‘limlarga ajraladi: Musiqa, Inkwell, Asosiy',
+        'Inkwell bo‘limida seriya, bugungi maqsad, takrorlanadigan so‘zlar va o‘qilayotgan maqola; har biri Inkwell’ni o‘sha joyda ochadi',
+        'Fokus boshlanganda, tugaganda, maqsad bajarilganda va seriya saqlanganda notch xabar beradi',
+        'Ruxsat bersangiz, Telegram, qo‘ng‘iroqlar va boshqa ilovalar xabarlari ham notch’da; faylni notch’ga tashlasangiz — AirDrop',
+      ]],
+      en: ['Dynamic Notch', [
+        'A live notch around the camera at the top of the Mac’s screen: Settings → Dynamic Notch',
+        'Closed, it shows the focus timer or the song playing; a click opens it in sections: Music, Inkwell, Home',
+        'The Inkwell section has your streak, today’s goal, words to review and the article in progress; each opens Inkwell right there',
+        'The notch tells you when a focus session starts and ends, when the goal is reached and when the streak is safe',
+        'With your permission, Telegram, calls and other apps’ notifications show there too; drop a file on the notch to AirDrop it',
+      ]],
+      ru: ['Dynamic Notch', [
+        'Живой вырез вокруг камеры вверху экрана Mac: Настройки → Dynamic Notch',
+        'В закрытом виде — таймер фокуса или играющая песня; по клику открывается и делится на разделы: Музыка, Inkwell, Главное',
+        'В разделе Inkwell — серия, цель на сегодня, слова на повторение и статья, которую читаешь; каждое открывает Inkwell прямо там',
+        'Вырез сообщает о начале и конце фокуса, о выполненной цели и о спасённой серии',
+        'С твоего разрешения там же появляются уведомления Telegram, звонки и другие приложения; брось файл на вырез — и AirDrop',
+      ]],
+    }],
     ['1.1.53', '2026-10-29', {
       uz: ['IELTS Reading', [
         'The Guardian javonida yangi «IELTS Reading» bo‘limi: IELTS matnlari olinadigan bo‘limlardan (fan, tabiat, ta’lim, jamiyat, texnologiya, Long Read) mos maqolalar o‘zi saralanadi',

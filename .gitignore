@@ -10,3 +10,4 @@ src/renderer/private/
 web/dist/
 web/content/
 web/.vercel/
+tools/notch/.build/

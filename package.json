@@ -16,12 +16,13 @@
     "build:ocr": "mkdir -p src/bin && swiftc -O tools/vision-ocr.swift -o src/bin/vision-ocr",
     "build:read": "mkdir -p src/bin && swiftc -O tools/read-along.swift -o src/bin/read-along",
     "build:haptic": "bash scripts/build-haptic.sh",
-    "build:mac-tools": "npm run build:ocr && npm run build:read && npm run build:haptic",
+    "build:mac-tools": "npm run build:ocr && npm run build:read && npm run build:haptic && npm run build:notch",
     "reextract": "node scripts/reextract.mjs --apply",
     "web:content": "node scripts/web-content.mjs",
     "web:build": "node scripts/build-web.mjs",
     "web:dev": "node scripts/build-web.mjs && npx -y serve web/dist -l 5173",
-    "web:deploy": "node scripts/build-web.mjs && cd web/dist && npx -y vercel@latest deploy --prod --yes"
+    "web:deploy": "node scripts/build-web.mjs && cd web/dist && npx -y vercel@latest deploy --prod --yes",
+    "build:notch": "bash scripts/build-notch.sh"
   },
   "dependencies": {
     "@napi-rs/canvas": "^0.1.100",

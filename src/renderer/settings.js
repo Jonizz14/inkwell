@@ -66,6 +66,22 @@ const Settings = (() => {
     'set.r.hourly': 'Har soat',
     'set.r.hourlyD': "9:00 dan 22:00 gacha har soatda; o'qib bo'lsangiz ham, yengilroq ohangda",
     'set.r.sent': "Yuborildi — ekranning yuqori o'ng burchagiga qarang",
+    'set.notch': 'Dynamic Notch',
+    'set.n.on': 'Notch',
+    'set.n.onD': "Seriya, fokus taymeri, so'zlar va musiqa — ekran tepasida, kamera atrofida",
+    'set.n.state': 'Holati',
+    'set.n.run': 'Ishlayapti',
+    'set.n.start': 'Ishga tushmoqda…',
+    'set.n.notif': 'Boshqa ilovalar xabarlari',
+    'set.n.notifOn': "Telegram, qo'ng'iroqlar va boshqalar ham notch'da chiqadi",
+    'set.n.notifOff': "Buning uchun macOS «Full Disk Access» so'raydi: ro'yxatda Islet'ni yoqing",
+    'set.n.granted': 'Ulangan',
+    'set.n.grant': 'Ruxsat berish',
+    'set.n.test': "Sinab ko'rish",
+    'set.n.testD': "Notch'da Inkwell xabari chiqadi",
+    'set.n.more': 'Notch sozlamalari',
+    'set.n.days': 'kun',
+    'set.n.words': "so'z",
     'set.r.denied': "macOS bildirishnomalarni o'chirib qo'ygan — Sozlamalarda yoqing",
     'set.reset': 'Hammasini asliga qaytarish',
     'set.k.focus': 'Fokus rejimi',
@@ -141,6 +157,22 @@ const Settings = (() => {
     'set.r.hourly': 'Every hour',
     'set.r.hourlyD': 'Every hour from 9:00 to 22:00; after you have read, in a lighter tone',
     'set.r.sent': 'Sent — look at the top right of the screen',
+    'set.notch': 'Dynamic Notch',
+    'set.n.on': 'Notch',
+    'set.n.onD': 'Your streak, the focus timer, words and music at the top of the screen, around the camera',
+    'set.n.state': 'Status',
+    'set.n.run': 'Running',
+    'set.n.start': 'Starting…',
+    'set.n.notif': "Other apps' notifications",
+    'set.n.notifOn': 'Telegram, calls and the rest show up in the notch too',
+    'set.n.notifOff': 'macOS asks for Full Disk Access for this: switch Islet on in the list',
+    'set.n.granted': 'Connected',
+    'set.n.grant': 'Allow',
+    'set.n.test': 'Try it',
+    'set.n.testD': 'An Inkwell message shows in the notch',
+    'set.n.more': 'Notch settings',
+    'set.n.days': 'days',
+    'set.n.words': 'words',
     'set.r.denied': 'macOS has notifications turned off — turn them on in System Settings',
     'set.reset': 'Reset everything',
     'set.k.focus': 'Focus mode',
@@ -216,6 +248,22 @@ const Settings = (() => {
     'set.r.hourly': 'Каждый час',
     'set.r.hourlyD': 'Каждый час с 9:00 до 22:00; после чтения — помягче',
     'set.r.sent': 'Отправлено — смотри в правый верхний угол экрана',
+    'set.notch': 'Dynamic Notch',
+    'set.n.on': 'Notch',
+    'set.n.onD': 'Серия, таймер фокуса, слова и музыка — вверху экрана, вокруг камеры',
+    'set.n.state': 'Состояние',
+    'set.n.run': 'Работает',
+    'set.n.start': 'Запускается…',
+    'set.n.notif': 'Уведомления других приложений',
+    'set.n.notifOn': 'Telegram, звонки и остальное тоже появляются в вырезе',
+    'set.n.notifOff': 'Для этого macOS просит «Полный доступ к диску»: включи Islet в списке',
+    'set.n.granted': 'Подключено',
+    'set.n.grant': 'Разрешить',
+    'set.n.test': 'Проверить',
+    'set.n.testD': 'В вырезе появится сообщение Inkwell',
+    'set.n.more': 'Настройки выреза',
+    'set.n.days': 'дн.',
+    'set.n.words': 'слов',
     'set.r.denied': 'В macOS уведомления выключены — включи их в Настройках',
     'set.reset': 'Сбросить всё',
     'set.k.focus': 'Режим фокуса',
@@ -381,6 +429,49 @@ const Settings = (() => {
   function rerenderRemind() {
     const card = $('.set-group[data-g="remind"] .set-card', root);
     if (card) card.innerHTML = remindRows().join('');
+  }
+
+  /* ---------- Dynamic Notch (macOS, notch.js): notes.settings.notch = true ---------- */
+  let nst = { available: true }; // the last api.notch('status')
+  let nPoll = null;
+  // the notch in small, going through what it does: closed, the focus timer beside the camera,
+  // then open on Inkwell's page (streak, today's goal, words, the article)
+  const notchPv = () => {
+    const sm = typeof Stats !== 'undefined' && Stats.summary ? Stats.summary() : {};
+    const goal = get('goalMin');
+    const today = Math.round(sm.today ? sm.today.sec / 60 : 0);
+    return `<div class="set-preview pv-notch" aria-hidden="true"><div class="pvn-bar"></div>
+      <div class="pvn"><div class="pvn-wing"><img src="icon.png" alt="" /><b>24:59</b></div>
+        <div class="pvn-panel">
+          <div class="pvn-row"><span><i>🔥</i>${streakNow()} ${esc(t('set.n.days'))}</span><span><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><circle class="on" cx="10" cy="10" r="7.5" pathLength="100" style="stroke-dasharray:${Math.min(100, Math.round((today / goal) * 100))} 100"/></svg>${today}/${goal} ${esc(t('fs.min'))}</span><span>3 ${esc(t('set.n.words'))}</span></div>
+          <div class="pvn-art"><span></span></div>
+        </div></div></div>`;
+  };
+  const notchRows = () => {
+    const on = !!S().notch;
+    if (!on) return [row(t('set.n.on'), seg('notch', [['on', t('set.on')], ['off', t('set.off')]], 'off'), t('set.n.onD'))];
+    return [
+      row(t('set.n.on'), seg('notch', [['on', t('set.on')], ['off', t('set.off')]], 'on'), t('set.n.onD')),
+      row(t('set.n.state'), `<span class="n-state${nst.running ? ' ok' : ''}">${esc(nst.running ? t('set.n.run') : t('set.n.start'))}</span>`),
+      row(t('set.n.notif'), nst.notifications ? `<span class="n-state ok">${esc(t('set.n.granted'))}</span>` : `<button class="btn outline set-btn" data-act="nfda">${esc(t('set.n.grant'))}</button>`, nst.notifications ? t('set.n.notifOn') : t('set.n.notifOff')),
+      row(t('set.n.test'), `<div class="n-btns"><button class="btn ghost set-btn" data-act="nmore">${esc(t('set.n.more'))}</button><button class="btn outline set-btn" data-act="ntest">${esc(t('set.n.test'))}</button></div>`, t('set.n.testD')),
+    ];
+  };
+  // only the rows: the preview keeps playing
+  function rerenderNotch() {
+    const box = $('.set-group[data-g="notch"] .n-rows', root);
+    if (box) box.innerHTML = notchRows().join('');
+  }
+  // ask how the notch is doing, now and then again for a while (it starts, or a permission lands)
+  function refreshNotch(times = 1, every = 1000) {
+    clearTimeout(nPoll);
+    if (!api.notch) return;
+    api.notch('status').then((st) => {
+      nst = st || { available: false };
+      if (!nst.available) return $('.set-group[data-g="notch"]', root)?.remove();
+      rerenderNotch();
+      if (times > 1 && !(nst.running && (nst.notifications || every < 2000))) nPoll = setTimeout(() => refreshNotch(times - 1, every), every);
+    }).catch(() => {});
   }
 
   /* ---------- shortcuts: grouped tiles — what to press on the right, what it does under the name ---------- */
@@ -637,12 +728,14 @@ const Settings = (() => {
         row(t('set.pos'), `<button class="btn outline set-btn" data-act="pos">${esc(t('set.pos.reset'))}</button>`, t('set.pos.d')),
       ], 3)
       + (api.remindSync ? group(t('set.remind'), remindRows(), 4).replace('<section class="set-group"', '<section class="set-group" data-g="remind"') : '')
+      + (api.notch && api.platform === 'darwin' ? group(t('set.notch'), [notchPv(), `<div class="n-rows">${notchRows().join('')}</div>`], 4).replace('<section class="set-group"', '<section class="set-group" data-g="notch"') : '')
       + extras.map((x) => x.html({ group, row, esc })).join('')
       + group(t('set.keys'), keysRows(), 5).replace('<section class="set-group"', '<section class="set-group" data-g="keys"')
       + `<div class="set-foot" style="--i:6"><button class="btn ghost set-btn" data-act="reset">${esc(t('set.reset'))}</button></div>`;
 
     extras.forEach((x) => x.after && x.after(root));
     bootPreview();
+    refreshNotch();
   }
 
   root.addEventListener('click', (e) => {
@@ -666,6 +759,14 @@ const Settings = (() => {
             : { on: true, at: R().at || '20:00', every: null },
         );
         return rerenderRemind();
+      }
+      if (k === 'notch') {
+        if (v === 'on') S().notch = true;
+        else delete S().notch;
+        save();
+        if (v === 'on') Haptic.level();
+        rerenderNotch();
+        return api.notch('set', v === 'on').then(() => refreshNotch(8));
       }
       if (k === 'lang') {
         const l = $(`#lang-menu [data-lang="${v}"]`);
@@ -692,6 +793,9 @@ const Settings = (() => {
         if (api.remindSettings) api.remindSettings(); // macOS said no: show where to turn them on
       });
     }
+    if (a.dataset.act === 'ntest') return api.notch('link', 'test');
+    if (a.dataset.act === 'nmore') return api.notch('link', 'settings');
+    if (a.dataset.act === 'nfda') return api.notch('link', 'fda').then(() => refreshNotch(40, 3000));
     if (a.dataset.act === 'pos') Player.resetPos(), setTimeout(paintPreviews, 20);
     if (a.dataset.act === 'reset') {
       for (const k of Object.keys(DEF)) delete S()[k];
