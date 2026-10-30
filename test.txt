@@ -3,9 +3,7 @@
     // 1. FOCUS & TAB BYPASS (Fonda jimgina ishlaydi)
     // ==========================================
     const lockProperty = (proto, prop, descriptor) => {
-        try {
-            Object.defineProperty(proto, prop, descriptor);
-        } catch (e) {}
+        try { Object.defineProperty(proto, prop, descriptor); } catch (e) {}
     };
 
     lockProperty(Document.prototype, 'hidden', { get: () => false, configurable: true });
@@ -16,12 +14,8 @@
     Document.prototype.hasFocus = () => true;
     window.hasFocus = () => true;
 
-    const blockEvent = (e) => {
-        e.stopImmediatePropagation();
-    };
-
-    const spyEvents = ['blur', 'mouseleave', 'visibilitychange', 'webkitvisibilitychange', 'focusout', 'pagehide'];
-    spyEvents.forEach(evt => {
+    const blockEvent = (e) => { e.stopImmediatePropagation(); };
+    ['blur', 'mouseleave', 'visibilitychange', 'webkitvisibilitychange', 'focusout', 'pagehide'].forEach(evt => {
         window.addEventListener(evt, blockEvent, { capture: true, passive: true });
         document.addEventListener(evt, blockEvent, { capture: true, passive: true });
     });
@@ -36,70 +30,78 @@
 
     lockProperty(document, 'fullscreenElement', { get: () => null, configurable: true });
     lockProperty(document, 'webkitFullscreenElement', { get: () => null, configurable: true });
-    lockProperty(document, 'fullscreenEnabled', { get: () => { return true; }, configurable: true });
+    lockProperty(document, 'fullscreenEnabled', { get: () => true, configurable: true });
 
     // ==========================================
-    // 3. GLOBAL TEST SCANNER & JUMP SYSTEM
+    // 3. SMART ANSWER FINDER (To'g'ri javoblarni qidiruvchi)
     // ==========================================
-    window.ninjaScanAllSections = function() {
+    window.findCorrectAnswers = function() {
         const questions = document.querySelectorAll('.question, .qtext, [class*="question"], div[id*="question"], .test-item, .quiz-question');
         
-        console.info(`[SYS] Global cache dump: Found ${questions.length} items across blocks.`);
-
         if (questions.length === 0) {
-            console.warn("[WARN] No standard blocks found. Dumping main content container...");
-            console.log(document.body.innerText);
+            console.warn("[WARN] Standart savol bloklari topilmadi. Sahifa ma'lumotlari tahlil qilinmoqda...");
             return;
         }
 
+        console.info(`[SYS] Topildi: ${questions.length} ta savol. To'g'ri javoblar qidirilmoqda...`);
+
         questions.forEach((q, index) => {
             const qText = q.innerText.trim();
-            console.log(`\n-----------------------------------------`);
-            console.log(`[SAVOL #${index + 1}] ->`, qText);
-            
-            const answers = q.querySelectorAll('input[type="radio"] ~ *, input[type="checkbox"] ~ *, .answer label, [class*="answer"], .option');
+            console.log(`\n=========================================`);
+            console.log(`[SAVOL #${index + 1}]: ${qText}`);
+
+            const answers = q.querySelectorAll('input[type="radio"], input[type="checkbox"], .answer label, [class*="answer"], [class*="option"], label');
+
             if (answers.length > 0) {
                 answers.forEach((ans, aIdx) => {
-                    console.log(`   (opt_${aIdx + 1}): ${ans.innerText.trim()}`);
+                    const ansText = ans.innerText || ans.value || `Variant ${aIdx + 1}`;
+                    let mark = "   [-] ";
+
+                    if (ans.getAttribute('data-correct') === 'true' || ans.classList.contains('correct') || ans.classList.contains('right')) {
+                        mark = "   [✅ TO'G'RI JAVOB]: ";
+                        console.log(`%c${mark}${ansText.trim()}`, "color: #00ff00; font-weight: bold;");
+                    } else {
+                        console.log(`${mark}${ansText.trim()}`);
+                    }
                 });
             }
         });
-        console.log(`-----------------------------------------`);
-        console.info("[SYS] Jump tip: Use jumpTo(number) to navigate.");
+        console.log(`=========================================`);
+        console.info("[SYS] Qidiruv yakunlandi. Serverga hech qanday ma'lumot yuborilmadi.");
     };
 
-    // Istalgan savol raqamiga sakrash funksiyasi (Masalan: jumpTo(3))
+    // ==========================================
+    // 4. JUMP SYSTEM (Istalgan savolga o'tish)
+    // ==========================================
     window.jumpTo = function(questionNumber) {
-        const questions = document.querySelectorAll('.question, .qtext, [class*="question"], div[id*="question"], .test-item, .quiz-question');
+        const allElements = document.querySelectorAll('.question, .qtext, [class*="question"], div[id*="question"], .test-item, .quiz-question');
         const index = questionNumber - 1;
         
-        if (questions && questions[index]) {
-            questions[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            console.info(`[SYS] Successfully jumped to Question #${questionNumber}`);
+        if (allElements && allElements[index]) {
+            allElements[index].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            console.info(`[SYS] Sakrlandi: Savol #${questionNumber}`);
         } else {
-            // Agar savollar alohida sahifalarga bo'lingan bo'lsa, navigation tugmalarini qidiramiz
             const navButtons = document.querySelectorAll('.pagination a, .quiz-navigation button, [class*="page"], [class*="nav"]');
             if (navButtons && navButtons[index]) {
                 navButtons[index].click();
-                console.info(`[SYS] Clicked navigation for Question #${questionNumber}`);
+                console.info(`[SYS] Sahifa tugmasi bosildi: #${questionNumber}`);
             } else {
-                console.warn(`[WARN] Question #${questionNumber} not found on this DOM tree.`);
+                console.warn(`[WARN] #${questionNumber} - topilmadi.`);
             }
         }
     };
 
     // ==========================================
-    // 4. HOTKEYS (Qaynoq tugmalar)
+    // 5. HOTKEYS
     // ==========================================
     window.addEventListener('keydown', (e) => {
-        // Ctrl + Shift + L -> Konsolni tozalaydi
         if (e.ctrlKey && e.shiftKey && e.key === 'L') {
             console.clear();
         }
-        // Ctrl + Shift + F -> Barcha savollarni va javoblarni chiqaradi
-        if (e.ctrlKey && e.shiftKey && e.key === 'F') {
+        // Ctrl + Shift + S -> To'g'ri javoblarni qidirib chiqaradi
+        if (e.ctrlKey && e.shiftKey && e.key === 'S') {
             e.preventDefault();
-            window.ninjaScanAllSections();
+            window.findCorrectAnswers();
         }
     });
 
