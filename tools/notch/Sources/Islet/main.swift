@@ -108,11 +108,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // One notch only: the copy inside Inkwell and a standalone Islet share an id.
+        // One notch only: the copy inside Inkwell and a standalone Islet share an id. A second
+        // copy stays just long enough to pass on the link it was opened with, then leaves.
         if NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? "")
             .contains(where: { $0 != .current }) {
-            NSApp.terminate(nil)
+            isDuplicate = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { NSApp.terminate(nil) }
             return
+        }
+        DistributedNotificationCenter.default().addObserver(forName: Self.forwardName, object: nil, queue: .main) { [weak self] note in
+            guard let link = note.object as? String, let url = URL(string: link) else { return }
+            self?.handle(url)
         }
         Prefs.register()
         let screen = NSScreen.notched ?? NSScreen.main!
@@ -145,6 +151,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // a duplicate must not take the running copy's status with it
+        guard !isDuplicate else { return }
         player.stop()
         try? FileManager.default.removeItem(at: Self.statusURL)
     }
@@ -154,17 +162,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// islet://settings · islet://test · islet://open/<music|inkwell|home> · islet://quit
     func application(_ application: NSApplication, open urls: [URL]) {
         for url in urls where url.scheme == "islet" {
-            switch url.host {
-            case "settings": openSettings()
-            case "test":
-                model.show(IncomingNotification(id: -Int64(Date().timeIntervalSince1970) - 7, bundleID: InkwellLink.bundleID,
-                                                appName: "Inkwell", title: "Inkwell ulandi ✨", subtitle: "",
-                                                body: "Seriya, fokus va so‘zlar endi shu yerda ko‘rinadi.",
-                                                icon: inkwell.icon ?? NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath), isCall: false))
-            case "open": model.open(tab: NotchModel.Tab(rawValue: url.lastPathComponent))
-            case "quit": NSApp.terminate(nil)
-            default: break
+            if isDuplicate {
+                DistributedNotificationCenter.default().postNotificationName(Self.forwardName, object: url.absoluteString, userInfo: nil, deliverImmediately: true)
+            } else {
+                handle(url)
             }
+        }
+    }
+
+    static let forwardName = Notification.Name("com.jakhongir.islet.url")
+    private var isDuplicate = false
+
+    private func handle(_ url: URL) {
+        switch url.host {
+        case "settings": openSettings()
+        case "test":
+            model.show(IncomingNotification(id: -Int64(Date().timeIntervalSince1970) - 7, bundleID: InkwellLink.bundleID,
+                                            appName: "Inkwell", title: "Inkwell ulandi ✨", subtitle: "",
+                                            body: "Seriya, fokus va so‘zlar endi shu yerda ko‘rinadi.",
+                                            icon: inkwell.icon ?? NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath), isCall: false))
+        case "open": model.open(tab: NotchModel.Tab(rawValue: url.lastPathComponent))
+        case "quit": NSApp.terminate(nil)
+        default: break
         }
     }
 
@@ -284,6 +303,15 @@ extension AppDelegate: NSMenuDelegate {
 
 if let i = CommandLine.arguments.firstIndex(of: "--snapshot"), i + 1 < CommandLine.arguments.count {
     MainActor.assumeIsolated { Snapshot.run(into: CommandLine.arguments[i + 1]) }
+    exit(0)
+}
+
+// `Islet --send islet://test`: hand a link to the copy that is running, then exit. Inkwell
+// talks to the notch this way, so it never depends on which copy macOS would open a link with.
+if let i = CommandLine.arguments.firstIndex(of: "--send"), i + 1 < CommandLine.arguments.count {
+    DistributedNotificationCenter.default().postNotificationName(AppDelegate.forwardName, object: CommandLine.arguments[i + 1],
+                                                                 userInfo: nil, deliverImmediately: true)
+    RunLoop.main.run(until: Date().addingTimeInterval(0.2))
     exit(0)
 }
 

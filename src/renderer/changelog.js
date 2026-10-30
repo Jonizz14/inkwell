@@ -6,6 +6,23 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.60', '2026-10-30', {
+      uz: ['Notch tuzatishlari', [
+        'Sozlamalardagi «Sinab ko‘rish» endi notch’da xabar chiqaradi',
+        'Mac’da alohida Islet ham o‘rnatilgan bo‘lsa, holat to‘g‘ri ko‘rinadi — avval «Ishga tushmoqda…»da qotib qolardi',
+        '«Notch sozlamalari» va boshqa tugmalar aynan ishlab turgan notch’ga boradi',
+      ]],
+      en: ['Notch fixes', [
+        '“Try it” in Settings now shows a message in the notch',
+        'With a standalone Islet on the Mac as well, the status is right — it used to stay on “Starting…”',
+        '“Notch settings” and the other buttons reach the notch that is actually running',
+      ]],
+      ru: ['Исправления выреза', [
+        '«Проверить» в настройках теперь показывает сообщение в вырезе',
+        'Если на Mac есть и отдельный Islet, состояние показывается верно — раньше висело «Запускается…»',
+        '«Настройки выреза» и другие кнопки попадают в тот вырез, что запущен',
+      ]],
+    }],
     ['1.1.59', '2026-10-30', {
       uz: ['Dynamic Notch', [
         'Mac’da ekran tepasida, kamera atrofida jonli «notch»: Sozlamalar → Dynamic Notch',
