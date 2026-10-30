@@ -6,9 +6,10 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
-    ['1.1.58', '2026-10-30', {
+    ['1.1.59', '2026-10-30', {
       uz: ['Dynamic Notch', [
         'Mac’da ekran tepasida, kamera atrofida jonli «notch»: Sozlamalar → Dynamic Notch',
+        'Yoqqaningizda Inkwell notch’ga uchib kirib ulanadi, ekrandagi notch esa salomlashadi',
         'Yopiq turganda — fokus taymeri yoki qo‘shiq; bossangiz ochiladi va bo‘limlarga ajraladi: Musiqa, Inkwell, Asosiy',
         'Inkwell bo‘limida seriya, bugungi maqsad, takrorlanadigan so‘zlar va o‘qilayotgan maqola; har biri Inkwell’ni o‘sha joyda ochadi',
         'Fokus boshlanganda, tugaganda, maqsad bajarilganda va seriya saqlanganda notch xabar beradi',
@@ -16,6 +17,7 @@ const Changelog = (() => {
       ]],
       en: ['Dynamic Notch', [
         'A live notch around the camera at the top of the Mac’s screen: Settings → Dynamic Notch',
+        'Switch it on and Inkwell flies into the notch to connect, and the notch on your screen says hello',
         'Closed, it shows the focus timer or the song playing; a click opens it in sections: Music, Inkwell, Home',
         'The Inkwell section has your streak, today’s goal, words to review and the article in progress; each opens Inkwell right there',
         'The notch tells you when a focus session starts and ends, when the goal is reached and when the streak is safe',
@@ -23,11 +25,32 @@ const Changelog = (() => {
       ]],
       ru: ['Dynamic Notch', [
         'Живой вырез вокруг камеры вверху экрана Mac: Настройки → Dynamic Notch',
+        'При включении Inkwell влетает в вырез и подключается, а вырез на экране здоровается',
         'В закрытом виде — таймер фокуса или играющая песня; по клику открывается и делится на разделы: Музыка, Inkwell, Главное',
         'В разделе Inkwell — серия, цель на сегодня, слова на повторение и статья, которую читаешь; каждое открывает Inkwell прямо там',
         'Вырез сообщает о начале и конце фокуса, о выполненной цели и о спасённой серии',
         'С твоего разрешения там же появляются уведомления Telegram, звонки и другие приложения; брось файл на вырез — и AirDrop',
       ]],
+    }],
+    ['1.1.57', '2026-10-30', {
+      uz: ['Ichki ishlar', ['Ilovaning o‘zida ko‘rinadigan o‘zgarish yo‘q: loyihaning sinov fayllari yangilandi']],
+      en: ['Behind the scenes', ['Nothing changed in the app itself: the project’s test files were updated']],
+      ru: ['Внутренние изменения', ['В самом приложении ничего не изменилось: обновились тестовые файлы проекта']],
+    }],
+    ['1.1.56', '2026-10-30', {
+      uz: ['Ichki ishlar', ['Ilovaning o‘zida ko‘rinadigan o‘zgarish yo‘q: loyihaning sinov fayllari yangilandi']],
+      en: ['Behind the scenes', ['Nothing changed in the app itself: the project’s test files were updated']],
+      ru: ['Внутренние изменения', ['В самом приложении ничего не изменилось: обновились тестовые файлы проекта']],
+    }],
+    ['1.1.55', '2026-10-29', {
+      uz: ['Ichki ishlar', ['Ilovaning o‘zida ko‘rinadigan o‘zgarish yo‘q: loyihaning sinov fayllari yangilandi']],
+      en: ['Behind the scenes', ['Nothing changed in the app itself: the project’s test files were updated']],
+      ru: ['Внутренние изменения', ['В самом приложении ничего не изменилось: обновились тестовые файлы проекта']],
+    }],
+    ['1.1.54', '2026-10-29', {
+      uz: ['Ichki ishlar', ['Ilovaning o‘zida ko‘rinadigan o‘zgarish yo‘q: loyihaning sinov fayllari yangilandi']],
+      en: ['Behind the scenes', ['Nothing changed in the app itself: the project’s test files were updated']],
+      ru: ['Внутренние изменения', ['В самом приложении ничего не изменилось: обновились тестовые файлы проекта']],
     }],
     ['1.1.53', '2026-10-29', {
       uz: ['IELTS Reading', [

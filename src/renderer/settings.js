@@ -441,7 +441,9 @@ const Settings = (() => {
     const goal = get('goalMin');
     const today = Math.round(sm.today ? sm.today.sec / 60 : 0);
     return `<div class="set-preview pv-notch" aria-hidden="true"><div class="pvn-bar"></div>
+      <img class="pvn-ink" src="icon.png" alt="" />
       <div class="pvn"><div class="pvn-wing"><img src="icon.png" alt="" /><b>24:59</b></div>
+        <div class="pvn-ok"><img src="icon.png" alt="" /><b>✓</b></div>
         <div class="pvn-panel">
           <div class="pvn-row"><span><i>🔥</i>${streakNow()} ${esc(t('set.n.days'))}</span><span><svg viewBox="0 0 20 20"><circle cx="10" cy="10" r="7.5"/><circle class="on" cx="10" cy="10" r="7.5" pathLength="100" style="stroke-dasharray:${Math.min(100, Math.round((today / goal) * 100))} 100"/></svg>${today}/${goal} ${esc(t('fs.min'))}</span><span>3 ${esc(t('set.n.words'))}</span></div>
           <div class="pvn-art"><span></span></div>
@@ -457,6 +459,17 @@ const Settings = (() => {
       row(t('set.n.test'), `<div class="n-btns"><button class="btn ghost set-btn" data-act="nmore">${esc(t('set.n.more'))}</button><button class="btn outline set-btn" data-act="ntest">${esc(t('set.n.test'))}</button></div>`, t('set.n.testD')),
     ];
   };
+  // switched on: Inkwell rises into the little notch, the notch takes it in and shows a tick,
+  // then goes back to its loop; the real notch says hello at the same moment
+  function connectNotch() {
+    const pv = $('.set-group[data-g="notch"] .pv-notch', root);
+    if (!pv) return;
+    pv.classList.remove('connecting');
+    void pv.offsetWidth;
+    pv.classList.add('connecting');
+    setTimeout(() => Haptic.level(), 1250); // the moment Inkwell meets the notch
+    setTimeout(() => pv.classList.remove('connecting'), 2900);
+  }
   // only the rows: the preview keeps playing
   function rerenderNotch() {
     const box = $('.set-group[data-g="notch"] .n-rows', root);
@@ -764,9 +777,13 @@ const Settings = (() => {
         if (v === 'on') S().notch = true;
         else delete S().notch;
         save();
-        if (v === 'on') Haptic.level();
         rerenderNotch();
-        return api.notch('set', v === 'on').then(() => refreshNotch(8));
+        if (v !== 'on') return api.notch('set', false).then(() => refreshNotch());
+        connectNotch();
+        return api.notch('set', true).then(() => {
+          refreshNotch(8);
+          setTimeout(() => api.notch('link', 'test'), 1300);
+        });
       }
       if (k === 'lang') {
         const l = $(`#lang-menu [data-lang="${v}"]`);

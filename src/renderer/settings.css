@@ -288,3 +288,41 @@
 .n-state.ok { color: var(--ink); }
 .n-state.ok::before { content: '✓ '; }
 .n-btns { display: flex; gap: 6px; }
+
+/* switched on: Inkwell flies up into the notch, which opens on a tick, then the loop resumes */
+.pvn-ink {
+  position: absolute; left: 50%; top: 0; width: 34px; height: 34px; margin-left: -17px;
+  border-radius: 9px; opacity: 0; pointer-events: none;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+}
+.pvn-ok {
+  position: absolute; top: 0; left: 52px; right: 52px; height: 22px; padding: 0 8px;
+  display: flex; align-items: center; justify-content: space-between; opacity: 0;
+}
+.pvn-ok img { width: 14px; height: 14px; border-radius: 4px; }
+.pvn-ok b { font: 700 12px var(--ui); }
+.pv-notch.connecting .pvn { animation: pvc-shape 2.9s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.pv-notch.connecting .pvn-wing, .pv-notch.connecting .pvn-panel { animation: none; opacity: 0; }
+.pv-notch.connecting .pvn-ink { animation: pvc-ink 2.9s cubic-bezier(0.32, 0.72, 0, 1) both; }
+.pv-notch.connecting .pvn-ok { animation: pvc-ok 2.9s ease both; }
+@keyframes pvc-ink {
+  0% { opacity: 0; transform: translateY(96px) scale(0.9); filter: blur(6px); }
+  14% { opacity: 1; transform: translateY(84px) scale(1); filter: none; }
+  26% { opacity: 1; transform: translateY(84px) scale(1); }
+  42% { opacity: 1; transform: translateY(0) scale(0.42); filter: none; }
+  48%, 100% { opacity: 0; transform: translateY(-4px) scale(0.3); filter: blur(3px); }
+}
+@keyframes pvc-shape {
+  0%, 40% { clip-path: inset(0 90px 78px 90px round 0 0 10px 10px); }
+  46% { clip-path: inset(0 86px 75px 86px round 0 0 12px 12px); }
+  58%, 84% { clip-path: inset(0 52px 78px 52px round 0 0 10px 10px); }
+  100% { clip-path: inset(0 90px 78px 90px round 0 0 10px 10px); }
+}
+@keyframes pvc-ok {
+  0%, 52% { opacity: 0; filter: blur(4px); }
+  60%, 82% { opacity: 1; filter: none; }
+  92%, 100% { opacity: 0; filter: blur(4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pv-notch.connecting .pvn, .pv-notch.connecting .pvn-ink, .pv-notch.connecting .pvn-ok { animation: none; }
+}
