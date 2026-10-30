@@ -106,7 +106,7 @@ final class InkwellLink: ObservableObject {
         focusTimer = Timer.scheduledTimer(withTimeInterval: end.timeIntervalSinceNow + 0.5, repeats: false) { [weak self] _ in
             guard let self else { return }
             self.focusActive = false
-            self.post(id: 3, title: "Fokus tugadi 👏", body: self.state?.focus?.title ?? "Zo‘r ishladingiz. Biroz dam oling.", url: "articles365://focus")
+            self.post(id: 3, title: "Fokus tugadi 👏", body: self.state?.focus?.title ?? "Zo‘r ishladingiz. Biroz dam oling.", url: "articles365://focus", inky: .proud)
         }
     }
 
@@ -114,26 +114,26 @@ final class InkwellLink: ObservableObject {
         let sameDay = old.day == new.day
         if !old.focusActive, new.focusActive, let end = new.focusEnd {
             let minutes = Int((end.timeIntervalSinceNow / 60).rounded())
-            post(id: 1, title: "Fokus boshlandi · \(minutes) daqiqa", body: new.focus?.title ?? "Telefonni chetga qo‘yamiz 📵", url: "articles365://focus")
+            post(id: 1, title: "Fokus boshlandi · \(minutes) daqiqa", body: new.focus?.title ?? "Telefonni chetga qo‘yamiz 📵", url: "articles365://focus", inky: .reading)
         }
         let goal = new.goal ?? 15
         if sameDay, (old.todayMin ?? 0) < goal, (new.todayMin ?? 0) >= goal {
-            post(id: 2, title: "🎯 Bugungi maqsad bajarildi", body: "\(goal) daqiqa o‘qidingiz. Zo‘r!", url: nil)
+            post(id: 2, title: "🎯 Bugungi maqsad bajarildi", body: "\(goal) daqiqa o‘qidingiz. Zo‘r!", url: nil, inky: .starry)
         } else if sameDay, old.doneToday == false, new.doneToday == true {
             let n = new.streak ?? 0
             let milestone = [3, 7, 14, 30, 50, 100, 150, 200, 250, 300, 365].contains(n)
             post(id: 4, title: milestone ? "🏆 \(n) kun ketma-ket!" : "🔥 \(n) kun — bugungisi saqlandi",
-                 body: "Olov yonib turibdi. Ertaga ham kutamiz.", url: nil)
+                 body: "Olov yonib turibdi. Ertaga ham kutamiz.", url: nil, inky: milestone ? .starry : .happy)
         }
         if (new.due ?? 0) > (old.due ?? 0), let word = new.word {
-            post(id: 5, title: "«\(word)» — nima degani edi? 🤔", body: "\(new.due ?? 1) ta so‘z takrorlashni kutyapti.", url: "articles365://cards")
+            post(id: 5, title: "«\(word)» — nima degani edi? 🤔", body: "\(new.due ?? 1) ta so‘z takrorlashni kutyapti.", url: "articles365://cards", inky: .idle)
         }
     }
 
-    private func post(id: Int64, title: String, body: String, url: String?) {
+    private func post(id: Int64, title: String, body: String, url: String?, inky: InkyMood) {
         onEvent?(IncomingNotification(id: -1_000_000 - id - Int64(Date().timeIntervalSince1970) * 10,
                                       bundleID: Self.bundleID, appName: "Inkwell", title: title, subtitle: "",
-                                      body: body, icon: icon, isCall: false, url: url.flatMap(URL.init(string:))))
+                                      body: body, icon: icon, isCall: false, url: url.flatMap(URL.init(string:)), inky: inky))
     }
 
     // MARK: Opening places in Inkwell

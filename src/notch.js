@@ -38,8 +38,9 @@ async function status() {
     } catch {}
   }
   // an older Islet may not have written the file: the process itself is the answer then
-  if (!running && (await pgrep())) return { available: true, running: true, notifications: false };
-  return { available: true, running, notifications: !!(running && s.notifications) };
+  if (!running && (await pgrep())) return { available: true, running: true, notifications: false, inkwell: false, hello: 0 };
+  // inkwell: it reads our widget.json; hello: when it last showed the greeting (ms)
+  return { available: true, running, notifications: !!(running && s.notifications), inkwell: !!(running && s.inkwell), hello: (running && s.hello) || 0 };
 }
 
 // -g: in the background, the reader keeps the keyboard; one already running is left as it is

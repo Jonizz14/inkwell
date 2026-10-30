@@ -13,6 +13,8 @@ struct IncomingNotification: Identifiable, Equatable {
     let isCall: Bool
     /// Deep link to open on click instead of just bringing the app forward.
     var url: URL? = nil
+    /// Inkwell's own messages show Inky instead of an app icon.
+    var inky: InkyMood? = nil
 
     static func == (a: Self, b: Self) -> Bool { a.id == b.id }
 

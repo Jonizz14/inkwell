@@ -326,3 +326,48 @@
 @media (prefers-reduced-motion: reduce) {
   .pv-notch.connecting .pvn, .pv-notch.connecting .pvn-ink, .pv-notch.connecting .pvn-ok { animation: none; }
 }
+
+/* ---------- connecting: a checklist, each step really checked, the tick drawn when it passes ---------- */
+.set-btn.solid { color: var(--on-ink); }
+.nq { padding: 4px 0 2px; }
+.nq-step {
+  position: relative; display: flex; align-items: center; gap: 14px; padding: 12px 16px;
+  animation: nq-in 520ms var(--ease) both; animation-delay: calc(var(--k, 0) * 70ms);
+}
+@keyframes nq-in { from { opacity: 0; filter: blur(6px); transform: translateY(4px); } }
+/* the line from one step to the next fills in as the step above passes */
+.nq-step + .nq-step::before {
+  content: ''; position: absolute; left: 26px; top: -11px; width: 2px; height: 22px; border-radius: 1px;
+  background: var(--line-2); transition: background 400ms var(--ease);
+}
+.nq-step[data-st="done"] + .nq-step::before, .nq-step[data-st="skip"] + .nq-step::before { background: var(--ink); }
+.nq-dot {
+  flex-shrink: 0; display: grid; place-items: center; width: 22px; height: 22px; box-sizing: border-box;
+  border-radius: 50%; border: 2px solid var(--line-2);
+  transition: background 300ms var(--ease), border-color 300ms var(--ease), transform 420ms cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.nq-dot svg { width: 14px; height: 14px; fill: none; stroke: var(--on-ink); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 16; stroke-dashoffset: 16; transition: stroke-dashoffset 360ms ease 120ms; }
+.nq-step[data-st="run"] .nq-dot { border-top-color: var(--ink); animation: nq-spin 750ms linear infinite; }
+@keyframes nq-spin { to { transform: rotate(360deg); } }
+.nq-step[data-st="done"] .nq-dot { background: var(--ink); border-color: var(--ink); transform: scale(1.06); }
+.nq-step[data-st="done"] .nq-dot svg { stroke-dashoffset: 0; }
+.nq-step[data-st="ask"] .nq-dot, .nq-step[data-st="fail"] .nq-dot { border-color: var(--ink); }
+.nq-step[data-st="fail"] .nq-dot::after { content: '!'; font: 700 12px var(--ui); color: var(--ink); }
+.nq-step[data-st="fail"] .nq-dot svg { display: none; }
+.nq-step[data-st="skip"] .nq-dot { border-style: dashed; border-color: var(--muted); }
+.nq-txt { flex: 1; min-width: 0; transition: opacity 300ms var(--ease); }
+.nq-step:not([data-st]) .nq-txt { opacity: 0.4; }
+.nq-txt b { display: block; font: 500 14px/1.35 var(--ui); color: var(--ink); }
+.nq-txt small { display: block; min-height: 15px; margin-top: 1px; font-size: 12px; color: var(--muted); }
+.nq-act { display: flex; gap: 6px; }
+.nq-done {
+  display: flex; align-items: center; gap: 14px; margin: 6px 16px 10px; padding: 14px 16px;
+  border-radius: 14px; background: var(--hover-2); color: var(--ink);
+  animation: nq-in 640ms var(--ease) both;
+}
+.nq-done b { display: block; font: 600 14.5px var(--ui); }
+.nq-done small { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) {
+  .nq-step, .nq-done { animation: none; }
+  .nq-step[data-st="run"] .nq-dot { animation: none; }
+}

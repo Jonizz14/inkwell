@@ -21,6 +21,9 @@ enum Snapshot {
             ("tab-home", { $0.open(tab: .home) }),
             ("notification", { $0.show(note) }),
             ("call", { $0.show(call) }),
+            ("inky-hello", { $0.show(IncomingNotification(id: 9, bundleID: InkwellLink.bundleID, appName: "Inkwell", title: "Salom! Men Inky 👋",
+                                                          subtitle: "", body: "Inkwell ulandi: seriya, fokus va so‘zlar endi shu yerda.",
+                                                          icon: nil, isCall: false, inky: .hello)) }),
             ("airdrop", { $0.dropTargeted = true }),
         ]
         for (name, setup) in states {

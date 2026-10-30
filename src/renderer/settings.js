@@ -82,6 +82,24 @@ const Settings = (() => {
     'set.n.more': 'Notch sozlamalari',
     'set.n.days': 'kun',
     'set.n.words': "so'z",
+    'set.n.connect': "Inkwell'ni notch'ga ulash",
+    'set.n.connectD': "Bir necha soniya — hammasini o'zimiz tekshiramiz",
+    'set.n.go': 'Ulash',
+    'set.n.q1': "Notch'ni ishga tushirish",
+    'set.n.q1d': 'Ishlayapti',
+    'set.n.q2': "Inkwell bilan bog'lash",
+    'set.n.q2w': "macOS ruxsat so'rasa — «Ruxsat berish»ni bosing",
+    'set.n.q2d': "Seriya, maqsad va so'zlar notch'ga boradi",
+    'set.n.q3': 'Salomlashish',
+    'set.n.q3d': "Inky notch'da qo'l silkitdi 👋",
+    'set.n.later': 'Keyinroq',
+    'set.n.skipped': 'Keyinroq yoqish mumkin',
+    'set.n.wait': 'Kutilmoqda…',
+    'set.n.fail': "Bo'lmadi",
+    'set.n.retry': 'Qayta urinish',
+    'set.n.done': 'Tayyor! Inkwell va notch ulandi',
+    'set.n.doneD': "Notch'ni bosing — Inkwell bo'limi sizni kutyapti",
+    'set.n.recheck': 'Qayta tekshirish',
     'set.r.denied': "macOS bildirishnomalarni o'chirib qo'ygan — Sozlamalarda yoqing",
     'set.reset': 'Hammasini asliga qaytarish',
     'set.k.focus': 'Fokus rejimi',
@@ -173,6 +191,24 @@ const Settings = (() => {
     'set.n.more': 'Notch settings',
     'set.n.days': 'days',
     'set.n.words': 'words',
+    'set.n.connect': 'Connect Inkwell to the notch',
+    'set.n.connectD': 'A few seconds — we check everything ourselves',
+    'set.n.go': 'Connect',
+    'set.n.q1': 'Starting the notch',
+    'set.n.q1d': 'Running',
+    'set.n.q2': 'Linking with Inkwell',
+    'set.n.q2w': 'If macOS asks, choose Allow',
+    'set.n.q2d': 'Your streak, goal and words go to the notch',
+    'set.n.q3': 'Saying hello',
+    'set.n.q3d': 'Inky waved in the notch 👋',
+    'set.n.later': 'Later',
+    'set.n.skipped': 'You can turn it on later',
+    'set.n.wait': 'Waiting…',
+    'set.n.fail': "Didn't work",
+    'set.n.retry': 'Try again',
+    'set.n.done': 'Done! Inkwell and the notch are connected',
+    'set.n.doneD': 'Click the notch — the Inkwell section is waiting',
+    'set.n.recheck': 'Check again',
     'set.r.denied': 'macOS has notifications turned off — turn them on in System Settings',
     'set.reset': 'Reset everything',
     'set.k.focus': 'Focus mode',
@@ -264,6 +300,24 @@ const Settings = (() => {
     'set.n.more': 'Настройки выреза',
     'set.n.days': 'дн.',
     'set.n.words': 'слов',
+    'set.n.connect': 'Подключить Inkwell к вырезу',
+    'set.n.connectD': 'Пара секунд — всё проверим сами',
+    'set.n.go': 'Подключить',
+    'set.n.q1': 'Запуск выреза',
+    'set.n.q1d': 'Работает',
+    'set.n.q2': 'Связь с Inkwell',
+    'set.n.q2w': 'Если macOS спросит — нажми «Разрешить»',
+    'set.n.q2d': 'Серия, цель и слова уходят в вырез',
+    'set.n.q3': 'Приветствие',
+    'set.n.q3d': 'Inky помахал в вырезе 👋',
+    'set.n.later': 'Позже',
+    'set.n.skipped': 'Можно включить позже',
+    'set.n.wait': 'Ждём…',
+    'set.n.fail': 'Не получилось',
+    'set.n.retry': 'Повторить',
+    'set.n.done': 'Готово! Inkwell и вырез связаны',
+    'set.n.doneD': 'Нажми на вырез — раздел Inkwell ждёт',
+    'set.n.recheck': 'Проверить снова',
     'set.r.denied': 'В macOS уведомления выключены — включи их в Настройках',
     'set.reset': 'Сбросить всё',
     'set.k.focus': 'Режим фокуса',
@@ -451,12 +505,13 @@ const Settings = (() => {
   };
   const notchRows = () => {
     const on = !!S().notch;
-    if (!on) return [row(t('set.n.on'), seg('notch', [['on', t('set.on')], ['off', t('set.off')]], 'off'), t('set.n.onD'))];
+    if (!on) return [row(t('set.n.connect'), `<button class="btn solid set-btn" data-act="nquest">${esc(t('set.n.go'))}</button>`, t('set.n.connectD'))];
     return [
       row(t('set.n.on'), seg('notch', [['on', t('set.on')], ['off', t('set.off')]], 'on'), t('set.n.onD')),
       row(t('set.n.state'), `<span class="n-state${nst.running ? ' ok' : ''}">${esc(nst.running ? t('set.n.run') : t('set.n.start'))}</span>`),
       row(t('set.n.notif'), nst.notifications ? `<span class="n-state ok">${esc(t('set.n.granted'))}</span>` : `<button class="btn outline set-btn" data-act="nfda">${esc(t('set.n.grant'))}</button>`, nst.notifications ? t('set.n.notifOn') : t('set.n.notifOff')),
-      row(t('set.n.test'), `<div class="n-btns"><button class="btn ghost set-btn" data-act="nmore">${esc(t('set.n.more'))}</button><button class="btn outline set-btn" data-act="ntest">${esc(t('set.n.test'))}</button></div>`, t('set.n.testD')),
+      row(t('set.n.q3'), `<div class="n-btns"><button class="btn ghost set-btn" data-act="nmore">${esc(t('set.n.more'))}</button><button class="btn outline set-btn" data-act="ntest">${esc(t('set.n.test'))}</button></div>`, t('set.n.testD')),
+      row(t('set.n.connect'), `<button class="btn ghost set-btn" data-act="nquest">${esc(t('set.n.recheck'))}</button>`, t('set.n.connectD')),
     ];
   };
   // switched on: Inkwell rises into the little notch, the notch takes it in and shows a tick,
@@ -470,8 +525,91 @@ const Settings = (() => {
     setTimeout(() => Haptic.level(), 1250); // the moment Inkwell meets the notch
     setTimeout(() => pv.classList.remove('connecting'), 2900);
   }
+  /* the connect checklist: each step is really checked against what Islet reports
+     (notch.js status: running, inkwell = it reads our widget.json, hello = it showed the greeting) */
+  let quest = null;
+  const QSTEPS = [['start', 'set.n.q1'], ['data', 'set.n.q2'], ['hello', 'set.n.q3'], ['notif', 'set.n.notif']];
+  const CHECK = '<svg viewBox="0 0 20 20"><path d="M5.5 10.5l3 3 6-7"/></svg>';
+  const questHtml = () => `<div class="nq">${QSTEPS.map(([k, label], i) =>
+    `<div class="nq-step" data-s="${k}" style="--k:${i}"><span class="nq-dot">${CHECK}</span><div class="nq-txt"><b>${esc(t(label))}</b><small></small></div><div class="nq-act"></div></div>`).join('')}</div>`;
+  function setStep(k, st, sub, act = '') {
+    const el = $(`.nq-step[data-s="${k}"]`, root);
+    if (!el) return;
+    el.dataset.st = st;
+    if (sub != null) el.querySelector('small').textContent = sub;
+    el.querySelector('.nq-act').innerHTML = act;
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function until(test, ms, every = 500) {
+    for (const end = Date.now() + ms; Date.now() < end; await sleep(every)) {
+      const st = await api.notch('status').catch(() => ({}));
+      if (test(st || {})) return st;
+    }
+    return null;
+  }
+  async function runQuest() {
+    const box = $('.set-group[data-g="notch"] .n-rows', root);
+    if (!box || quest) return;
+    const q = (quest = {});
+    box.innerHTML = questHtml();
+    S().notch = true;
+    save();
+    // a step shows for a moment at least, so it reads as done rather than flashing past
+    const step = async (k, run, sub, done, min = 900) => {
+      setStep(k, 'run', sub);
+      const t0 = Date.now();
+      const ok = await run();
+      await sleep(Math.max(0, min - (Date.now() - t0)));
+      if (quest !== q) return false;
+      if (ok) setStep(k, 'done', done), Haptic.align();
+      else setStep(k, 'fail', t('set.n.fail'), `<button class="btn outline set-btn" data-act="nqretry">${esc(t('set.n.retry'))}</button>`), Haptic.level();
+      return ok;
+    };
+    if (!(await step('start', async () => (await api.notch('set', true), !!(await until((s) => s.running, 8000))), t('set.n.start'), t('set.n.q1d')))) return;
+    if (!(await step('data', () => until((s) => s.inkwell, 25000, 700).then(Boolean), t('set.n.q2w'), t('set.n.q2d')))) return;
+    const hi = Date.now() - 500;
+    connectNotch();
+    if (!(await step('hello', async () => (await api.notch('link', 'test'), !!(await until((s) => s.hello >= hi, 6000))), t('set.n.wait'), t('set.n.q3d'), 1500))) return;
+    const st = await api.notch('status').catch(() => ({}));
+    if (st && st.notifications) {
+      setStep('notif', 'done', t('set.n.notifOn'));
+      Haptic.align();
+    } else {
+      setStep('notif', 'ask', t('set.n.notifOff'), `<button class="btn ghost set-btn" data-act="nqlater">${esc(t('set.n.later'))}</button><button class="btn outline set-btn" data-act="nfda">${esc(t('set.n.grant'))}</button>`);
+      await new Promise((res) => (q.choose = res));
+      if (quest !== q) return;
+    }
+    // done: Inky says so, then the usual rows come back
+    const nq = $('.nq', root);
+    if (nq) {
+      nq.insertAdjacentHTML('beforeend', `<div class="nq-done">${typeof Inky !== 'undefined' && Inky.html ? Inky.html('happy2', 3) : ''}<div><b>${esc(t('set.n.done'))}</b><small>${esc(t('set.n.doneD'))}</small></div></div>`);
+      Haptic.level();
+    }
+    await sleep(3200);
+    if (quest !== q) return;
+    quest = null;
+    refreshNotch();
+  }
+  // the reader allowed notifications (or put it off): the checklist goes on
+  async function questNotif(grant) {
+    const q = quest;
+    if (!q || !q.choose) return;
+    if (!grant) {
+      setStep('notif', 'skip', t('set.n.skipped'));
+      return q.choose();
+    }
+    setStep('notif', 'run', t('set.n.notifOff'), `<button class="btn ghost set-btn" data-act="nqlater">${esc(t('set.n.later'))}</button>`);
+    const st = await until((s) => s.notifications, 180000, 2000);
+    if (quest !== q || !q.choose) return;
+    if (st) setStep('notif', 'done', t('set.n.notifOn')), Haptic.align();
+    else setStep('notif', 'skip', t('set.n.skipped'));
+    q.choose();
+    q.choose = null;
+  }
+
   // only the rows: the preview keeps playing
   function rerenderNotch() {
+    if (quest) return; // the checklist owns the rows while it runs
     const box = $('.set-group[data-g="notch"] .n-rows', root);
     if (box) box.innerHTML = notchRows().join('');
   }
@@ -710,6 +848,7 @@ const Settings = (() => {
   }
 
   function render() {
+    quest = null; // a checklist in the old page ends with it
     root.innerHTML = `<h2 class="set-h">${esc(t('set.title'))}</h2>`
       + group(t('set.look'), [
         lookPv(),
@@ -777,13 +916,10 @@ const Settings = (() => {
         if (v === 'on') S().notch = true;
         else delete S().notch;
         save();
+        quest = null;
+        if (v === 'on') return rerenderNotch(), runQuest();
         rerenderNotch();
-        if (v !== 'on') return api.notch('set', false).then(() => refreshNotch());
-        connectNotch();
-        return api.notch('set', true).then(() => {
-          refreshNotch(8);
-          setTimeout(() => api.notch('link', 'test'), 1300);
-        });
+        return api.notch('set', false).then(() => refreshNotch());
       }
       if (k === 'lang') {
         const l = $(`#lang-menu [data-lang="${v}"]`);
@@ -812,7 +948,9 @@ const Settings = (() => {
     }
     if (a.dataset.act === 'ntest') return api.notch('link', 'test');
     if (a.dataset.act === 'nmore') return api.notch('link', 'settings');
-    if (a.dataset.act === 'nfda') return api.notch('link', 'fda').then(() => refreshNotch(40, 3000));
+    if (a.dataset.act === 'nquest' || a.dataset.act === 'nqretry') return (quest = null), runQuest();
+    if (a.dataset.act === 'nqlater') return questNotif(false);
+    if (a.dataset.act === 'nfda') return api.notch('link', 'fda').then(() => (quest ? questNotif(true) : refreshNotch(40, 3000)));
     if (a.dataset.act === 'pos') Player.resetPos(), setTimeout(paintPreviews, 20);
     if (a.dataset.act === 'reset') {
       for (const k of Object.keys(DEF)) delete S()[k];

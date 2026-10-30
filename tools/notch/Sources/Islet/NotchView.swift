@@ -399,6 +399,8 @@ struct NotificationCard: View {
                     .frame(width: 42, height: 42)
                     .background(Circle().fill(.green))
                     .symbolEffect(.pulse, options: .repeating)
+            } else if let mood = item.inky {
+                InkyView(mood: mood, pixel: 2).frame(width: 52, height: 42)
             } else if let icon = item.icon {
                 Image(nsImage: icon).resizable().frame(width: 42, height: 42)
             }
@@ -461,9 +463,8 @@ struct FocusActivityView: View {
 
     var body: some View {
         HStack {
-            if let icon = inkwell.icon {
-                Image(nsImage: icon).resizable().frame(width: height - 10, height: height - 10)
-            }
+            // Inky reads along while the focus timer runs
+            InkyView(mood: .reading, pixel: (height - 8) / 16)
             Spacer(minLength: 0)
             if let start = inkwell.state?.focusStart, let end = inkwell.state?.focusEnd, end > start {
                 Text(timerInterval: start...end, countsDown: true)
@@ -488,9 +489,9 @@ struct InkwellPanel: View {
             HStack(spacing: 8) {
                 Tile(action: { inkwell.open("articles365://open") }) {
                     HStack(spacing: 8) {
-                        Text("🔥").font(.system(size: 18))
+                        InkyView(mood: s?.doneToday == true ? .happy : .idle, pixel: 1.5)
                         VStack(alignment: .leading, spacing: 0) {
-                            Text("\(s?.streak ?? 0) kun").font(.system(size: 13, weight: .semibold))
+                            Text("🔥 \(s?.streak ?? 0) kun").font(.system(size: 13, weight: .semibold))
                             Text("ketma-ket").font(.system(size: 10)).foregroundStyle(.secondary)
                         }
                     }

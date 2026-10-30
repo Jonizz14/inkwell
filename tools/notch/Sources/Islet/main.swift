@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import ServiceManagement
 import SwiftUI
 
@@ -141,6 +142,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if ProcessInfo.processInfo.environment["ISLET_DEBUG"] != nil { listenForDebugClicks() }
         inkwell.onEvent = { [weak self] in self?.model.show($0) }
         inkwell.start()
+        // Inkwell's connect checklist waits for these to show up in the status
+        inkwellWatch = inkwell.$state.map { $0 != nil }.removeDuplicates()
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.writeStatus() } }
 
         setUpStatusItem()
         NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
@@ -172,15 +176,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     static let forwardName = Notification.Name("com.jakhongir.islet.url")
     private var isDuplicate = false
+    private var inkwellWatch: AnyCancellable?
+    private var lastHello: Date?
 
     private func handle(_ url: URL) {
         switch url.host {
         case "settings": openSettings()
         case "test":
             model.show(IncomingNotification(id: -Int64(Date().timeIntervalSince1970) - 7, bundleID: InkwellLink.bundleID,
-                                            appName: "Inkwell", title: "Inkwell ulandi ✨", subtitle: "",
-                                            body: "Seriya, fokus va so‘zlar endi shu yerda ko‘rinadi.",
-                                            icon: inkwell.icon ?? NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath), isCall: false))
+                                            appName: "Inkwell", title: "Salom! Men Inky 👋", subtitle: "",
+                                            body: "Inkwell ulandi: seriya, fokus va so‘zlar endi shu yerda.",
+                                            icon: inkwell.icon ?? NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath), isCall: false,
+                                            url: URL(string: "articles365://open"), inky: .hello))
+            lastHello = Date()
+            writeStatus()
         case "open": model.open(tab: NotchModel.Tab(rawValue: url.lastPathComponent))
         case "quit": NSApp.terminate(nil)
         default: break
@@ -196,6 +205,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             "pid": ProcessInfo.processInfo.processIdentifier,
             "version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "",
             "notifications": watcher.hasAccess,
+            "inkwell": inkwell.state != nil,
+            "hello": lastHello.map { $0.timeIntervalSince1970 * 1000 } ?? 0,
             "path": Bundle.main.bundlePath,
         ]
         try? FileManager.default.createDirectory(at: Self.statusURL.deletingLastPathComponent(), withIntermediateDirectories: true)

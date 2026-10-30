@@ -6,6 +6,26 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.61', '2026-10-30', {
+      uz: ['Notch’ga ulanish va Inky', [
+        'Sozlamalar → Dynamic Notch → «Ulash»: to‘rt qadam birma-bir tekshiriladi — notch ishga tushdimi, Inkwell bilan bog‘landimi, salomlashdimi, boshqa ilovalar xabarlari',
+        'Har bir qadam o‘tganda belgi chiziladi; nimadir bo‘lmasa — «Qayta urinish»',
+        'Inky endi notch’da ham: fokus paytida kitob o‘qiydi, Inkwell bo‘limida seriya yonida turadi, salomlashganda qo‘l silkitadi, maqsad bajarilganda ko‘zlari yulduz bo‘ladi',
+        '«Qayta tekshirish» — ulanishni istalgan payt yana tekshirish',
+      ]],
+      en: ['Connecting to the notch, and Inky', [
+        'Settings → Dynamic Notch → “Connect”: four steps, each really checked — the notch starts, it links with Inkwell, it says hello, other apps’ notifications',
+        'A tick is drawn as each step passes; if something fails — “Try again”',
+        'Inky lives in the notch too: it reads during focus, stands by your streak in the Inkwell section, waves hello and gets starry eyes when the goal is done',
+        '“Check again” runs the checks whenever you like',
+      ]],
+      ru: ['Подключение к вырезу и Inky', [
+        'Настройки → Dynamic Notch → «Подключить»: четыре шага, каждый проверяется по-настоящему — вырез запустился, связался с Inkwell, поздоровался, уведомления других приложений',
+        'Когда шаг пройден, рисуется галочка; если что-то не так — «Повторить»',
+        'Inky теперь и в вырезе: читает во время фокуса, стоит рядом с серией в разделе Inkwell, машет при встрече и смотрит звёздами, когда цель выполнена',
+        '«Проверить снова» — проверка связи в любой момент',
+      ]],
+    }],
     ['1.1.60', '2026-10-30', {
       uz: ['Notch tuzatishlari', [
         'Sozlamalardagi «Sinab ko‘rish» endi notch’da xabar chiqaradi',
