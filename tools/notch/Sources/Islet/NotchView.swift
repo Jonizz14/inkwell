@@ -59,7 +59,7 @@ struct NotchRootView: View {
 
     private var notchH: CGFloat { model.notchSize.height }
     /// Artwork + equalizer live once and fly between the closed wings, the
-    /// notification's wings and the open player.
+    /// notifications' wings and the open player.
     private var showsHero: Bool {
         model.showsLiveActivity || model.showsMusicWings || (model.mode == .expanded && model.tab == .music && player.hasTrack)
     }
@@ -79,9 +79,11 @@ struct NotchRootView: View {
         .background(Color.black)
         .clipShape(shape)
         .shadow(color: .black.opacity(model.isOpen ? 0.45 : 0), radius: 14, y: 6)
-        .onDrop(of: [.fileURL], isTargeted: $model.dropTargeted) { model.handleDrop($0) }
+        .onDrop(of: [.fileURL], delegate: NotchDrop(model: model))
         .animation(NotchModel.open, value: model.showsLiveActivity)
         .animation(NotchModel.open, value: model.showsFocus)
+        .animation(NotchModel.open, value: model.showsActivity)
+        .animation(NotchModel.open, value: player.artWide)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.colorScheme, .dark)
     }
@@ -119,22 +121,28 @@ struct NotchRootView: View {
             if model.showsFocus {
                 fixed(.closed) { FocusActivityView(inkwell: inkwell, height: notchH) }
                     .transition(.dissolve)
+            } else if model.showsActivity, let activity = model.activity {
+                fixed(.closed) { WorkActivityView(activity: activity, height: notchH) }
+                    .transition(.dissolve)
             } else if model.showsLiveActivity {
-                fixed(.closed) { LiveActivityView(hero: hero, height: notchH) }
+                fixed(.closed) { LiveActivityView(hero: hero, height: notchH, art: model.wingArt) }
                     .transition(.dissolve)
             }
         case .expanded:
             fixed(.expanded) {
                 VStack(spacing: 0) {
-                    // Beside the camera: sections on the left, the time on the right.
+                    // Beside the camera: sections on the left; on the right what Inkwell is
+                    // doing, or the time.
                     HStack {
                         TabBar(model: model, ns: tabs)
                         Spacer()
-                        if model.tab != .home {
+                        if let activity = model.activity {
+                            ActivityPill(activity: activity).transition(.dissolve)
+                        } else if model.tab != .home {
                             TimelineView(.everyMinute) { context in
-                            Text(context.date, format: .dateTime.hour().minute())
-                                .font(.system(size: 12, weight: .semibold).monospacedDigit())
-                                .foregroundStyle(.secondary)
+                                Text(context.date, format: .dateTime.hour().minute())
+                                    .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                                    .foregroundStyle(.secondary)
                             }
                             .transition(.dissolve)
                         }
@@ -153,37 +161,73 @@ struct NotchRootView: View {
                             InkwellPanel(inkwell: inkwell).transition(.dissolve)
                         case .home:
                             IdleView().transition(.dissolve)
+                        case .shelf:
+                            ShelfView(model: model).transition(.dissolve)
+                        case .inbox:
+                            InboxView(model: model).transition(.dissolve)
                         }
                     }
                     .padding(.top, 10)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, model.tab == .inbox || model.tab == .shelf ? 18 : 30)
                     .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
             .transition(.dissolve)
-        case .notification(let item):
-            fixed(model.mode) {
+        case .stack:
+            fixed(.stack) {
                 ZStack(alignment: .top) {
                     if model.showsMusicWings {
-                        LiveActivityView(hero: hero, height: notchH)
+                        LiveActivityView(hero: hero, height: notchH, art: model.wingArt)
                             .padding(.horizontal, 14)
                     }
-                    NotificationCard(item: item, dismiss: model.dismissNotification)
-                        .padding(.top, notchH + 6)
-                        .padding(.horizontal, 28)
+                    NotificationStack(model: model)
+                        .padding(.top, notchH + 8)
+                        .padding(.horizontal, 14)
                 }
             }
-            .id(item.id)
             .transition(.dissolve)
         case .airdrop:
             fixed(.airdrop) {
-                AirDropZone(targeted: model.dropTargeted)
+                DropZones(side: model.dropSide, targeted: model.dropTargeted)
                     .padding(.top, notchH + 6)
-                    .padding(.horizontal, 30)
+                    .padding(.horizontal, 18)
                     .padding(.bottom, 14)
             }
             .transition(.dissolve)
         }
+    }
+}
+
+/// Files over the notch: which half they're over decides where they go.
+struct NotchDrop: DropDelegate {
+    let model: NotchModel
+
+    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.fileURL]) }
+
+    func dropEntered(info: DropInfo) {
+        model.dropTargeted = true
+        follow(info)
+    }
+
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        follow(info)
+        return DropProposal(operation: .copy)
+    }
+
+    func dropExited(info: DropInfo) { model.dropTargeted = false }
+
+    func performDrop(info: DropInfo) -> Bool {
+        let providers = info.itemProviders(for: [.fileURL])
+        let ok = model.handleDrop(providers)
+        model.dropTargeted = false
+        return ok
+    }
+
+    private func follow(_ info: DropInfo) {
+        let side: NotchModel.DropSide = info.location.x < model.currentSize.width / 2 ? .shelf : .airdrop
+        guard side != model.dropSide else { return }
+        model.haptic(.alignment)
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.72)) { model.dropSide = side }
     }
 }
 
@@ -194,10 +238,12 @@ struct NotchRootView: View {
 struct LiveActivityView: View {
     let hero: Namespace.ID
     let height: CGFloat
+    /// Square, or 16:9 when a video is playing.
+    let art: CGSize
 
     var body: some View {
         HStack {
-            Color.clear.frame(width: height - 12, height: height - 12)
+            Color.clear.frame(width: art.width, height: art.height)
                 .matchedGeometryEffect(id: "art", in: hero)
             Spacer(minLength: 0)
             Color.clear.frame(width: 18, height: height - 16)
@@ -216,7 +262,8 @@ struct PlayerView: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Color.clear.frame(width: 78, height: 78)
+            // a video's picture keeps its 16:9 shape instead of being cut to a square
+            Color.clear.frame(width: player.artWide ? 136 : 78, height: player.artWide ? 77 : 78)
                 .matchedGeometryEffect(id: "art", in: hero)
 
             VStack(alignment: .leading, spacing: 7) {
@@ -363,79 +410,6 @@ struct IdleView: View {
 
 // MARK: - AirDrop drop zone
 
-struct AirDropZone: View {
-    let targeted: Bool
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "dot.radiowaves.up.forward")
-                .font(.system(size: 28, weight: .medium))
-                .foregroundStyle(targeted ? Color.accentColor : .white)
-                .scaleEffect(targeted ? 1.15 : 1)
-            Text(targeted ? "Qo‘yib yuboring — AirDrop ochiladi" : "AirDrop uchun shu yerga tashlang")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(.white.opacity(targeted ? 0.12 : 0.06)))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
-            .strokeBorder(targeted ? Color.accentColor : .white.opacity(0.25), style: StrokeStyle(lineWidth: 1.5, dash: [6, 4])))
-        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: targeted)
-    }
-}
-
-// MARK: - Notifications & calls
-
-struct NotificationCard: View {
-    let item: IncomingNotification
-    let dismiss: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            if item.isCall {
-                Image(systemName: "phone.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 42, height: 42)
-                    .background(Circle().fill(.green))
-                    .symbolEffect(.pulse, options: .repeating)
-            } else if let mood = item.inky {
-                InkyView(mood: mood, pixel: 2).frame(width: 52, height: 42)
-            } else if let icon = item.icon {
-                Image(nsImage: icon).resizable().frame(width: 42, height: 42)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Text(item.isCall ? "Qo‘ng‘iroq · \(item.appName)" : item.appName)
-                        .font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
-                    Spacer()
-                    if !item.isCall {
-                        Text("hozir").font(.system(size: 11)).foregroundStyle(.tertiary)
-                    }
-                }
-                Text(item.title.isEmpty ? item.appName : item.title)
-                    .font(.system(size: 13, weight: .semibold)).lineLimit(1)
-                let detail = [item.subtitle, item.body].filter { !$0.isEmpty }.joined(separator: " — ")
-                if !detail.isEmpty {
-                    Text(detail).font(.system(size: 12)).foregroundStyle(.secondary).lineLimit(item.isCall ? 1 : 2)
-                }
-            }
-
-            if item.isCall {
-                HStack(spacing: 10) {
-                    CircleButton(symbol: "xmark", color: .red, action: dismiss)
-                    CircleButton(symbol: "phone.fill", color: .green) {
-                        item.openApp()
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .foregroundStyle(.white)
-    }
-}
-
 struct CircleButton: View {
     let symbol: String
     let color: Color
@@ -568,6 +542,9 @@ struct TabBar: View {
                     Image(systemName: tab.symbol)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(model.tab == tab ? .black : .white.opacity(0.6))
+                        // the bell rings for a new notification, the tray hops when a file lands
+                        .symbolEffect(.bounce, value: tab == .inbox ? model.unread : tab == .shelf ? model.shelfBump : 0)
+                        .symbolEffect(.bounce.down, value: model.tab == tab)
                         .frame(width: 30, height: 22)
                         .background {
                             if model.tab == tab {
@@ -575,10 +552,24 @@ struct TabBar: View {
                             }
                         }
                         .contentShape(Capsule())
+                        .overlay(alignment: .topTrailing) {
+                            if tab == .inbox, model.unread > 0 {
+                                Text(model.unread > 99 ? "99+" : "\(model.unread)")
+                                    .font(.system(size: 8, weight: .bold).monospacedDigit())
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 3.5)
+                                    .frame(minWidth: 13, minHeight: 13)
+                                    .background(Capsule().fill(.red))
+                                    .contentTransition(.numericText())
+                                    .offset(x: 3, y: -3)
+                                    .transition(.scale.combined(with: .opacity))
+                            }
+                        }
                 }
                 .buttonStyle(PressStyle())
             }
         }
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: model.unread)
     }
 }
 

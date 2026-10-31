@@ -6,7 +6,7 @@ import SwiftUI
 /// Borderless overlay pinned over the notch. Only the black shape takes the
 /// pointer; everywhere else clicks fall through to the menu bar.
 final class NotchPanel: NSPanel {
-    static let canvas = CGSize(width: 680, height: 260)
+    static let canvas = CGSize(width: 680, height: 360)
 
     init() {
         super.init(contentRect: .zero, styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
@@ -78,10 +78,8 @@ final class NotchHostingView: NSHostingView<NotchRootView> {
         switch model.mode {
         case .closed:
             model.click()
-        case .notification(let n) where !n.isCall:
-            model.click()
         default:
-            // Expanded player / call card: let SwiftUI buttons handle it.
+            // Open notch / notifications: their own buttons take the click.
             super.mouseDown(with: event)
         }
     }
@@ -191,6 +189,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             lastHello = Date()
             writeStatus()
         case "open": model.open(tab: NotchModel.Tab(rawValue: url.lastPathComponent))
+        // Inkwell working in the background (notch.js activity)
+        case "activity": model.handleActivity(url)
         case "quit": NSApp.terminate(nil)
         default: break
         }

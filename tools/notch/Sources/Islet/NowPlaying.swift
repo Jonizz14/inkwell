@@ -10,6 +10,8 @@ final class NowPlaying: ObservableObject {
     @Published private(set) var artist = ""
     @Published private(set) var isPlaying = false
     @Published private(set) var artwork: NSImage?
+    /// Width / height of the artwork: video thumbnails (YouTube in a browser…) are 16:9.
+    @Published private(set) var artAspect: CGFloat = 1
     @Published private(set) var accent: NSColor = .white
     @Published private(set) var appIcon: NSImage?
     @Published private(set) var duration: Double = 0
@@ -25,6 +27,8 @@ final class NowPlaying: ObservableObject {
     private var clearWork: DispatchWorkItem?
 
     var hasTrack: Bool { !title.isEmpty }
+    /// Wide artwork is shown wide (16:9), not cropped to a square.
+    var artWide: Bool { artwork != nil && artAspect > 1.25 }
 
     func elapsed(at date: Date) -> Double {
         guard duration > 0 else { return 0 }
@@ -143,7 +147,11 @@ final class NowPlaying: ObservableObject {
                 bundleID = bundle
                 appIcon = icon
             }
-            if let newArtwork { artwork = newArtwork }
+            if let newArtwork {
+                artwork = newArtwork
+                let size = newArtwork?.size ?? .zero
+                artAspect = size.height > 0 ? min(max(size.width / size.height, 1), 2) : 1
+            }
             if let newAccent { accent = newAccent }
         }
 

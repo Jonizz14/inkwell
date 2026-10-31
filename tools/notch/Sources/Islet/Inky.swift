@@ -3,7 +3,7 @@ import SwiftUI
 /// Inky, Inkwell's pixel mascot, living in the notch. Same frames as in Inkwell
 /// (InkyFrames.swift); on black the ink body is drawn light and the eyes dark.
 /// It moves like a sprite: whole frames a few times a second, only while shown.
-enum InkyMood {
+enum InkyMood: String, Codable {
     case idle, hello, happy, reading, love, starry, proud, sleep
 }
 

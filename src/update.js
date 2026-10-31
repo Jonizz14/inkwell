@@ -295,10 +295,12 @@ function hold(e) {
   return true;
 }
 
-function start(win) {
+// tell(channel, data): optional, also gets every message (the notch shows the download)
+function start(win, tell = () => {}) {
   send = (ch, data) => {
     const w = win();
     if (w && !w.isDestroyed()) w.webContents.send(ch, data);
+    tell(ch, data);
   };
   ipcMain.handle('update:demo', () => DEMO);
   ipcMain.handle('update:done', async () => {

@@ -50,7 +50,8 @@ function pdfOf(lib, m) {
   return m.src;
 }
 
-function create({ DATA, LIB, INDEX, NOTES, readJson, update }) {
+// tell(phase, last): optional, for the notch (notch.js activity)
+function create({ DATA, LIB, INDEX, NOTES, readJson, update, tell = () => {} }) {
   let running = null;
 
   async function on() {
@@ -133,6 +134,7 @@ function create({ DATA, LIB, INDEX, NOTES, readJson, update }) {
     if (running) return running;
     running = (async () => {
       if (!force && !(await on())) return null;
+      tell('start');
       const low = await lowDisk();
       const parts = {};
       for (const [k, fn] of [['pdf', dedupePdfs], ['cache', () => trimCaches(low)], ['update', dropUpdate], ['ocr', dropOldOcr]]) {
@@ -145,6 +147,7 @@ function create({ DATA, LIB, INDEX, NOTES, readJson, update }) {
       }
       const last = { at: Date.now(), freed: Object.values(parts).reduce((a, b) => a + b, 0), parts, low };
       await fsp.writeFile(path.join(DATA(), 'tidy.json'), JSON.stringify(last)).catch(() => {});
+      tell('done', last);
       return last;
     })().finally(() => (running = null));
     return running;

@@ -15,8 +15,15 @@ struct IncomingNotification: Identifiable, Equatable {
     var url: URL? = nil
     /// Inkwell's own messages show Inky instead of an app icon.
     var inky: InkyMood? = nil
+    var date = Date()
+    /// A picture or video the notification carries (shown in its own shape, 16:9 stays wide).
+    var imagePath: String? = nil
+    /// Islet's own short notes (Inkwell finished a job): shown, but not kept in the box.
+    var transient = false
 
     static func == (a: Self, b: Self) -> Bool { a.id == b.id }
+
+    var detail: String { [subtitle, body].filter { !$0.isEmpty }.joined(separator: " — ") }
 
     func openApp() {
         if let url { NSWorkspace.shared.open(url); return }
@@ -116,10 +123,9 @@ final class NotificationWatcher {
             let data = Data(bytes: blob, count: Int(sqlite3_column_bytes(stmt, 2)))
             if let n = Self.parse(id: id, appID: appID, data: data) { found.append(n) }
         }
-        // Several rows can land at once (e.g. after wake); show only the latest few.
-        for n in found.suffix(3) {
-            DispatchQueue.main.async { self.onNotification?(n) }
-        }
+        // Several rows can land at once (e.g. after wake): every one is shown and kept
+        guard !found.isEmpty else { return }
+        DispatchQueue.main.async { found.forEach { self.onNotification?($0) } }
     }
 
     private static func parse(id: Int64, appID: String, data: Data) -> IncomingNotification? {
@@ -140,8 +146,27 @@ final class NotificationWatcher {
 
         let text = "\(title) \(subtitle) \(body)".lowercased()
         let isCall = callApps.contains(bundle) || callWords.contains { text.contains($0) }
+        let date = (req["date"] as? Date) ?? (root["date"] as? Date) ?? Date()
         return IncomingNotification(id: id, bundleID: bundle, appName: appName, title: title,
-                                    subtitle: subtitle, body: body, icon: icon, isCall: isCall)
+                                    subtitle: subtitle, body: body, icon: icon, isCall: isCall,
+                                    date: date, imagePath: attachment(in: req["atta"] ?? req))
+    }
+
+    private static let mediaTypes: Set<String> = ["png", "jpg", "jpeg", "heic", "gif", "webp", "tiff", "mp4", "mov", "m4v"]
+
+    /// The first picture or video attached to the request, wherever usernoted put its path.
+    private static func attachment(in value: Any, depth: Int = 0) -> String? {
+        guard depth < 5 else { return nil }
+        if let s = value as? String {
+            let path = s.hasPrefix("file://") ? URL(string: s)?.path ?? "" : s
+            guard path.hasPrefix("/"), mediaTypes.contains((path as NSString).pathExtension.lowercased()),
+                  FileManager.default.fileExists(atPath: path) else { return nil }
+            return path
+        }
+        if let url = value as? URL, url.isFileURL { return attachment(in: url.path, depth: depth + 1) }
+        if let list = value as? [Any] { return list.lazy.compactMap { attachment(in: $0, depth: depth + 1) }.first }
+        if let dict = value as? [String: Any] { return dict.values.lazy.compactMap { attachment(in: $0, depth: depth + 1) }.first }
+        return nil
     }
 
     private static func scalar(_ db: OpaquePointer?, _ sql: String) -> Int64? {

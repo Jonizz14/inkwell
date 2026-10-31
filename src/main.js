@@ -120,7 +120,11 @@ async function doImport(files) {
   const index = await readJson(INDEX(), []);
   const known = new Set(index.map((a) => a.id));
   const knownFiles = new Map(index.map((a) => [a.src, a.size]));
-  const send = (p) => win && !win.isDestroyed() && win.webContents.send('import:progress', p);
+  const send = (p) => {
+    if (win && !win.isDestroyed()) win.webContents.send('import:progress', p);
+    // the notch shows it too, once a file really is being read
+    if (!p.added && p.done < p.total) notch.activity('import', 'progress', { p: p.done / p.total, text: p.name }).catch(() => {});
+  };
   let added = 0;
   let failed = 0;
   for (let i = 0; i < files.length; i++) {
@@ -165,6 +169,8 @@ async function doImport(files) {
   }
   await extractor.stopOcr();
   if (files.length) send({ done: files.length, total: files.length });
+  if (added) notch.activity('import', 'done', { n: added }).catch(() => {});
+  else if (failed) notch.activity('import', 'cancel').catch(() => {});
   return { added, failed, total: index.length };
 }
 
@@ -343,16 +349,21 @@ ipcMain.handle('storage:clear', async (_e, part = 'cache') => {
     if (update.pending() || update.working()) return false;
     await fsp.rm(path.join(DATA(), 'update'), { recursive: true, force: true });
   } else {
+    notch.activity('clear', 'start').catch(() => {});
     const s = session.defaultSession;
     await s.clearCache();
     await s.clearCodeCaches({});
     await s.clearStorageData({ storages: ['shadercache', 'cachestorage'] });
+    notch.activity('clear', 'done').catch(() => {});
   }
   usage = null;
   return true;
 });
 // smart storage, now: what it freed comes back with the new sizes
-const smart = tidy.create({ DATA, LIB, INDEX, NOTES, readJson, update });
+const smart = tidy.create({
+  DATA, LIB, INDEX, NOTES, readJson, update,
+  tell: (phase, last) => notch.activity('tidy', phase, { n: last ? last.freed : undefined }).catch(() => {}),
+});
 ipcMain.handle('storage:tidy', async () => {
   await smart.pass({ force: true });
   usage = null;
@@ -641,7 +652,10 @@ app.whenReady().then(async () => {
     remind.schedule().catch((e) => console.error('remind schedule', e));
     remind.widget().catch((e) => console.error('widget', e));
     // a newer release is announced in the window; it comes down when the reader asks (update.js)
-    update.start(() => win);
+    update.start(() => win, (ch, d) => {
+      const act = { 'update:progress': d && d.f < 1 ? 'progress' : null, 'update:staged': 'done', 'update:failed': 'cancel' }[ch];
+      if (act) notch.activity('update', act, act === 'progress' ? { p: d.f } : {}).catch(() => {});
+    });
     smart.start();
     readJson(NOTES(), {}).then((n) => n.settings && n.settings.notch && notch.start()).catch(() => {});
     return;

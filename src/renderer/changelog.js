@@ -6,6 +6,35 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.63', '2026-10-31', {
+      uz: ['Notch: xabarlar qutisi, shelf va Inkwell ishlari', [
+        'Bir nechta xabar kelsa, notch ostida ustma-ust turadi: eng yangisi tepada, ko‘pi bilan 3 ta, qolgani «+N yana»',
+        'Har bir xabarni ✕ bilan yopish yoki chetga surib tashlash mumkin; «Hammasini yopish» tugmasi bor',
+        'Yangi 🔔 bo‘lim — xabarlar qutisi: kelgan hamma xabar saqlanadi, o‘qilmaganlar soni ko‘rinadi, «Tozalash» bilan bo‘shatiladi',
+        'Shelf: faylni notch’ning chap yarmiga tashlang — tepada qadalib turadi; bossangiz ochiladi, olib boshqa joyga tashlasa bo‘ladi',
+        'Video va 16:9 rasmlar kesilmasdan, keng ko‘rinadi (musiqa va xabarlardagi rasmlar)',
+        'Inkwell orqa fonda ishlayotganini notch ko‘rsatadi: kesh tozalash, yangilanish yuklash, maqola qo‘shish — Inky ishlaydi, halqa to‘ladi',
+        'Ko‘proq mikro-animatsiyalar: qo‘ng‘iroqcha silkinadi, fayl tushganda shelf sakraydi, qatorlar blur orqali kiradi',
+      ]],
+      en: ['Notch: a notification box, a shelf and Inkwell at work', [
+        'Several notifications stack under the notch: newest on top, three at most, the rest as “+N more”',
+        'Close each one with ✕ or swipe it aside; “Close all” clears them',
+        'A new 🔔 section, the box: every notification is kept, unread ones are counted, “Clear” empties it',
+        'Shelf: drop a file on the left half of the notch and it stays pinned up there; click opens it, drag it out to use it',
+        'Videos and 16:9 pictures show wide instead of cut to a square (music and notification pictures)',
+        'The notch shows when Inkwell works in the background: cleaning its cache, downloading an update, adding articles — Inky works, a ring fills',
+        'More small animations: the bell rings, the shelf hops when a file lands, rows come in through a blur',
+      ]],
+      ru: ['Notch: ящик уведомлений, полка и работа Inkwell', [
+        'Несколько уведомлений складываются под вырезом: новое сверху, не больше трёх, остальные — «+N ещё»',
+        'Каждое можно закрыть ✕ или смахнуть в сторону; есть «Закрыть все»',
+        'Новый раздел 🔔 — ящик: все уведомления сохраняются, непрочитанные считаются, «Очистить» опустошает его',
+        'Полка: бросьте файл на левую половину выреза — он закрепится наверху; клик открывает, можно перетащить куда нужно',
+        'Видео и картинки 16:9 показываются широкими, а не обрезанными в квадрат',
+        'Вырез показывает фоновую работу Inkwell: очистку кэша, загрузку обновления, добавление статей — Inky работает, кольцо заполняется',
+        'Больше микроанимаций: колокольчик звенит, полка подпрыгивает, строки появляются через размытие',
+      ]],
+    }],
     ['1.1.62', '2026-10-31', {
       uz: ['Bitta yangilanish oynasi, silliq sahifalar', [
         'Yangilanish banneri endi bitta: bosh sahifada (va Yangilanishlar sahifasida) turadi, «Nima yangi» ochilganda ikkinchi nusxa chiqmaydi',

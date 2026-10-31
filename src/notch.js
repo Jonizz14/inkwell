@@ -66,4 +66,25 @@ async function link(what) {
   return send(LINKS[what]);
 }
 
-module.exports = { available, status, start, stop, link };
+// What Inkwell is doing in the background — cleaning its cache, downloading an update, adding
+// articles — shows in the notch while it runs (Inky at work, a ring filling) and a short note
+// when it's done. kind: tidy | clear | update | import; phase: start | progress | done | cancel;
+// p: 0–1; n: bytes freed or articles added. Only when the notch is running; progress at most
+// twice a second.
+let lastProgress = 0;
+async function activity(kind, phase, { p, n, text } = {}) {
+  if (!available()) return;
+  if (phase === 'progress') {
+    const now = Date.now();
+    if (now - lastProgress < 500) return;
+    lastProgress = now;
+  }
+  if (!(await status()).running) return;
+  const q = new URLSearchParams({ kind, phase });
+  if (p != null) q.set('p', String(Math.round(p * 100) / 100));
+  if (n != null) q.set('n', String(n));
+  if (text) q.set('text', String(text).slice(0, 60));
+  send('islet://activity?' + q);
+}
+
+module.exports = { available, status, start, stop, link, activity };

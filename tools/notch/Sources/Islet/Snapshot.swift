@@ -5,6 +5,7 @@ import SwiftUI
 enum Snapshot {
     static func run(into dir: String) {
         Prefs.register()
+        Store.enabled = false
         let player = NowPlaying()
         let inkwell = InkwellLink()
         inkwell.start()
@@ -25,12 +26,29 @@ enum Snapshot {
                                                           subtitle: "", body: "Inkwell ulandi: seriya, fokus va so‘zlar endi shu yerda.",
                                                           icon: nil, isCall: false, inky: .hello)) }),
             ("airdrop", { $0.dropTargeted = true }),
+            ("stack3", { m in
+                for i in 0..<5 { m.show(IncomingNotification(id: 100 + Int64(i), bundleID: "ru.keepcoder.Telegram", appName: "Telegram",
+                                                             title: "Aziz \(i + 1)", subtitle: "", body: "Bro ertaga soat nechida uchrashamiz?",
+                                                             icon: NSWorkspace.shared.icon(forFile: "/System/Applications/Messages.app"), isCall: false)) }
+            }),
+            ("inbox", { m in
+                m.show(note)
+                m.open(tab: .inbox)
+            }),
+            ("inbox-empty", { $0.open(tab: .inbox) }),
+            ("shelf", { m in m.pin([URL(fileURLWithPath: "/System/Applications/Notes.app"), URL(fileURLWithPath: "/Library/Desktop Pictures")]) }),
+            ("shelf-empty", { $0.open(tab: .shelf) }),
+            ("activity", { m in m.handleActivity(URL(string: "islet://activity?kind=update&phase=progress&p=0.42")!) }),
+            ("activity-open", { m in
+                m.handleActivity(URL(string: "islet://activity?kind=tidy&phase=start")!)
+                m.open(tab: .home)
+            }),
         ]
         for (name, setup) in states {
-            let model = NotchModel(notchSize: size, player: player, inkwell: inkwell)
+            let model = NotchModel(notchSize: size, player: player, inkwell: inkwell, restore: false)
             setup(model)
             let view = NotchRootView(model: model, player: player, inkwell: inkwell)
-                .frame(width: 560, height: 200)
+                .frame(width: 560, height: 330)
                 .background(Color(white: 0.85))
             let renderer = ImageRenderer(content: view)
             renderer.scale = 2
