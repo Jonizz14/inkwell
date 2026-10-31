@@ -168,7 +168,7 @@ struct NotchRootView: View {
                         }
                     }
                     .padding(.top, 10)
-                    .padding(.horizontal, model.tab == .inbox || model.tab == .shelf ? 18 : 30)
+                    .padding(.horizontal, model.tab == .inbox || model.tab == .shelf ? 26 : 30)
                     .frame(maxHeight: .infinity, alignment: .top)
                 }
             }
@@ -180,9 +180,10 @@ struct NotchRootView: View {
                         LiveActivityView(hero: hero, height: notchH, art: model.wingArt)
                             .padding(.horizontal, 14)
                     }
+                    // the shape's sides sit 14 pt in (the flares at the top): 14 + 12 of air
                     NotificationStack(model: model)
                         .padding(.top, notchH + 8)
-                        .padding(.horizontal, 14)
+                        .padding(.horizontal, 26)
                 }
             }
             .transition(.dissolve)
@@ -190,8 +191,8 @@ struct NotchRootView: View {
             fixed(.airdrop) {
                 DropZones(side: model.dropSide, targeted: model.dropTargeted)
                     .padding(.top, notchH + 6)
-                    .padding(.horizontal, 18)
-                    .padding(.bottom, 14)
+                    .padding(.horizontal, 26)
+                    .padding(.bottom, 16)
             }
             .transition(.dissolve)
         }

@@ -160,9 +160,9 @@ final class NotchModel: ObservableObject {
             switch tab {
             case .inbox:
                 let rows = CGFloat(min(max(box.count, 1), 4))
-                return CGSize(width: width, height: n.height + 10 + 30 + rows * (Self.inboxRow + 4) + 14)
+                return CGSize(width: width, height: n.height + 10 + 30 + rows * (Self.inboxRow + 4) + 18)
             case .shelf:
-                return CGSize(width: width, height: n.height + 10 + 30 + 96 + 12)
+                return CGSize(width: width, height: n.height + 10 + 30 + 96 + 16)
             default:
                 return CGSize(width: width, height: n.height + 122)
             }
@@ -172,7 +172,7 @@ final class NotchModel: ObservableObject {
             let rows = stackShown.reduce(CGFloat(0)) { $0 + ($1.isCall ? Self.callHeight : Self.rowHeight) }
             let gaps = CGFloat(max(stackShown.count - 1, 0)) * Self.rowGap
             let more: CGFloat = live.count > 1 ? Self.rowGap + 20 : 0
-            return CGSize(width: max(n.width + 260, 460), height: n.height + 8 + rows + gaps + more + 12)
+            return CGSize(width: max(n.width + 290, 490), height: n.height + 8 + rows + gaps + more + 20)
         }
     }
 

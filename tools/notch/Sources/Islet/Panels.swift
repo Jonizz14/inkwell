@@ -97,6 +97,7 @@ struct NotificationStack: View {
                     PillButton(title: "Hammasini yopish", symbol: "xmark", action: model.closeStack)
                 }
                 .frame(height: 20)
+                .padding(.horizontal, 4)
                 .transition(.rowIn)
             }
         }

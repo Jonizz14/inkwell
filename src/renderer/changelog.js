@@ -6,6 +6,11 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.64', '2026-10-31', {
+      uz: ['Notch’da bo‘shliq', ['Xabarlar, quti, shelf va fayl tashlash zonalari endi notch chetiga yopishmaydi — har tomonda bo‘shliq bor']],
+      en: ['Room to breathe in the notch', ['Notifications, the box, the shelf and the drop zones no longer touch the notch’s edges — there is space on every side']],
+      ru: ['Отступы в вырезе', ['Уведомления, ящик, полка и зоны для файлов больше не прилипают к краям выреза — со всех сторон есть отступ']],
+    }],
     ['1.1.63', '2026-10-31', {
       uz: ['Notch: xabarlar qutisi, shelf va Inkwell ishlari', [
         'Bir nechta xabar kelsa, notch ostida ustma-ust turadi: eng yangisi tepada, ko‘pi bilan 3 ta, qolgani «+N yana»',
