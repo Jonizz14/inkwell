@@ -139,6 +139,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         model.callExists = { [weak self] id in self?.watcher.exists(id) ?? true }
         watcher.start()
         writeStatus()
+        // without Full Disk Access no notification or call can reach the notch: say so, in the notch
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) { [weak self] in
+            guard let self, !self.watcher.hasAccess else { return }
+            self.model.show(IncomingNotification(id: -3_000_000, bundleID: "com.apple.systempreferences", appName: "Islet",
+                                                 title: "Xabarlar uchun ruxsat kerak",
+                                                 subtitle: "", body: "Bosing → Full Disk Access’da Islet’ni o‘chirib, qayta yoqing",
+                                                 icon: NSWorkspace.shared.icon(forFile: Bundle.main.bundlePath), isCall: false,
+                                                 url: URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles"),
+                                                 transient: true))
+        }
         if ProcessInfo.processInfo.environment["ISLET_DEBUG"] != nil { listenForDebugClicks() }
         inkwell.onEvent = { [weak self] in self?.model.show($0) }
         inkwell.start()

@@ -507,7 +507,7 @@ struct CallView: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            CallerAvatar(name: name, icon: item.icon)
+            CallerAvatar(name: name, icon: item.icon, ringing: model.callStart == nil)
                 .frame(width: 54, height: 54)
                 .scaleEffect(shown ? 1 : 0.6)
                 .blur(radius: shown ? 0 : 6)
@@ -515,7 +515,7 @@ struct CallView: View {
                 HStack(spacing: 5) {
                     Image(systemName: "iphone.radiowaves.left.and.right")
                         .symbolEffect(.variableColor.iterative, options: .repeating)
-                    Text(item.appName == "FaceTime" ? "Qo‘ng‘iroq" : "Qo‘ng‘iroq · \(item.appName)")
+                    Text(model.inCall ? "Suhbat" : item.appName == "FaceTime" ? "Qo‘ng‘iroq" : "Qo‘ng‘iroq · \(item.appName)")
                 }
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(.secondary)
@@ -529,9 +529,24 @@ struct CallView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .opacity(shown ? 1 : 0)
             .offset(y: shown ? 0 : -8)
-            HStack(spacing: 14) {
-                CallButton(symbol: "phone.down.fill", color: .red, action: model.declineCall)
-                CallButton(symbol: "phone.fill", color: .green, glow: true, action: model.acceptCall)
+            Group {
+                if let start = model.callStart {
+                    // the call going on: its time, mute and end
+                    HStack(spacing: 12) {
+                        Text(start, style: .timer)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit())
+                            .foregroundStyle(.green)
+                            .frame(width: 56, alignment: .trailing)
+                        CallButton(symbol: model.muted ? "mic.slash.fill" : "mic.fill", color: Color(white: model.muted ? 0.9 : 0.28),
+                                   tint: model.muted ? .black : .white, action: model.muteCall)
+                        CallButton(symbol: "phone.down.fill", color: .red, action: model.hangUp)
+                    }
+                } else {
+                    HStack(spacing: 14) {
+                        CallButton(symbol: "phone.down.fill", color: .red, action: model.declineCall)
+                        CallButton(symbol: "phone.fill", color: .green, glow: true, action: model.acceptCall)
+                    }
+                }
             }
             .scaleEffect(shown ? 1 : 0.4)
             .opacity(shown ? 1 : 0)
@@ -548,6 +563,7 @@ struct CallView: View {
 struct CallerAvatar: View {
     let name: String
     let icon: NSImage?
+    var ringing = true
     @State private var wave = false
 
     private var initials: String {
@@ -558,13 +574,13 @@ struct CallerAvatar: View {
 
     var body: some View {
         ZStack {
-            ForEach(0..<2) { i in
+            if ringing { ForEach(0..<2) { i in
                 Circle()
                     .stroke(.green.opacity(0.7), lineWidth: 1.5)
                     .scaleEffect(wave ? 1.55 : 1)
                     .opacity(wave ? 0 : 0.8)
                     .animation(.easeOut(duration: 1.6).repeatForever(autoreverses: false).delay(Double(i) * 0.8), value: wave)
-            }
+            } }
             Circle().fill(LinearGradient(colors: [Color(white: 0.42), Color(white: 0.24)], startPoint: .top, endPoint: .bottom))
             if !initials.isEmpty {
                 Text(initials).font(.system(size: 20, weight: .semibold, design: .rounded))
@@ -581,6 +597,7 @@ struct CallerAvatar: View {
 struct CallButton: View {
     let symbol: String
     let color: Color
+    var tint: Color = .white
     var glow = false
     let action: () -> Void
     @State private var pulse = false
@@ -589,7 +606,8 @@ struct CallButton: View {
         Button(action: action) {
             Image(systemName: symbol)
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(tint)
+                .contentTransition(.symbolEffect(.replace))
                 .rotationEffect(.degrees(glow && pulse ? -12 : 0))
                 .frame(width: 46, height: 46)
                 .background(Circle().fill(color))

@@ -132,8 +132,9 @@ final class NotchModel: ObservableObject {
     var inCall: Bool { callStart != nil }
     /// A call going on: green phone and its time beside the notch, above everything else.
     var showsCall: Bool { mode == .closed && inCall }
+    /// Ringing, not yet answered (an answered call opened from its pill uses the same mode).
     var ringing: IncomingNotification? {
-        if case .call(let n) = mode { return n }
+        if case .call(let n) = mode, !inCall { return n }
         return nil
     }
     /// Inkwell working in the background: Inky on the left, its progress on the right.
@@ -241,6 +242,7 @@ final class NotchModel: ObservableObject {
             guard let self, !self.hovering else { return }
             if self.peeking { withAnimation(Self.close) { self.peeking = false } }
             if self.mode == .expanded { self.set(.closed) }
+            if self.inCall, case .call = self.mode { self.foldCall() }
         }
         hoverWork = work
         // Short grace period so a slightly sloppy pointer doesn't snap it shut.
@@ -277,11 +279,15 @@ final class NotchModel: ObservableObject {
     func click() {
         switch mode {
         case .closed:
+            if inCall { return openCall() }
             haptic(.levelChange)
             open()
         case .expanded:
             set(.closed)
-        case .stack, .airdrop, .call:
+        case .call:
+            // the call going on folds back into its pill; a ringing one waits for its buttons
+            foldCall()
+        case .stack, .airdrop:
             break
         }
     }
@@ -386,6 +392,8 @@ final class NotchModel: ObservableObject {
     // MARK: Calls (Continuity from the iPhone, FaceTime…)
 
     private func ring(_ n: IncomingNotification) {
+        callItem = n
+        muted = false
         dismissWork?.cancel()
         hoverWork?.cancel()
         live = []
@@ -411,14 +419,45 @@ final class NotchModel: ObservableObject {
 
     func acceptCall() {
         guard let n = ringing else { return }
-        if !CallControl.press(accept: true) { n.openApp() }
+        if !CallControl.press(.accept) { n.openApp() }
         stopRinging(answered: true)
     }
 
     func declineCall() {
         guard ringing != nil else { return }
-        CallControl.press(accept: false)
+        CallControl.press(.decline)
         stopRinging(answered: false)
+    }
+
+    /// The call that is going on (who it is), for the open call view.
+    @Published private(set) var callItem: IncomingNotification?
+    @Published private(set) var muted = false
+
+    /// A click on the call's pill: the call opens below the notch, as on a phone.
+    func openCall() {
+        guard inCall, let n = callItem else { return }
+        haptic(.levelChange)
+        withAnimation(Self.drop) {
+            mode = .call(n)
+            peeking = false
+        }
+    }
+
+    func foldCall() {
+        guard inCall, case .call = mode else { return }
+        withAnimation(Self.close) { mode = .closed }
+    }
+
+    func muteCall() {
+        haptic(.alignment)
+        if CallControl.press(.mute) { withAnimation(.spring(response: 0.3)) { muted.toggle() } }
+        else { callItem?.openApp() }
+    }
+
+    func hangUp() {
+        if !CallControl.press(.end) { callItem?.openApp(); return }
+        endCall()
+        withAnimation(Self.close) { mode = .closed }
     }
 
     /// Notification Center changed: a ringing call whose banner went away was answered (the
@@ -466,11 +505,20 @@ final class NotchModel: ObservableObject {
         callWork?.cancel()
         micWasOn = false
         haptic(.alignment)
-        withAnimation(Self.close) { callStart = nil }
+        withAnimation(Self.close) {
+            callStart = nil
+            if case .call = mode { mode = .closed }
+        }
+        muted = false
     }
 
     /// For `--snapshot`: the pill of a call going on.
-    func previewCall() { callStart = Date().addingTimeInterval(-74) }
+    func previewCall(open: Bool = false) {
+        callStart = Date().addingTimeInterval(-74)
+        callItem = IncomingNotification(id: 1, bundleID: "com.apple.FaceTime", appName: "FaceTime", title: "Onam", subtitle: "",
+                                        body: "iPhone orqali", icon: nil, isCall: true)
+        if open { openCall() }
+    }
 
     // MARK: Inkwell working in the background
 

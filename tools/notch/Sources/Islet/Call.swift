@@ -45,15 +45,30 @@ final class Mic {
 /// Answers or declines the call through macOS's own call banner (Notification Center), the way a
 /// click on its button would. Needs Accessibility; without it the caller's app is opened instead.
 enum CallControl {
-    private static let acceptWords = ["accept", "answer", "qabul", "javob", "принять", "ответить"]
-    private static let declineWords = ["decline", "reject", "rad et", "отклонить", "сбросить"]
+    enum Action {
+        case accept, decline, end, mute
+
+        var words: [String] {
+            switch self {
+            case .accept: return ["accept", "answer", "qabul", "javob", "принять", "ответить"]
+            case .decline: return ["decline", "reject", "rad et", "отклонить", "сбросить"]
+            case .end: return ["end", "hang up", "tugat", "завершить", "сбросить", "отбой"]
+            case .mute: return ["mute", "ovozsiz", "выключить звук", "без звука"]
+            }
+        }
+    }
+
+    /// The call's controls live in Notification Center's banner while it rings, and in the
+    /// call window/HUD (FaceTime) once it's going.
+    private static let apps = ["com.apple.notificationcenterui", "com.apple.FaceTime", "com.apple.TelephonyUtilities"]
 
     @discardableResult
-    static func press(accept: Bool) -> Bool {
+    static func press(_ action: Action) -> Bool {
         guard AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary) else { return false }
-        let words = accept ? acceptWords : declineWords
-        for app in NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.notificationcenterui") {
-            if find(AXUIElementCreateApplication(app.processIdentifier), words, depth: 0) { return true }
+        for id in apps {
+            for app in NSRunningApplication.runningApplications(withBundleIdentifier: id) {
+                if find(AXUIElementCreateApplication(app.processIdentifier), action.words, depth: 0) { return true }
+            }
         }
         return false
     }

@@ -6,6 +6,23 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.66', '2026-10-31', {
+      uz: ['Suhbat notch’da ochiladi', [
+        'Gaplashayotganda notch yonidagi yashil taymerni bossangiz, suhbat pastga ochiladi: kim bilan, qancha vaqt, «Ovozsiz» va «Tugatish» tugmalari',
+        'Sichqoncha ketganda yoki yana bosilganda suhbat yana kichik taymerga yig‘iladi',
+        'Islet’da xabarlar uchun ruxsat (Full Disk Access) bo‘lmasa, notch buni o‘zi aytadi — bossangiz kerakli sozlama ochiladi',
+      ]],
+      en: ['The call opens in the notch', [
+        'During a call, click the green timer beside the notch and the call opens below it: who, how long, Mute and End',
+        'It folds back into the timer when the pointer leaves or on another click',
+        'If Islet has no Full Disk Access (needed for notifications), the notch says so — a click opens that setting',
+      ]],
+      ru: ['Разговор открывается в вырезе', [
+        'Во время звонка нажмите на зелёный таймер у выреза — разговор откроется под ним: с кем, сколько, «Без звука» и «Завершить»',
+        'Он сворачивается обратно в таймер, когда уводите курсор или нажимаете ещё раз',
+        'Если у Islet нет Full Disk Access (нужен для уведомлений), вырез сам скажет об этом — клик откроет нужную настройку',
+      ]],
+    }],
     ['1.1.65', '2026-10-31', {
       uz: ['Notch’da qo‘ng‘iroq — Dynamic Island kabi', [
         'iPhone’ga (yoki FaceTime’ga) qo‘ng‘iroq kelsa, notch pastga tushib keladi: ism, avatar atrofida to‘lqinlar, qizil va yashil tugmalar',
