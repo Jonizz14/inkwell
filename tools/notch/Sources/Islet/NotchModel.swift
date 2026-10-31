@@ -50,6 +50,8 @@ final class NotchModel: ObservableObject {
         case stack
         /// Files dragged over the notch: shelf on the left, AirDrop on the right.
         case airdrop
+        /// A phone call ringing: the notch drops down like the Dynamic Island.
+        case call(IncomingNotification)
     }
 
     /// Sections of the open notch; only one shows at a time.
@@ -102,6 +104,17 @@ final class NotchModel: ObservableObject {
     static let close = Animation.spring(response: 0.38, dampingFraction: 0.95)
     static let peek = Animation.spring(response: 0.3, dampingFraction: 0.7)
     static let row = Animation.spring(response: 0.42, dampingFraction: 0.78)
+    /// The call's drop: a little bounce at the bottom, like the island on a phone.
+    static let drop = Animation.spring(response: 0.5, dampingFraction: 0.66)
+
+    /// Since when the call is going (answered); its pill sits beside the notch.
+    @Published private(set) var callStart: Date?
+    /// Is macOS's own call banner still there (NotificationWatcher)? Set by the app.
+    var callExists: ((Int64) -> Bool)?
+    private var callWork: DispatchWorkItem?
+    private var ringTimer: Timer?
+    private let mic = Mic()
+    private var micWasOn = false
 
     init(notchSize: CGSize, player: NowPlaying, inkwell: InkwellLink, restore: Bool = true) {
         self.notchSize = notchSize
@@ -115,10 +128,17 @@ final class NotchModel: ObservableObject {
 
     var isOpen: Bool { mode != .closed }
     /// Inkwell focus session counting down in the closed notch; wins over everything.
-    var showsFocus: Bool { mode == .closed && inkwell.focusActive && Prefs.inkwell }
+    var showsFocus: Bool { mode == .closed && !inCall && inkwell.focusActive && Prefs.inkwell }
+    var inCall: Bool { callStart != nil }
+    /// A call going on: green phone and its time beside the notch, above everything else.
+    var showsCall: Bool { mode == .closed && inCall }
+    var ringing: IncomingNotification? {
+        if case .call(let n) = mode { return n }
+        return nil
+    }
     /// Inkwell working in the background: Inky on the left, its progress on the right.
-    var showsActivity: Bool { mode == .closed && activity != nil && Prefs.inkwell && !showsFocus }
-    var showsLiveActivity: Bool { mode == .closed && player.isPlaying && Prefs.liveActivity && !showsFocus && !showsActivity }
+    var showsActivity: Bool { mode == .closed && !inCall && activity != nil && Prefs.inkwell && !showsFocus }
+    var showsLiveActivity: Bool { mode == .closed && !inCall && player.isPlaying && Prefs.liveActivity && !showsFocus && !showsActivity }
     /// Music keeps its wings beside the notch while notifications are shown.
     var showsMusicWings: Bool { mode == .stack && player.isPlaying && Prefs.liveActivity }
     var showsInkwellStrip: Bool { inkwell.state != nil && Prefs.inkwell }
@@ -145,7 +165,9 @@ final class NotchModel: ObservableObject {
         switch mode {
         case .closed:
             let base: CGSize
-            if inkwell.focusActive && Prefs.inkwell {
+            if inCall {
+                base = CGSize(width: n.width + 2 * 66, height: n.height)
+            } else if inkwell.focusActive && Prefs.inkwell {
                 base = CGSize(width: n.width + 2 * 62, height: n.height)
             } else if activity != nil && Prefs.inkwell {
                 base = CGSize(width: n.width + 2 * 62, height: n.height)
@@ -168,6 +190,8 @@ final class NotchModel: ObservableObject {
             }
         case .airdrop:
             return CGSize(width: max(n.width + 300, 500), height: n.height + 118)
+        case .call:
+            return CGSize(width: max(n.width + 330, 530), height: n.height + 98)
         case .stack:
             let rows = stackShown.reduce(CGFloat(0)) { $0 + ($1.isCall ? Self.callHeight : Self.rowHeight) }
             let gaps = CGFloat(max(stackShown.count - 1, 0)) * Self.rowGap
@@ -257,7 +281,7 @@ final class NotchModel: ObservableObject {
             open()
         case .expanded:
             set(.closed)
-        case .stack, .airdrop:
+        case .stack, .airdrop, .call:
             break
         }
     }
@@ -266,6 +290,12 @@ final class NotchModel: ObservableObject {
 
     func show(_ notification: IncomingNotification) {
         if notification.isCall ? !Prefs.calls : !Prefs.notifications { return }
+        if notification.isCall {
+            box.insert(notification, at: 0)
+            unread += 1
+            saveBox()
+            return ring(notification)
+        }
         if !notification.transient {
             box.insert(notification, at: 0)
             if box.count > 200 { box.removeLast(box.count - 200) }
@@ -352,6 +382,95 @@ final class NotchModel: ObservableObject {
         UserDefaults.standard.set(unread, forKey: "unread")
         Store.write("inbox.json", box.map(SavedNotification.init))
     }
+
+    // MARK: Calls (Continuity from the iPhone, FaceTime…)
+
+    private func ring(_ n: IncomingNotification) {
+        dismissWork?.cancel()
+        hoverWork?.cancel()
+        live = []
+        haptic(.levelChange)
+        withAnimation(Self.drop) {
+            mode = .call(n)
+            peeking = false
+        }
+        // a soft tap with every ring while it rings (felt with a finger on the trackpad)
+        ringTimer?.invalidate()
+        var rings = 0
+        ringTimer = Timer.scheduledTimer(withTimeInterval: 1.4, repeats: true) { [weak self] t in
+            rings += 1
+            if rings > 10 { t.invalidate() }
+            self?.haptic(.levelChange)
+        }
+        mic.onChange = { [weak self] on in self?.micChanged(on) }
+        mic.start()
+        let work = DispatchWorkItem { [weak self] in self?.stopRinging(answered: self?.mic.running ?? false) }
+        callWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 45, execute: work)
+    }
+
+    func acceptCall() {
+        guard let n = ringing else { return }
+        if !CallControl.press(accept: true) { n.openApp() }
+        stopRinging(answered: true)
+    }
+
+    func declineCall() {
+        guard ringing != nil else { return }
+        CallControl.press(accept: false)
+        stopRinging(answered: false)
+    }
+
+    /// Notification Center changed: a ringing call whose banner went away was answered (the
+    /// microphone is on) or missed.
+    func notificationsChanged() {
+        guard let n = ringing, n.id > 0, let exists = callExists, !exists(n.id) else { return }
+        stopRinging(answered: mic.running)
+    }
+
+    private func stopRinging(answered: Bool) {
+        ringTimer?.invalidate()
+        callWork?.cancel()
+        if answered {
+            micWasOn = mic.running
+            callStart = Date()
+            // answered on the iPhone itself: the Mac's microphone never opens, the pill goes
+            let work = DispatchWorkItem { [weak self] in
+                guard let self, !self.micWasOn else { return }
+                self.endCall()
+            }
+            callWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20, execute: work)
+        } else {
+            mic.stop()
+        }
+        haptic(.alignment)
+        withAnimation(Self.close) {
+            mode = .closed
+            peeking = false
+        }
+    }
+
+    private func micChanged(_ on: Bool) {
+        if on {
+            micWasOn = true
+            // taken from macOS's own banner
+            if ringing != nil { stopRinging(answered: true) }
+        } else if inCall, micWasOn {
+            endCall()
+        }
+    }
+
+    func endCall() {
+        mic.stop()
+        callWork?.cancel()
+        micWasOn = false
+        haptic(.alignment)
+        withAnimation(Self.close) { callStart = nil }
+    }
+
+    /// For `--snapshot`: the pill of a call going on.
+    func previewCall() { callStart = Date().addingTimeInterval(-74) }
 
     // MARK: Inkwell working in the background
 

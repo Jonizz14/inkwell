@@ -83,6 +83,7 @@ struct NotchRootView: View {
         .animation(NotchModel.open, value: model.showsLiveActivity)
         .animation(NotchModel.open, value: model.showsFocus)
         .animation(NotchModel.open, value: model.showsActivity)
+        .animation(NotchModel.open, value: model.showsCall)
         .animation(NotchModel.open, value: player.artWide)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .environment(\.colorScheme, .dark)
@@ -118,7 +119,10 @@ struct NotchRootView: View {
     @ViewBuilder private var content: some View {
         switch model.mode {
         case .closed:
-            if model.showsFocus {
+            if model.showsCall, let start = model.callStart {
+                fixed(.closed) { InCallView(start: start, height: notchH) }
+                    .transition(.dissolve)
+            } else if model.showsFocus {
                 fixed(.closed) { FocusActivityView(inkwell: inkwell, height: notchH) }
                     .transition(.dissolve)
             } else if model.showsActivity, let activity = model.activity {
@@ -185,6 +189,14 @@ struct NotchRootView: View {
                         .padding(.top, notchH + 8)
                         .padding(.horizontal, 26)
                 }
+            }
+            .transition(.dissolve)
+        case .call(let item):
+            fixed(model.mode) {
+                CallView(item: item, model: model)
+                    .padding(.top, notchH + 10)
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 16)
             }
             .transition(.dissolve)
         case .airdrop:

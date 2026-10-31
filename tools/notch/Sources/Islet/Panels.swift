@@ -493,3 +493,139 @@ struct ActivityPill: View {
         .animation(.easeOut(duration: 0.3), value: activity)
     }
 }
+
+// MARK: - A phone call
+
+/// The notch dropped down for a ringing call: who it is, rings going out from them, and the two
+/// round buttons. Parts arrive one after another as the shape lands.
+struct CallView: View {
+    let item: IncomingNotification
+    @ObservedObject var model: NotchModel
+    @State private var shown = false
+
+    private var name: String { item.title.isEmpty ? "Noma’lum raqam" : item.title }
+
+    var body: some View {
+        HStack(spacing: 14) {
+            CallerAvatar(name: name, icon: item.icon)
+                .frame(width: 54, height: 54)
+                .scaleEffect(shown ? 1 : 0.6)
+                .blur(radius: shown ? 0 : 6)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 5) {
+                    Image(systemName: "iphone.radiowaves.left.and.right")
+                        .symbolEffect(.variableColor.iterative, options: .repeating)
+                    Text(item.appName == "FaceTime" ? "Qo‘ng‘iroq" : "Qo‘ng‘iroq · \(item.appName)")
+                }
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.secondary)
+                Text(name)
+                    .font(.system(size: 19, weight: .semibold))
+                    .lineLimit(1)
+                if !item.body.isEmpty {
+                    Text(item.body).font(.system(size: 11.5)).foregroundStyle(.secondary).lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown ? 0 : -8)
+            HStack(spacing: 14) {
+                CallButton(symbol: "phone.down.fill", color: .red, action: model.declineCall)
+                CallButton(symbol: "phone.fill", color: .green, glow: true, action: model.acceptCall)
+            }
+            .scaleEffect(shown ? 1 : 0.4)
+            .opacity(shown ? 1 : 0)
+        }
+        .foregroundStyle(.white)
+        .onAppear {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.7).delay(0.12)) { shown = true }
+        }
+    }
+}
+
+/// Initials in a soft circle (the app's icon when there's no name), with rings going out while
+/// it rings.
+struct CallerAvatar: View {
+    let name: String
+    let icon: NSImage?
+    @State private var wave = false
+
+    private var initials: String {
+        let parts = name.split(separator: " ").prefix(2)
+        let letters = parts.compactMap(\.first).map(String.init).joined()
+        return letters.isEmpty || name.first?.isNumber == true ? "" : letters.uppercased()
+    }
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<2) { i in
+                Circle()
+                    .stroke(.green.opacity(0.7), lineWidth: 1.5)
+                    .scaleEffect(wave ? 1.55 : 1)
+                    .opacity(wave ? 0 : 0.8)
+                    .animation(.easeOut(duration: 1.6).repeatForever(autoreverses: false).delay(Double(i) * 0.8), value: wave)
+            }
+            Circle().fill(LinearGradient(colors: [Color(white: 0.42), Color(white: 0.24)], startPoint: .top, endPoint: .bottom))
+            if !initials.isEmpty {
+                Text(initials).font(.system(size: 20, weight: .semibold, design: .rounded))
+            } else if let icon {
+                Image(nsImage: icon).resizable().padding(8)
+            } else {
+                Image(systemName: "person.fill").font(.system(size: 22))
+            }
+        }
+        .onAppear { wave = true }
+    }
+}
+
+struct CallButton: View {
+    let symbol: String
+    let color: Color
+    var glow = false
+    let action: () -> Void
+    @State private var pulse = false
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.white)
+                .rotationEffect(.degrees(glow && pulse ? -12 : 0))
+                .frame(width: 46, height: 46)
+                .background(Circle().fill(color))
+                .background(Circle().fill(color.opacity(glow ? 0.45 : 0)).scaleEffect(pulse ? 1.35 : 1).blur(radius: 6))
+                .contentShape(Circle())
+        }
+        .buttonStyle(PressStyle())
+        .onAppear {
+            guard glow else { return }
+            withAnimation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true)) { pulse = true }
+        }
+    }
+}
+
+/// A call going on, beside the closed notch: a green phone and how long it's been.
+struct InCallView: View {
+    let start: Date
+    let height: CGFloat
+
+    var body: some View {
+        HStack {
+            HStack(spacing: 6) {
+                Image(systemName: "phone.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: height - 12, height: height - 12)
+                    .background(Circle().fill(.green))
+                Equalizer(color: .green, playing: true).frame(width: 16, height: height - 18)
+            }
+            Spacer(minLength: 0)
+            Text(start, style: .timer)
+                .font(.system(size: 13, weight: .semibold, design: .rounded).monospacedDigit())
+                .foregroundStyle(.green)
+                .frame(width: 52, alignment: .trailing)
+        }
+        .padding(.horizontal, 12)
+        .frame(height: height)
+    }
+}

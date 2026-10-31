@@ -38,6 +38,8 @@ struct IncomingNotification: Identifiable, Equatable {
 final class NotificationWatcher {
     var onNotification: ((IncomingNotification) -> Void)?
     var onAccessChange: (() -> Void)?
+    /// Anything changed in Notification Center's database (a banner came or went).
+    var onChange: (() -> Void)?
     private(set) var hasAccess = false {
         didSet { if hasAccess != oldValue { onAccessChange?() } }
     }
@@ -123,6 +125,7 @@ final class NotificationWatcher {
             let data = Data(bytes: blob, count: Int(sqlite3_column_bytes(stmt, 2)))
             if let n = Self.parse(id: id, appID: appID, data: data) { found.append(n) }
         }
+        DispatchQueue.main.async { self.onChange?() }
         // Several rows can land at once (e.g. after wake): every one is shown and kept
         guard !found.isEmpty else { return }
         DispatchQueue.main.async { found.forEach { self.onNotification?($0) } }
@@ -167,6 +170,14 @@ final class NotificationWatcher {
         if let list = value as? [Any] { return list.lazy.compactMap { attachment(in: $0, depth: depth + 1) }.first }
         if let dict = value as? [String: Any] { return dict.values.lazy.compactMap { attachment(in: $0, depth: depth + 1) }.first }
         return nil
+    }
+
+    /// Is this notification still delivered (its banner not yet answered or dismissed)?
+    func exists(_ id: Int64) -> Bool {
+        queue.sync {
+            guard let db else { return true }
+            return (Self.scalar(db, "SELECT COUNT(*) FROM record WHERE rec_id = \(id)") ?? 1) > 0
+        }
     }
 
     private static func scalar(_ db: OpaquePointer?, _ sql: String) -> Int64? {

@@ -135,6 +135,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         player.start()
         watcher.onNotification = { [weak self] in self?.model.show($0) }
         watcher.onAccessChange = { [weak self] in self?.writeStatus() }
+        watcher.onChange = { [weak self] in self?.model.notificationsChanged() }
+        model.callExists = { [weak self] id in self?.watcher.exists(id) ?? true }
         watcher.start()
         writeStatus()
         if ProcessInfo.processInfo.environment["ISLET_DEBUG"] != nil { listenForDebugClicks() }

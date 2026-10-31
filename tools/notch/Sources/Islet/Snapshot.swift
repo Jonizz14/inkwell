@@ -26,6 +26,7 @@ enum Snapshot {
                                                           subtitle: "", body: "Inkwell ulandi: seriya, fokus va so‘zlar endi shu yerda.",
                                                           icon: nil, isCall: false, inky: .hello)) }),
             ("airdrop", { $0.dropTargeted = true }),
+            ("in-call", { $0.previewCall() }),
             ("stack3", { m in
                 for i in 0..<5 { m.show(IncomingNotification(id: 100 + Int64(i), bundleID: "ru.keepcoder.Telegram", appName: "Telegram",
                                                              title: "Aziz \(i + 1)", subtitle: "", body: "Bro ertaga soat nechida uchrashamiz?",

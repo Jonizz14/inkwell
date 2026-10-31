@@ -6,6 +6,23 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.65', '2026-10-31', {
+      uz: ['Notch’da qo‘ng‘iroq — Dynamic Island kabi', [
+        'iPhone’ga (yoki FaceTime’ga) qo‘ng‘iroq kelsa, notch pastga tushib keladi: ism, avatar atrofida to‘lqinlar, qizil va yashil tugmalar',
+        'Yashil — javob berish, qizil — rad etish (macOS’ning o‘z tugmasini bosadi; birinchi marta Accessibility ruxsatini so‘raydi)',
+        'Gaplashayotganda notch yonida yashil 📞 va taymer turadi; qo‘ng‘iroq tugasa o‘zi yo‘qoladi',
+      ]],
+      en: ['Calls in the notch, like the Dynamic Island', [
+        'When your iPhone (or FaceTime) rings, the notch drops down: the name, rings around the avatar, red and green buttons',
+        'Green answers, red declines (it presses macOS’s own button; asks for Accessibility the first time)',
+        'During the call a green 📞 and a timer sit beside the notch; they go when the call ends',
+      ]],
+      ru: ['Звонки в вырезе, как Dynamic Island', [
+        'Когда звонит iPhone (или FaceTime), вырез опускается: имя, волны вокруг аватара, красная и зелёная кнопки',
+        'Зелёная — ответить, красная — отклонить (нажимает кнопку самой macOS; в первый раз просит доступ Accessibility)',
+        'Во время разговора рядом с вырезом зелёный 📞 и таймер; исчезают, когда звонок закончится',
+      ]],
+    }],
     ['1.1.64', '2026-10-31', {
       uz: ['Notch’da bo‘shliq', ['Xabarlar, quti, shelf va fayl tashlash zonalari endi notch chetiga yopishmaydi — har tomonda bo‘shliq bor']],
       en: ['Room to breathe in the notch', ['Notifications, the box, the shelf and the drop zones no longer touch the notch’s edges — there is space on every side']],
