@@ -23,6 +23,9 @@
   --t-fast: 140ms;
   --t: 240ms;
   --t-slow: 420ms;
+  /* the push between pages. On :root, not .view: #dim (not a page) eases with it too — defined on
+     .view only, its transition was invalid and the dim snapped to black on the first frame */
+  --push: 520ms cubic-bezier(0.32, 0.72, 0, 1); /* the user prefers this one to an evenly slowing 440 ms curve (tried in 1.1.47) */
   --drawer-w: 420px;
   --read-size: 20px;
   --ui: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif;
@@ -137,7 +140,6 @@ code { font: 12px var(--mono); background: var(--soft); padding: 1px 5px; border
    which drifts left and dims underneath; back reverses it. Only transform
    and opacity animate, so it all stays on the GPU. */
 .view {
-  --push: 520ms cubic-bezier(0.32, 0.72, 0, 1); /* the user prefers this one to an evenly slowing 440 ms curve (tried in 1.1.47) */
   position: absolute;
   inset: 0;
   background: var(--bg);

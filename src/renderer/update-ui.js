@@ -43,7 +43,8 @@ const UpdateUI = (() => {
     },
     files: [['renderer/app.js', 148], ['renderer/styles.css', 62], ['renderer/focus.js', 31], ['renderer/listen.js', 6]],
   };
-  let el, page, info, stage = 'come', from = 'library', timers = [];
+  // wanted: the banner should be out; gone: the version whose banner was closed or swiped away
+  let el, page, info, stage = 'come', from = 'library', timers = [], wanted = false, gone = '';
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   const q = (s) => el.querySelector(s);
   const tap = () => typeof Haptic !== 'undefined' && Haptic.align && Haptic.align();
@@ -81,8 +82,85 @@ const UpdateUI = (() => {
     q('[data-b="go"]').onclick = (e) => takeover(e.currentTarget);
     q('[data-b="re"]').onclick = restart;
     // hidden, it stays in the notification centre; a download carries on and comes back when done
-    q('.up-x').onclick = () => hide();
+    q('.up-x').onclick = () => dismiss();
     q('.up-txt').onclick = () => stage !== 'load' && openPage();
+    swipe();
+  }
+
+  // One banner, in one place: on the home page (and on Update history, where you asked for it).
+  // Over "What's new" it would be a second copy of the same buttons, and over a reader it's in the way;
+  // it waits and slides back in on the way home.
+  const fits = () => state.view === 'library' || state.view === 'history';
+  function place() {
+    if (el) el.classList.toggle('show', wanted && fits());
+  }
+  const sv = showView;
+  showView = function (name) {
+    sv(name);
+    place();
+  };
+
+  // closed with ✕ or swiped off to the right: it stays in the notification centre, and the check
+  // every few hours doesn't bring the same version back
+  function dismiss() {
+    if (stage === 'come' && info) gone = info.version;
+    // the greeting of a new version: once away, it doesn't come back
+    if (stage === 'hi' && state.notes.whatsNew) (state.notes.whatsNew.seen = true), save();
+    hide();
+  }
+
+  // the banner follows the finger (a drag, or two fingers on the trackpad) and goes off to the
+  // right when let go far or fast enough; otherwise it springs back. Left it only gives a little.
+  function swipe() {
+    let x0 = 0, dx = 0, t0 = 0, v = 0, drag = false, moved = false, wheelT = 0;
+    const set = (d) => {
+      dx = d;
+      el.style.transition = 'none';
+      el.style.transform = `translate3d(${d > 0 ? d : d / 4}px, 0, 0)`;
+    };
+    const release = () => {
+      const far = dx > el.offsetWidth * 0.35 || (dx > 24 && v > 0.45);
+      // the CSS transition takes it from where the finger left it
+      el.style.transition = '';
+      el.style.transform = '';
+      if (far) dismiss();
+      dx = v = 0;
+    };
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0 || e.target.closest('button')) return;
+      drag = true;
+      moved = false;
+      x0 = e.clientX;
+      t0 = e.timeStamp;
+      el.setPointerCapture(e.pointerId);
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (!drag) return;
+      const d = e.clientX - x0;
+      if (!moved && Math.abs(d) < 4) return;
+      moved = true;
+      v = (d - dx) / Math.max(1, e.timeStamp - t0);
+      t0 = e.timeStamp;
+      set(d);
+    });
+    const up = () => {
+      if (!drag) return;
+      drag = false;
+      if (moved) release();
+    };
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    // a drag is not a click on the text
+    el.addEventListener('click', (e) => moved && (e.stopPropagation(), (moved = false)), true);
+    el.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+      e.preventDefault();
+      const d = dx - e.deltaX;
+      v = -e.deltaX / 16;
+      set(d);
+      clearTimeout(wheelT);
+      wheelT = setTimeout(release, 90);
+    }, { passive: false });
   }
 
   // one column of digits per place, rolled with a transform (like the statistics' odometer)
@@ -111,12 +189,13 @@ const UpdateUI = (() => {
   function show(i) {
     info = i;
     stage = 'come';
+    wanted = true;
     build();
     keep('update', tx().come(info.version));
-    requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('show')));
-    tap();
+    requestAnimationFrame(() => requestAnimationFrame(place));
+    if (fits()) tap();
   }
-  const hide = () => el && el.classList.remove('show');
+  const hide = () => ((wanted = false), el && el.classList.remove('show'));
 
   function download() {
     q('[data-b="go"]').classList.add('off');
@@ -160,8 +239,9 @@ const UpdateUI = (() => {
 
   function done() {
     if (cover) return coverDone();
-    // the banner comes back unless the page is already showing it all
-    if (!(page && page.classList.contains('is-active'))) el.classList.add('show');
+    // the banner comes back (on the home page; "What's new" already shows it all)
+    wanted = true;
+    place();
     el.classList.remove('loading');
     el.classList.add('done');
     text('done');
@@ -269,7 +349,7 @@ const UpdateUI = (() => {
   if (api.onUpdateHold) api.onUpdateHold(() => {
     const m = page && page.classList.contains('is-active') && page.querySelector('.wn-prog .wn-msg');
     if (m) (m.classList.remove('nudge'), void m.offsetWidth, m.classList.add('nudge'));
-    else if (el) (el.classList.add('show'), el.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], { duration: 420 }));
+    else if (el) ((wanted = true), place(), el.animate([{ transform: 'translateX(-6px)' }, { transform: 'translateX(5px)' }, { transform: 'none' }], { duration: 420 }));
     tap();
   });
 
@@ -370,7 +450,14 @@ const UpdateUI = (() => {
     later(1800, () => api.updateRestart(info.version));
   }
 
-  return { demo: () => show(SAMPLE), announce: (i) => show({ ...i, real: true }), welcome, openPage };
+  // asked for (Check for updates) it always shows; the check in the background respects a banner
+  // that was closed
+  const announce = (i, asked) => {
+    if (!asked && i.version === gone) return;
+    if (!asked && el && wanted && info && info.version === i.version) return; // already out
+    show({ ...i, real: true });
+  };
+  return { demo: () => show(SAMPLE), announce, welcome, openPage };
 })();
 
 // ⋯ menu → "Check for updates": asks GitHub now and answers in a toast, or with the banner when
@@ -408,7 +495,7 @@ if (typeof api !== 'undefined' && api.updateCheck && document.querySelector('#bt
     toast(t('up.checking'), 4000);
     const r = await api.updateCheck().catch(() => ({ state: 'error' }));
     asking = false;
-    if (r.state === 'found') return (toast(''), document.querySelector('#toast').classList.remove('show'), UpdateUI.announce(r.info));
+    if (r.state === 'found') return (toast(''), document.querySelector('#toast').classList.remove('show'), UpdateUI.announce(r.info, true));
     toast(r.state === 'latest' ? t('up.latest', r.current) : t('up.' + r.state), 3200);
   };
 }

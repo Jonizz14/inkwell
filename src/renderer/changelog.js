@@ -6,6 +6,26 @@
 const Changelog = (() => {
   // [version, date, { uz: [title, [points]], en: [...], ru: [...] }]
   const LOG = [
+    ['1.1.62', '2026-10-31', {
+      uz: ['Bitta yangilanish oynasi, silliq sahifalar', [
+        'Yangilanish banneri endi bitta: bosh sahifada (va Yangilanishlar sahifasida) turadi, «Nima yangi» ochilganda ikkinchi nusxa chiqmaydi',
+        'Bannerni ✕ bilan yopish yoki o‘ngga surib tashlash mumkin (sichqoncha yoki trackpad’da ikki barmoq)',
+        '«Yangilash» tugmasi birinchi bosishdayoq ishlaydi — avval faqat pastroqqa bosilganda ishlardi',
+        'Sahifa o‘ngdan chiqqanda orqa fon birdan qoraymaydi, sahifa bilan birga silliq qorayadi',
+      ]],
+      en: ['One update banner, smoother pages', [
+        'The update banner is one banner now: it stays on the home page (and on Update history), with no second copy over “What’s new”',
+        'Close it with ✕ or swipe it away to the right (mouse, or two fingers on the trackpad)',
+        'The “Update” button works on the first click — before, only its lower edge did',
+        'When a page slides in from the right, the background darkens smoothly with it instead of turning dark at once',
+      ]],
+      ru: ['Одно окно обновления, плавные страницы', [
+        'Баннер обновления теперь один: он на главной (и в Истории обновлений), без второй копии поверх «Что нового»',
+        'Его можно закрыть ✕ или смахнуть вправо (мышью или двумя пальцами на трекпаде)',
+        'Кнопка «Обновить» срабатывает с первого нажатия — раньше только по нижнему краю',
+        'Когда страница выезжает справа, фон затемняется плавно вместе с ней, а не сразу',
+      ]],
+    }],
     ['1.1.61', '2026-10-30', {
       uz: ['Notch’ga ulanish va Inky', [
         'Sozlamalar → Dynamic Notch → «Ulash»: to‘rt qadam birma-bir tekshiriladi — notch ishga tushdimi, Inkwell bilan bog‘landimi, salomlashdimi, boshqa ilovalar xabarlari',
